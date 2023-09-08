@@ -19,7 +19,9 @@ Guides: https://uwap.org/guides/webframework
 - Worker to regularly update files, handle memory integrity, certificates and more
 - Plugins (see more below)
 - Option for usage as a local web server for local web apps as interfaces for proper apps on a computer
+ 
 ...and much more!
+
 Most features have plugins as interfaces.
 
 ## Installation
