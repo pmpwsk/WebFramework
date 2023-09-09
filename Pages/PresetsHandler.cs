@@ -1,19 +1,36 @@
 ﻿using MimeKit;
+using System.Web;
 using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
 
 namespace uwap.WebFramework.Elements;
 
+/// <summary>
+/// Default preset handler class that should be inherited by a class overwriting some/all methods. Make sure to set Presets.Handler to an element of that new class once you have one.
+/// </summary>
 public class PresetsHandler
 {
-    public virtual string? SupportEmail => null;
-    internal string? GetSupportEmail()
+    /// <summary>
+    /// The email address for support or null to use support@[MailManager.ServerDomain].<br/>
+    /// Default implementation returns null
+    /// </summary>
+    protected virtual string? SupportEmail => null;
+
+    /// <summary>
+    /// Gets the the support email from SupportEmail but resolves the case of it being null.<br/>
+    /// If SupportEmail and MailManager.ServerDomain are both null, null is returned here, too.<br/>
+    /// If only SupportEmail is null and MailManager.ServerDomain isn't null, support@[MailManager.ServerDomain] is returned.<br/>
+    /// </summary>
+    protected virtual string? GetSupportEmail()
     {
         if (SupportEmail == null && MailManager.ServerDomain == null)
             return null;
         return SupportEmail ?? ("support@" + MailManager.ServerDomain);
     }
 
+    /// <summary>
+    /// Sends an important email to the given user using the given subject and text. A different address may be specified.
+    /// </summary>
     public virtual MailSendResult WarningMail(User user, string subject, string text, string? useThisAddress = null)
     {
         string? address = GetSupportEmail();
@@ -34,6 +51,9 @@ public class PresetsHandler
         return MailManager.Out.Send(message);
     }
 
+    /// <summary>
+    /// Creates a new Page (not IPage!) for the AppRequest with the given title and returns the new Page and its list of elements for easy access.
+    /// </summary>
     public virtual void CreatePage(AppRequest request, string title, out Page page, out List<IPageElement> e)
     {
         page = new(title);
@@ -41,8 +61,27 @@ public class PresetsHandler
         e = page.Elements;
     }
 
-    public virtual string AccountText => "Account";
+    /// <summary>
+    /// Returns an account navbar button (to log in or access the logged in account).
+    /// </summary>
+    public virtual IButton AccountButton(AppRequest request)
+    {
+        switch (request.LoginState)
+        {
+            case LoginState.None:
+                if (new string[] { "/", "/account/login", "/account/register" }.Contains(request.Path) || request.Path.StartsWith("/account/recovery"))
+                    return new Button("Login", "/account/login" + request.CurrentRedirectQuery(), "right");
+                else return new Button("Login", "/account/login?redirect=" + HttpUtility.UrlEncode(request.Path + request.Context.Request.QueryString), "right");
+            case LoginState.LoggedIn:
+                return new Button("Account", "/account", "right");
+            default:
+                return new Button("Logout", "/account/logout" + request.CurrentRedirectQuery(), "right");
+        }
+    }
 
+    /// <summary>
+    /// Populates the navigation bar of the given page using information from the given AppRequest.
+    /// </summary>
     public virtual void Navigation(AppRequest request, Page page)
     {
         if (AccountManager.Settings.Enabled)
@@ -64,17 +103,34 @@ public class PresetsHandler
             };
     }
 
+    /// <summary>
+    /// An array of possible theme names.<br/>
+    /// Default implementation throws an exception because there are no default themes.
+    /// </summary>
     public virtual string[] Themes => throw new Exception("No themes were set.");
-    public virtual List<IStyle> Style(IRequest request, out string fontUrl)
+
+    /// <summary>
+    /// Returns a list of styles that should be used for the given request as well as the URL of the used font in order to preload this if desired.<br/>
+    /// Default implementation throws an exception because there are no default themes.
+    /// </summary>
+    public virtual List<IStyle> Styles(IRequest request, out string fontUrl)
     {
         throw new Exception("No themes were set.");
     }
+
+    /// <summary>
+    /// Returns the name of the theme to be used for the given request.<br/>
+    /// Default implementation throws an exception because there are no default themes.
+    /// </summary>
     public virtual string ThemeName(IRequest request)
     {
         throw new Exception("No themes were set.");
     }
 
-    public virtual void AddSupportLink(Page page)
+    /// <summary>
+    /// Adds a button to contact customer support to the page.
+    /// </summary>
+    public virtual void AddSupportButton(Page page)
     {
         string? address = GetSupportEmail();
         if (address == null)
@@ -82,6 +138,9 @@ public class PresetsHandler
         page.Elements.Add(new ButtonElement("Contact support", address, "mailto:" + address, newTab: true));
     }
 
+    /// <summary>
+    /// Adds elements to allow for password (and 2FA if present) verification with input IDs 'password' and 'code'.
+    /// </summary>
     public virtual void AddAuthElements(AppRequest request)
     {
         request.Init(out Page page, out var e);

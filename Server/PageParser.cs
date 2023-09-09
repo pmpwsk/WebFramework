@@ -50,7 +50,7 @@ public static partial class Server
         IPageElement? currentContentElement = null;
         IPageElement? currentSidebarElement = null;
 
-        foreach (string lineUntrimmed in cacheEntry.GetTextLines())
+        foreach (string lineUntrimmed in cacheEntry.EnumerateTextLines())
         {
             string line = lineUntrimmed.Trim();
             if (line == "")

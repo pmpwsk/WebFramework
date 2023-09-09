@@ -1,6 +1,12 @@
 namespace uwap.WebFramework;
 
+/// <summary>
+/// Interface for styles for web pages (CSS).
+/// </summary>
 public interface IStyle
 {
-    public List<string> Export(IRequest request);
+    /// <summary>
+    /// Enumerates the style element's lines.
+    /// </summary>
+    public IEnumerable<string> Export(IRequest request);
 }

@@ -4,75 +4,148 @@ using uwap.WebFramework.Plugins;
 
 namespace uwap.WebFramework.Elements;
 
+/// <summary>
+/// An IPage implementation with a default layout (navbar, sidebar, content, footer) and more options for most things a web page needs.
+/// </summary>
 public class Page : IPage
 {
+    /// <summary>
+    /// The title of the page, an extension might be appended.
+    /// </summary>
+    public string Title;
+
+    /// <summary>
+    /// The list of styles that will be sent.<br/>
+    /// Default: empty list
+    /// </summary>
+    public List<IStyle> Styles = new();
+
+    /// <summary>
+    /// The list of scripts that will be sent.<br/>
+    /// Default: empty list
+    /// </summary>
+    public List<IScript> Scripts = new();
+
+    /// <summary>
+    /// The list of buttons in the navigation bar.<br/>
+    /// Default: empty list, a home button with the current domain will be added if it remains empty when exporting.
+    /// </summary>
     public List<IButton> Navigation = new();
+
+    /// <summary>
+    /// The list of main elements (content).<br/>
+    /// Default: empty list
+    /// </summary>
     public List<IPageElement> Elements = new();
+
+    /// <summary>
+    /// The list of sidebar elements.<br/>
+    /// Default: empty list
+    /// </summary>
     public List<IPageElement> Sidebar = new();
+
+    /// <summary>
+    /// The list of things to preload.<br/>
+    /// Default: empty list
+    /// </summary>
     public List<Preload> Preloads = new();
+
+    /// <summary>
+    /// Whether to send a footer (=false) or not (=true).<br/>
+    /// Default: false (sends a default footer with a copyring notice)
+    /// </summary>
     public bool HideFooter = false;
+
+    /// <summary>
+    /// The JavaScript command the browser should execute when the HTML body is loaded or null to disable.<br/>
+    /// Default: null
+    /// </summary>
     public string? Onload = null;
+
+    /// <summary>
+    /// The page's description for search engines and link integrations or null to disable.<br/>
+    /// Default: null
+    /// </summary>
     public string? Description = null;
-    public string? Favicon = "/favicon.ico";
+
+    /// <summary>
+    /// The URL of the page's icon or null to disable.<br/>
+    /// Default: null
+    /// </summary>
+    public string? Favicon = null;
+
+    /// <summary>
+    /// Custom lines to be added to the HTML head.<br/>
+    /// Default: empty list
+    /// </summary>
     public List<string> Head = new();
 
+    /// <summary>
+    /// Creates a new empty page with the given title.
+    /// </summary>
     public Page(string title)
     {
         Title = title;
     }
 
+    /// <summary>
+    /// Creates a new empty page with the given title and style.
+    /// </summary>
     public Page(string title, IStyle style)
     {
         Title = title;
         Styles.Add(style);
     }
 
+    /// <summary>
+    /// Creates a new empty page with the given title and styles.
+    /// </summary>
     public Page(string title, List<IStyle> styles)
     {
         Title = title;
         if (styles != null) Styles = styles;
     }
 
-    public override string Export(AppRequest request)
+    //documentation inherited from IPage
+    public IEnumerable<string> Export(AppRequest request)
     {
-        var domains = Parsers.Domains(request.Domain).ToArray();
+        var domains = Parsers.Domains(request.Domain);
 
         bool error = request.Status != 200;
 
-        string page = "";
-        page += "<!DOCTYPE html>";
-        page += "\n<html>";
-        page += "\n<head>";
+        yield return "<!DOCTYPE html>";
+        yield return "<html>";
+        yield return "<head>";
 
         //title
         if (error)
         {
             if (request.Status == 301 || request.Status == 302)
-                page += "\n\t<title>Redirecting</title>";
-            else page += "\n\t<title>Error</title>";
+                yield return "\t<title>Redirecting</title>";
+            else yield return "\t<title>Error</title>";
         }
         else
         {
             string title = Title;
             if (Server.Config.Domains.TitleExtensions.TryGetValueAny(out var titleExtension, domains))
                 title += " | " + titleExtension;
-            page += $"\n\t<title>{title}</title>";
+            yield return $"\t<title>{title}</title>";
         }
 
         //description
         if (Description != null)
-            page += $"\n\t<meta name=\"description\" content=\"{Description}\" />";
+            yield return $"\t<meta name=\"description\" content=\"{Description}\" />";
 
         //canonical
         if (Server.Config.Domains.CanonicalDomains.TryGetValueAny(out var canonical, domains))
         {
             canonical ??= request.Domain;
-            page += $"\n\t<link rel=\"canonical\" href=\"https://{canonical}{request.Path}{request.Context.Request.QueryString}\" />";
+            yield return $"\t<link rel=\"canonical\" href=\"https://{canonical}{request.Path}{request.Context.Request.QueryString}\" />";
         }
 
         //viewport settings + charset
-        page += $"\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />";
-        page += "\n\t<meta charset=\"utf-8\">";
+        yield return $"\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />";
+        yield return "\t<meta charset=\"utf-8\">";
 
         //favicon
         if (Favicon != null)
@@ -94,7 +167,7 @@ public class Page : IPage
 
             if (Server.Cache.TryGetValueAny(out var faviconA, domains.Select(d => d + Favicon).ToArray()))
             {
-                page += $"\n\t<link rel=\"icon\"{mime} href=\"{Favicon}?t={faviconA.GetModifiedUtc().Ticks}\">";
+                yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}?t={faviconA.GetModifiedUtc().Ticks}\">";
             }
             else
             {
@@ -103,57 +176,57 @@ public class Page : IPage
                 {
                     string? timestamp = plugin.GetFileVersion(relPath);
                     if (timestamp != null)
-                        page += $"\n\t<link rel=\"icon\"{mime} href=\"{Favicon}?t={timestamp}\">";
-                    else page += $"\n\t<link rel=\"icon\"{mime} href=\"{Favicon}\">";
+                        yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}?t={timestamp}\">";
+                    else yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}\">";
                 }
-                else page += $"\n\t<link rel=\"icon\"{mime} href=\"{Favicon}\">";
+                else yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}\">";
             }
         }
 
         //preloads
         foreach (Preload preload in Preloads)
-            page += "\n\t" + preload.Export();
+            yield return "\t" + preload.Export();
 
         //styles
         foreach (IStyle style in Styles)
             foreach (string line in style.Export(request))
-                page += "\n\t" + line;
+                yield return "\t" + line;
 
         //custom head items
         foreach (string line in Head)
-            page += $"\n\t{line}";
+            yield return $"\t{line}";
 
-        page += "\n</head>";
-        page += $"\n<body{(error||Onload==null?"":$" onload=\"{Onload}\"")}>";
+        yield return "</head>";
+        yield return $"<body{(error||Onload==null?"":$" onload=\"{Onload}\"")}>";
 
         //navbar
         var nav = (Navigation.Count != 0) ? Navigation : new List<IButton> { new Button(request.Domain, "/") };
-        page += "\n\t<div class=\"nav\">";
+        yield return "\t<div class=\"nav\">";
         foreach (IButton n in nav)
-            page += "\n\t\t" + n.Export();
-        page += "\n\t</div>";
+            yield return "\t\t" + n.Export();
+        yield return "\t</div>";
 
-        page += "\n\t<div class=\"full\">";
+        yield return "\t<div class=\"full\">";
         //sidebar
-        page += "\n\t\t<div class=\"sidebar\">";
-        page += "\n\t\t\t<div class=\"sidebar-items\">";
+        yield return "\t\t<div class=\"sidebar\">";
+        yield return "\t\t\t<div class=\"sidebar-items\">";
             foreach (IPageElement e in Sidebar)
                 foreach (string line in e.Export())
-                    page += "\n\t\t\t\t" + line;
-        page += "\n\t\t\t</div>";
-        page += "\n\t\t</div>";
+                    yield return "\t\t\t\t" + line;
+        yield return "\t\t\t</div>";
+        yield return "\t\t</div>";
 
         //content
-        page += "\n\t\t<div class=\"content\">";
-        page += "\n\t\t\t<div class=\"content-items\">";
+        yield return "\t\t<div class=\"content\">";
+        yield return "\t\t\t<div class=\"content-items\">";
         if (error)
         {
             if (request.Status == 301 || request.Status == 302)
             {
                 foreach (string line in new HeadingElement($"Redirecting...", "").Export())
-                    page += "\n\t\t\t\t" + line;
+                    yield return "\t\t\t\t" + line;
                 foreach (string line in new ButtonElementJS("Try again", null, "window.location.reload()").Export())
-                    page += "\n\t\t\t\t" + line;
+                    yield return "\t\t\t\t" + line;
             }
             else
             {
@@ -172,16 +245,16 @@ public class Page : IPage
                 else content = new List<IContent>();
 
                 foreach (string line in new HeadingElement($"Error {request.Status}", content, "red").Export())
-                    page += "\n\t\t\t\t" + line;
+                    yield return "\t\t\t\t" + line;
             }
         }
         else
         {
             foreach (IPageElement e in Elements)
                 foreach (string line in e.Export())
-                    page += "\n\t\t\t\t" + line;
+                    yield return "\t\t\t\t" + line;
         }
-        page += "\n\t\t\t</div>";
+        yield return "\t\t\t</div>";
 
         //footer
         if (!HideFooter)
@@ -197,23 +270,26 @@ public class Page : IPage
                 
             foreach (string line in new ContainerElement(null, footerContent, "footer").Export())
             {
-                page += "\n\t\t\t" + line;
+                yield return "\t\t\t" + line;
             }
         }
-        page += "\n\t\t</div>";
-        page += "\n\t</div>";
+        yield return "\t\t</div>";
+        yield return "\t</div>";
 
         //scripts
         if (!error)
             foreach (IScript script in Scripts)
                 foreach (string line in script.Export(request))
-                    page += "\n\t" + line;
+                    yield return "\t" + line;
 
-        page += "\n</body>";
-        page += "\n</html>";
-        return page;
+        yield return "</body>";
+        yield return "</html>";
     }
 
+    /// <summary>
+    /// Fills the sidebar with page navigation buttons for every element with a title and ID.<br/>
+    /// If addHeading is true, a heading "Navigation:" will be added.
+    /// </summary>
     public void PopulateSidebar(bool addHeading)
     {
         if (addHeading) Sidebar.Add(new ContainerElement("Navigation:", ""));

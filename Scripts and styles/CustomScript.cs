@@ -1,24 +1,39 @@
 namespace uwap.WebFramework.Elements;
 
+/// <summary>
+/// IScript with code provided during runtime.
+/// </summary>
 public class CustomScript : IScript
 {
+    /// <summary>
+    /// The lines of code the script has.
+    /// </summary>
     public List<string> Lines;
 
+    /// <summary>
+    /// Creates a new custom script with the given (first) line of code.
+    /// </summary>
     public CustomScript(string code)
         => Lines = code.Split('\n').ToList();
 
+    /// <summary>
+    /// Creates a new custom script with the given lines of code.
+    /// </summary>
     public CustomScript(params string[] lines)
         => Lines = lines.ToList();
 
+    /// <summary>
+    /// Creates a new custom script with the given lines of code.
+    /// </summary>
     public CustomScript(List<string> lines)
         => Lines = lines;
 
-    public List<string> Export(IRequest request)
+    //documentation inherited from IScript
+    public IEnumerable<string> Export(IRequest request)
     {
-        List<string> lines = new() { "<script>" };
+        yield return "<script>";
         foreach (string line in Lines)
-            lines.Add("\t" + line);
-        lines.Add("</script>");
-        return lines;
+            yield return "\t" + line;
+        yield return "</script>";
     }
 }

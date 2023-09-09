@@ -1,52 +1,80 @@
-﻿using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿namespace uwap.WebFramework.Elements;
 
-namespace uwap.WebFramework.Elements;
-
+/// <summary>
+/// An IPage with custom lines for head and body as well as a title string and lists for styles and scripts.
+/// </summary>
 public class CustomPage : IPage
 {
-    public List<string> Head = new();
-    public List<string> Body = new();
+    /// <summary>
+    /// The title of the page, an extension might be appended.
+    /// </summary>
+    public string Title;
 
-    public CustomPage()
+    /// <summary>
+    /// The list of styles that will be sent.<br/>
+    /// Default: empty list
+    /// </summary>
+    public List<IStyle> Styles = new();
+
+    /// <summary>
+    /// The list of scripts that will be sent.<br/>
+    /// Default: empty list
+    /// </summary>
+    public List<IScript> Scripts = new();
+
+    /// <summary>
+    /// The lines of the HTML head that will be sent.<br/>
+    /// Default: empty list
+    /// </summary>
+    public List<string> HeadLines = new();
+
+    /// <summary>
+    /// The lines of the HTML head that will be sent.<br/>
+    /// Default: empty list
+    /// </summary>
+    public List<string> BodyLines = new();
+
+    /// <summary>
+    /// Creates a new empty page with the given title.
+    /// </summary>
+    public CustomPage(string title)
     {
+        Title = title;
     }
 
-    public override string Export(AppRequest request)
+    //documentation inherited from IPage
+    public IEnumerable<string> Export(AppRequest request)
     {
-        string page = "";
-        page += "<!DOCTYPE html>";
-        page += "\n<html>";
-        page += "\n<head>";
+        yield return "<!DOCTYPE html>";
+        yield return "<html>";
+
+        ///head
+        yield return "<head>";
         //title
-        page += $"\n\t<title>{Title}</title>";
+        string title = Title;
+        if (Server.Config.Domains.TitleExtensions.TryGetValueAny(out var titleExtension, Parsers.Domains(request.Domain)))
+            title += " | " + titleExtension;
+        yield return $"\t<title>{title}</title>";
         //viewport settings + charset
-        page += $"\n\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />";
-        page += "\n\t<meta charset=\"utf-8\">";
-        //favicon
-        if (Server.Cache.ContainsKey("any/favicon.ico"))
-            page += $"\n\t<link rel=\"icon\" type=\"image/x-icon\" href=\"/favicon.ico?t={Server.Cache["any/favicon.ico"].GetModifiedUtc().Ticks}\">";
-        else if (Server.Cache.ContainsKey(request.Domain + "/favicon.ico"))
-            page += $"\n\t<link rel=\"icon\" type=\"image/x-icon\" href=\"/favicon.ico?t={Server.Cache[request.Domain + "/favicon.ico"].GetModifiedUtc().Ticks}\">";
-        /*//preloads
-        foreach (Preload preload in Preloads)
-            page += "\n\t" + preload.Export();*/
+        yield return $"\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />";
+        yield return "\t<meta charset=\"utf-8\">";
         //styles
         foreach (IStyle style in Styles)
             foreach (string line in style.Export(request))
-                page += "\n\t" + line;
-        foreach (string item in Head)
-            page += "\n\t" + item;
-        page += "\n</head>";
+                yield return "\t" + line;
+        foreach (string item in HeadLines)
+            yield return "\t" + item;
+        yield return "</head>";
 
-        page += "\n<body>";
-        foreach (string item in Body)
-            page += "\n\t" + item;
+        ///body
+        yield return "<body>";
+        foreach (string item in BodyLines)
+            yield return "\t" + item;
         foreach (IScript script in Scripts)
             foreach (string line in script.Export(request))
-                page += "\n\t" + line;
+                yield return "\t" + line;
+        yield return "</body>";
 
-        page += "\n</body>";
-        page += "\n</html>";
-        return page;
+        yield return "</html>";
     }
 }

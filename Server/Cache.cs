@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -110,29 +111,17 @@ public static partial class Server
         public string Path => $"../{(IsPublic?"Public":"Private")}/{Key}";
 
         /// <summary>
-        /// Appends the lines from the file to the given list and adds the given prefix in front of every line.
+        /// Enumerates the file's lines, assuming that it is a text file.
         /// </summary>
-        /// <param name="list"></param>
-        /// <param name="linePrefix"></param>
-        public void AppendTextLinesTo(List<string> list, string linePrefix = "")
+        public IEnumerable<string> EnumerateTextLines()
         {
             if (File == null)
                 foreach (string line in System.IO.File.ReadAllLines(Path))
-                    list.Add(linePrefix + line);
+                    yield return line;
             else
-                using (StreamReader reader = new StreamReader(new MemoryStream(File.Content), true))
+                using (StreamReader reader = new(new MemoryStream(File.Content), true))
                     while (!reader.EndOfStream)
-                        list.Add(linePrefix + reader.ReadLine());
-        }
-
-        /// <summary>
-        /// Returns the file's lines as a list, assuming that it is a text file.
-        /// </summary>
-        public List<string> GetTextLines()
-        {
-            List<string> list = new();
-            AppendTextLinesTo(list);
-            return list;
+                        yield return reader.ReadLine()??"";
         }
 
         /// <summary>

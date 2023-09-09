@@ -1,6 +1,12 @@
 namespace uwap.WebFramework;
 
+/// <summary>
+/// Interface for scripts for web pages (JavaScript).
+/// </summary>
 public interface IScript
 {
-    public List<string> Export(IRequest request);
+    /// <summary>
+    /// Enumerates the script element's lines.
+    /// </summary>
+    public IEnumerable<string> Export(IRequest request);
 }

@@ -221,6 +221,26 @@ public static class Parsers
     }
 
     /// <summary>
+    /// Attempts to get the value for one of the given keys in the given dictionary in the order they are provided in.<br/>
+    /// The out-parameter will be the value of the first key that has a value, if any have been found.<br/>
+    /// Returns true if a value was found, otherwise false.
+    /// </summary>
+    public static bool TryGetValueAny<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, [MaybeNullWhen(false)] out TValue result, IEnumerable<TKey> keys) where TKey : notnull
+    {
+        foreach (TKey key in keys)
+        {
+            if (dictionary.TryGetValue(key, out var value))
+            {
+                result = value;
+                return true;
+            }
+        }
+
+        result = default;
+        return false;
+    }
+
+    /// <summary>
     /// Capitalizes the first letter of the given string.
     /// </summary>
     public static string CapitalizeFirstLetter(this string value)

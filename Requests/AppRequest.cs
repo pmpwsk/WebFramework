@@ -41,7 +41,8 @@ public class AppRequest : IRequest
         }
         if (Page != null)
         {
-            await Context.Response.WriteAsync(Page.Export(this));
+            foreach (string line in Page.Export(this))
+                await Context.Response.WriteAsync(line + "\n");
         }
         else
         {

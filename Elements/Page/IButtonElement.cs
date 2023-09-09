@@ -1,20 +1,31 @@
 namespace uwap.WebFramework.Elements;
 
+/// <summary>
+/// Abstract class for button elements, either for hyperlinks or JavaScript commands.
+/// </summary>
 public abstract class IButtonElement : IPageElement
 {
+    //documentation inherited from IElement
     protected override string ElementType => "a";
 
-    public string? Text, Title;
+    /// <summary>
+    /// The button's subtext or null to disable.
+    /// </summary>
+    public string? Text;
 
-    public override ICollection<string> Export()
+    /// <summary>
+    /// The button's title or null to disable.
+    /// </summary>
+    public string? Title;
+
+    //documentation inherited from IPageElement
+    public override IEnumerable<string> Export()
     {
-        List<string> lines = new List<string>();
-        lines.Add(Opener);
+        yield return Opener;
         
-        if (Title != null) lines.Add($"\t<h2>{Title}</h2>");
-        if (Text != null) lines.Add($"\t<p>{Text}</p>");
+        if (Title != null) yield return $"\t<h2>{Title}</h2>";
+        if (Text != null) yield return $"\t<p>{Text}</p>";
 
-        lines.Add(Closer);
-        return lines;
+        yield return Closer;
     }
 }
