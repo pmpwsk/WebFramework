@@ -32,8 +32,15 @@ public abstract class ScriptOrStyle
     /// </summary>
     public ScriptOrStyle(string url)
     {
-        if (!url.EndsWith(Extension))
+        int queryIndex = url.IndexOf('?');
+        if (queryIndex == -1)
+        {
+            if (!url.EndsWith(Extension))
+                throw new ArgumentException("The URL must end with " + Extension);
+        }
+        else if (!url.Remove(queryIndex).EndsWith(Extension))
             throw new ArgumentException("The URL must end with " + Extension);
+
         Url = url;
     }
 
@@ -42,21 +49,24 @@ public abstract class ScriptOrStyle
     /// </summary>
     public IEnumerable<string> Export(IRequest request)
     {
+        int queryIndex = Url.IndexOf('?');
+        string urlWithoutQuery = queryIndex > -1 ? Url.Remove(queryIndex) : Url;
+
         var domains = Parsers.Domains(request.Domain);
-        var entry = FindEntry(domains);
+        var entry = FindEntry(domains, urlWithoutQuery);
         if (entry == null)
         {
-            IPlugin? plugin = PluginManager.GetPlugin(domains, Url, out string relPath, out _);
+            IPlugin? plugin = PluginManager.GetPlugin(domains, urlWithoutQuery, out string relPath, out _);
             if (plugin != null)
             {
                 string? timestamp = plugin.GetFileVersion(relPath);
                 if (timestamp != null)
-                    yield return BuildReference(Url + "?t=" + timestamp);
+                    yield return BuildReference(Url + (queryIndex > -1 ? "&" : "?") + "t=" + timestamp);
             }
             yield return BuildReference(Url);
         }
         else if (entry.IsPublic)
-            yield return BuildReference(Url + "?t=" + entry.GetModifiedUtc().Ticks);
+            yield return BuildReference(Url + (queryIndex > -1 ? "&" : "?") + "t=" + entry.GetModifiedUtc().Ticks);
         else
         {
             yield return $"<{Tag}>";
@@ -67,17 +77,17 @@ public abstract class ScriptOrStyle
     }
 
     /// <summary>
-    /// Finds the cache entry for the script or style, or returns null if it shouldn't be found.
+    /// Finds the cache entry for the script or style, or returns null if it couldn't be found.
     /// </summary>
     /// <param name="domains">List of accepted domains.</param>
-    private Server.CacheEntry? FindEntry(List<string> domains)
+    private Server.CacheEntry? FindEntry(List<string> domains, string urlWithoutQuery)
     {
         Server.CacheEntry? entry;
-        if (Url.StartsWith("http"))
+        if (urlWithoutQuery.StartsWith("http"))
         {
-            string? u = Url.Remove(0, 4);
+            string? u = urlWithoutQuery.Remove(0, 4);
             if (u.StartsWith("://")) u = u.Remove(0, 3);
-            else if (u.StartsWith("s://")) u.Remove(0, 4);
+            else if (u.StartsWith("s://")) u = u.Remove(0, 4);
             else u = null;
 
             if (u != null)
@@ -93,14 +103,14 @@ public abstract class ScriptOrStyle
                 }
             }
         }
-        else if (Url.StartsWith('/'))
+        else if (urlWithoutQuery.StartsWith('/'))
         {
             foreach (string domain in domains)
-                if (Server.Cache.TryGetValue(domain + Url, out entry)) return entry;
+                if (Server.Cache.TryGetValue(domain + urlWithoutQuery, out entry)) return entry;
         }
-        else if (!Url.Contains('/'))
+        else if (!urlWithoutQuery.Contains('/'))
         {
-            if (Server.Cache.TryGetValue(Url, out entry)) return entry;
+            if (Server.Cache.TryGetValue(urlWithoutQuery, out entry)) return entry;
         }
         return null;
     }
