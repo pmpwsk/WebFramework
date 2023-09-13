@@ -27,7 +27,7 @@ Most features have plugins as interfaces.
 ## Installation
 For now, there is no binary you can just install on your server, however, that's in the works.
 
-You can download the source code from <a href="/github">GitHub</a> and add a reference to it from your project.
+You can download the source code from GitHub and add a reference to it from your project.
 
 Soon, there will also be a NuGet package so you can simply install and update that.
 
