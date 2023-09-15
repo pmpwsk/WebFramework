@@ -25,11 +25,9 @@ Guides: https://uwap.org/guides/webframework
 Most features have plugins as interfaces.
 
 ## Installation
-For now, there is no binary you can just install on your server, however, that's in the works.
+You can get the NuGet package here: [uwap.WebFramework](https://www.nuget.org/packages/uwap.WebFramework/)
 
-You can download the source code from GitHub and add a reference to it from your project.
-
-Soon, there will also be a NuGet package so you can simply install and update that.
+You can also download the source code from GitHub and add a reference to it from your project.
 
 This library is based on ASP.NET, so it's best to create an empty ASP.NET project rather than a console app (those will terminate unless paused otherwise).
 
