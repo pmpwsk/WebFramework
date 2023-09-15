@@ -63,7 +63,7 @@ public abstract class ScriptOrStyle
                 if (timestamp != null)
                     yield return BuildReference(Url + (queryIndex > -1 ? "&" : "?") + "t=" + timestamp);
             }
-            yield return BuildReference(Url);
+            else yield return BuildReference(Url);
         }
         else if (entry.IsPublic)
             yield return BuildReference(Url + (queryIndex > -1 ? "&" : "?") + "t=" + entry.GetModifiedUtc().Ticks);
