@@ -131,16 +131,24 @@ public static partial class Server
                         {
                             if (path != AccountManager.Settings.MailVerifyPath)
                             {
-                                context.Response.Redirect($"{AccountManager.Settings.MailVerifyPath}?redirect={HttpUtility.UrlEncode(context.PathQuery())}");
-                                break;
+                                IPlugin? plugin = PluginManager.GetPlugin(domains, context.Path(), out string relPath, out string pathPrefix);
+                                if (plugin == null || plugin.GetFileVersion(relPath) == null)
+                                {
+                                    context.Response.Redirect($"{AccountManager.Settings.MailVerifyPath}?redirect={HttpUtility.UrlEncode(context.PathQuery())}");
+                                    break;
+                                }
                             }
                         }
                         else if (loginState == LoginState.Needs2FA)
                         {
                             if (path != AccountManager.Settings.TwoFactorPath)
                             {
-                                context.Response.Redirect($"{AccountManager.Settings.TwoFactorPath}?redirect={HttpUtility.UrlEncode(context.PathQuery())}");
-                                break;
+                                IPlugin? plugin = PluginManager.GetPlugin(domains, context.Path(), out string relPath, out string pathPrefix);
+                                if (plugin == null || plugin.GetFileVersion(relPath) == null)
+                                {
+                                    context.Response.Redirect($"{AccountManager.Settings.TwoFactorPath}?redirect={HttpUtility.UrlEncode(context.PathQuery())}");
+                                    break;
+                                }
                             }
                         }
 

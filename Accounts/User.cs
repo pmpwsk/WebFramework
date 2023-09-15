@@ -55,11 +55,11 @@ public partial class User : ITableValue
         if (!AccountManager.CheckUsernameFormat(value)) throw new Exception("Invalid username format.");
         if (_Username == value) throw new Exception("The provided username is the same as the old one.");
         if (users.FindByUsername(value) != null) throw new Exception("Another user with the provided username already exists.");
-        Lock();
+        if (announce) Lock();
         if (announce) try { users.Usernames.Remove(_Username); } catch { }
         _Username = value;
         if (announce) users.Usernames[value] = this;
-        UnlockSave();
+        if (announce) UnlockSave();
     }
 
     /// <summary>
@@ -106,11 +106,11 @@ public partial class User : ITableValue
         if (!AccountManager.CheckMailAddressFormat(value)) throw new Exception("Invalid mail address format.");
         if (_MailAddress == value) throw new Exception("The provided mail address is the same as the old one.");
         if (users.FindByMailAddress(value) != null) throw new Exception("Another user with the provided mail address already exists.");
-        Lock();
+        if (announce) Lock();
         if (announce) try { users.MailAddresses.Remove(_MailAddress); } catch { }
         _MailAddress = value;
         if (announce) users.MailAddresses[value] = this;
-        UnlockSave();
+        if (announce) UnlockSave();
     }
 
     /// <summary>
