@@ -97,10 +97,9 @@ public class UserTable : Table<User>
     /// </summary>
     public override bool Delete(string key)
     {
-        if (!Data.ContainsKey(key)) return false;
-        User user = Data[key].Value;
-        Usernames.Remove(user.Username);
-        MailAddresses.Remove(user.MailAddress);
+        if (!Data.TryGetValue(key, out var entry)) return false;
+        Usernames.Remove(entry.Value.Username);
+        MailAddresses.Remove(entry.Value.MailAddress);
         base.Delete(key);
         return true;
     }
