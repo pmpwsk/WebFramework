@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -29,7 +29,7 @@
   <ItemGroup>
     <PackageReference Include="Certes" Version="3.0.4" />
     <PackageReference Include="DnsClient" Version="1.7.0" />
-    <PackageReference Include="MailKit" Version="4.1.0" />
+    <PackageReference Include="MailKit" Version="4.2.0" />
     <PackageReference Include="Otp.NET" Version="1.3.0" />
     <PackageReference Include="QRCoder" Version="1.4.3" />
     <PackageReference Include="SmtpServer" Version="9.0.3" />

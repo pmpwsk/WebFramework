@@ -8,7 +8,7 @@ public static class Tables
     /// <summary>
     /// The dictionary of all imported tables (value) along with their names (key).
     /// </summary>
-    internal static Dictionary<string,ITable> Dictionary = new();
+    public static Dictionary<string,ITable> Dictionary = new();
 
     /// <summary>
     /// All characters that are allowed as table names and keys.
