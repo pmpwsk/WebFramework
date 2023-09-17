@@ -209,7 +209,7 @@ public static partial class Server
                                 IPlugin? plugin = PluginManager.GetPlugin(domains, context.Path(), out string relPath, out string pathPrefix);
                                 if (plugin != null)
                                 {
-                                    byte[]? file = plugin.GetFile(relPath, pathPrefix);
+                                    byte[]? file = plugin.GetFile(relPath, pathPrefix, context.Host());
                                     string? timestamp = plugin.GetFileVersion(relPath);
                                     if (file != null && timestamp != null)
                                     {

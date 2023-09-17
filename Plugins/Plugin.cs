@@ -48,7 +48,7 @@ public abstract class Plugin : IPlugin
     }
 
     //documentation is inherited from IPlugin
-    public virtual byte[]? GetFile(string relPath, string pathPrefix)
+    public virtual byte[]? GetFile(string relPath, string pathPrefix, string domain)
     {
         return null;
     }
