@@ -298,6 +298,11 @@ public static partial class Server
                             try { await request.Finish(); } catch { }
                         }
                     } break;
+                    case "HEAD": //just the headers should be returned
+                        context.Response.Headers.Add("Cache-Control", "no-cache, private");
+                        if (context.Path() != "/")
+                            context.Response.StatusCode = 404; //currently, only path / is "handled" to allow for web server discovery using HEAD requests
+                        break;
                     default: //method not supported
                     {
                         context.Response.Headers.Add("Cache-Control", "no-cache, private");
