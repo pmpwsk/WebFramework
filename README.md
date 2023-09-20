@@ -42,3 +42,11 @@ This library is based on ASP.NET, so it's best to create an empty ASP.NET projec
 - Files (file management for admins and interface for a file server)
 - Git (interface for a git server running on the same machine)
 - Finances (simple finance manager for users)
+
+## Used libraries
+- [Certes](https://github.com/fszlin/certes) to talk to Let's Encrypt
+- [DnsClient.NET](https://github.com/MichaCo/DnsClient.NET) for DNS requests to find mail servers and check mail authentication
+- [MailKit](https://github.com/jstedfast/MailKit) to send emails via SMTP and parse received emails
+- [SmtpServer](https://github.com/cosullivan/SmtpServer) to listen for incoming emails on the raw SMTP level
+- [Otp.NET](https://github.com/kspearrin/Otp.NET) to generate and check time-based one-time passwords (TOTP) for two-factor authentication
+- [QRCoder](https://github.com/codebude/QRCoder) to generate QR codes for 2FA setup strings
