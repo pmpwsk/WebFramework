@@ -102,13 +102,13 @@ public class Password3
     /// <summary>
     /// Checks whether the given password matches the one that is saved in this object (at least whether the resulting hash matches).
     /// </summary>
-    public bool Check(string password)
+    internal bool Check(string password)
         => Hash.SequenceEqual(GetHash(password));
 
     /// <summary>
     /// Whether the algorithm and parameters match the selected default
     /// </summary>
-    public bool MatchesDefault()
+    internal bool MatchesDefault()
     {
         if (Algorithm != DefaultAlgorithm)
             return false;
