@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+﻿using Isopoh.Cryptography.Argon2;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace uwap.WebFramework.Accounts;
 
@@ -16,18 +18,28 @@ public class Password3
     public enum DerivationAlgorithm
     {
         /// <summary>
-        /// The PBKDF2 derivation algorithm.
+        /// The PBKDF2 derivation algorithm (supported by Microsoft).
         /// </summary>
-        PBKDF2 = 0
+        PBKDF2 = 0,
+
+        /// <summary>
+        /// The Argon2 derivation algorithm (winner of the Password Hashing Competition).
+        /// </summary>
+        Argon2 = 1,
     }
 
     /// <summary>
-    /// The default derivation algorithm.
+    /// The default derivation algorithm.<br/>
+    /// If you change this, you need to change DefaultParameters as well.<br/>
+    /// Default: Argon2
     /// </summary>
-    public static DerivationAlgorithm DefaultAlgorithm = DerivationAlgorithm.PBKDF2;
+    public static DerivationAlgorithm DefaultAlgorithm = DerivationAlgorithm.Argon2;
 
     /// <summary>
-    /// The default parameters for PBKDF2.
+    /// The default parameters for PBKDF2.<br/>
+    /// PRF=HMACSHA512<br/>
+    /// Iterations=1048576<br/>
+    /// HashLength=64
     /// </summary>
     public static Dictionary<string, string> DefaultParameters_PBKDF2 = new()
     {
@@ -37,9 +49,30 @@ public class Password3
     };
 
     /// <summary>
-    /// The default parameters for the default derivation algorithm.
+    /// The default parameters for Argon2.<br/>
+    /// Type=id<br/>
+    /// Version=19<br/>
+    /// Time=10<br/>
+    /// Memory=32768<br/>
+    /// Lanes=8<br/>
+    /// HashLength=32
     /// </summary>
-    public static Dictionary<string, string> DefaultParameters = DefaultParameters_PBKDF2;
+    public static Dictionary<string, string> DefaultParameters_Argon2 = new()
+    {
+        { "Type", "id" },
+        { "Version", "19" },
+        { "Time", "10" },
+        { "Memory", "32768" },
+        { "Lanes", "8" },
+        { "HashLength", "32" }
+    };
+
+    /// <summary>
+    /// The default parameters for the default derivation algorithm.<br/>
+    /// If you're uncertain whether your current parameters work and how long it takes, execute WasteTime() to find out.<br/>
+    /// Default: DefaultParameters_Argon2
+    /// </summary>
+    public static Dictionary<string, string> DefaultParameters = DefaultParameters_Argon2;
 
     /// <summary>
     /// The length of the salt for newly set passwords.<br/>
@@ -87,7 +120,7 @@ public class Password3
     private readonly byte[] Hash;
 
     /// <summary>
-    /// Creates a new password hash object for the given password according to the default hashing parameters.
+    /// Creates a new password hash object for the given password according to the default hashing algorithm and parameters.
     /// </summary>
     public Password3(string password)
     {
@@ -146,6 +179,45 @@ public class Password3
                         _ => throw new NotImplementedException("Unknown base algorithm for PBKDF2.")
                     };
                     return KeyDerivation.Pbkdf2(password, salt, prf, iterations, hashLength);
+                }
+            case DerivationAlgorithm.Argon2:
+                {
+                    Argon2Type type = parameters["Type"] switch
+                    {
+                        "id" => Argon2Type.HybridAddressing,
+                        "i" => Argon2Type.DataIndependentAddressing,
+                        "d" => Argon2Type.DataDependentAddressing,
+                        _ => throw new NotImplementedException("Unknown type for Argon2.")
+                    };
+                    Argon2Version version = parameters["Version"] switch
+                    {
+                        "19" => Argon2Version.Nineteen,
+                        "16" => Argon2Version.Sixteen,
+                        _ => throw new NotImplementedException("Unknown version for Argon2.")
+                    };
+                    int time = int.Parse(parameters["Time"]);
+                    int memory = int.Parse(parameters["Memory"]);
+                    int lanes = int.Parse(parameters["Lanes"]);
+                    int hashLength = int.Parse(parameters["HashLength"]);
+                    Argon2Config config = new()
+                    {
+                        Type = type,
+                        Version = version,
+                        TimeCost = time,
+                        MemoryCost = memory,
+                        Lanes = lanes,
+                        Threads = Environment.ProcessorCount,
+                        Password = Encoding.UTF8.GetBytes(password),
+                        Salt = salt,
+                        HashLength = hashLength,
+                        ClearPassword = true
+                    };
+                    using var secureHash = new Argon2(config).Hash();
+                    byte[] hash = new byte[secureHash.Buffer.Length];
+                    for (int i = 0; i < hash.Length; i++)
+                        hash[i] = secureHash[i];
+                    secureHash.Dispose();
+                    return hash;
                 }
             default:
                 throw new NotImplementedException("Unknown algorithm.");
