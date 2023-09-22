@@ -21,7 +21,7 @@ public partial class User : ITableValue
         Id = id; SetUsername(username, users, false); SetMailAddress(mailAddress, users, false);
         if (password != null)
         {
-            Password = new Password2(password);
+            Password = new(password);
         }
         MailToken = Parsers.RandomString(10);
     }
@@ -35,7 +35,7 @@ public partial class User : ITableValue
         Username = old._Username;
         _MailAddress = old._MailAddress;
         _AccessLevel = old._AccessLevel;
-        Password = old.Password;
+        Password = old.Password==null ? null : new(old.Password);
         MailToken = old.MailToken;
         Signup = old.Signup;
         _TwoFactor = old._TwoFactor;
@@ -90,7 +90,7 @@ public partial class User : ITableValue
             if ((!ignoreRules) && !AccountManager.CheckPasswordFormat(value)) throw new Exception("Invalid password format.");
             if ((!allowSame) && ValidatePassword(value, null)) throw new Exception("The provided password is the same as the old one.");
             Lock();
-            Password = new Password2(value);
+            Password = new(value);
             UnlockSave();
         }
     }
@@ -147,7 +147,7 @@ public partial class User : ITableValue
     /// Gets or sets this user's password object.<br/>
     /// Default: null
     /// </summary>
-    [DataMember] public Password2? Password {get;private set;} = null;
+    [DataMember] public Password3? Password {get;private set;} = null;
 
     /// <summary>
     /// The token for mail verification or null if the mail address has already been verified.
