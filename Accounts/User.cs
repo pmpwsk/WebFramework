@@ -246,7 +246,6 @@ public partial class User : ITableValue
                 Lock();
                 Password = new(password);
                 UnlockSave();
-                Console.WriteLine("Password hash upgraded!");
             }
             return true;
         }
