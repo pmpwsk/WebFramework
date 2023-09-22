@@ -32,7 +32,7 @@ public partial class User : ITableValue
     public User(User_Old2 old)
     {
         Id = old.Id;
-        _Username = old._Username;
+        Username = old._Username;
         _MailAddress = old._MailAddress;
         _AccessLevel = old._AccessLevel;
         Password = old.Password;
@@ -49,14 +49,7 @@ public partial class User : ITableValue
     /// <summary>
     /// This user's username.
     /// </summary>
-    [DataMember] private string _Username = "";
-    /// <summary>
-    /// This user's username.
-    /// </summary>
-    public string Username
-    {
-        get => _Username;
-    }
+    [DataMember] public string Username { get; private set; } = "";
     /// <summary>
     /// Sets the username or throws an exception if it has an invalid format, another user is using it or equals the current one.
     /// </summary>
@@ -68,11 +61,11 @@ public partial class User : ITableValue
     private void SetUsername(string value, UserTable users, bool announce)
     {
         if (!AccountManager.CheckUsernameFormat(value)) throw new Exception("Invalid username format.");
-        if (_Username == value) throw new Exception("The provided username is the same as the old one.");
+        if (Username == value) throw new Exception("The provided username is the same as the old one.");
         if (users.FindByUsername(value) != null) throw new Exception("Another user with the provided username already exists.");
         if (announce) Lock();
-        if (announce) try { users.Usernames.Remove(_Username); } catch { }
-        _Username = value;
+        if (announce) try { users.Usernames.Remove(Username); } catch { }
+        Username = value;
         if (announce) users.Usernames[value] = this;
         if (announce) UnlockSave();
     }
