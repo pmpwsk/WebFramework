@@ -62,7 +62,31 @@ public class UserTable : Table<User>
     /// <param name="skipBroken">Whether to skip loading entries that failed to read (otherwise an exception is thrown).</param>
     public override void Reload(bool skipBroken = false)
     {
-        base.Reload(skipBroken);
+        Dictionary<string, TableEntry<User>> data = new();
+
+        foreach (FileInfo file in new DirectoryInfo("../Database/" + Name).EnumerateFiles("*.json"))
+        {
+            string key = file.Name.Remove(file.Name.Length - 5);
+            byte[] json = File.ReadAllBytes(file.FullName);
+            try
+            {
+                User value = Serialization.DeserializeUser(json, out bool updateDatabase);
+                if (updateDatabase)
+                {
+                    json = Serialization.Serialize(value);
+                    File.WriteAllBytes(file.FullName, json);
+                }
+                data[key] = new TableEntry<User>(Name, key, value, json);
+                value.ContainingEntry = data[key];
+            }
+            catch
+            {
+                if (!skipBroken) throw new Exception($"Key {key} could not be loaded.");
+            }
+        }
+
+        Data = data;
+
         Dictionary<string, User> usernames = new(), mailAddresses = new();
         foreach (var entry in Data.Values)
         {
