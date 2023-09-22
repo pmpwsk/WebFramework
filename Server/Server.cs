@@ -26,7 +26,7 @@ public static partial class Server
         get
         {
             if (ContextAccessor == null)
-                throw new Exception("The context accessor wasn't set.");
+                return null;
             return ContextAccessor.HttpContext;
         }
     }
