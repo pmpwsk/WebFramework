@@ -29,8 +29,11 @@ public static class Serialization
     /// <param name="json"></param>
     public static T Deserialize<T>(byte[] json)
     {
-        DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T));
-        using MemoryStream stream = new MemoryStream(json);
+        if (typeof(T) == typeof(User))
+            throw new Exception("For User objects, DeserializeUser(...) should be used instead.");
+
+        DataContractJsonSerializer serializer = new(typeof(T));
+        using MemoryStream stream = new(json);
         T obj = (T)(serializer.ReadObject(stream) ?? throw new Exception("Failed to deserialize the provided JSON."));
         stream.Close();
         return obj;
