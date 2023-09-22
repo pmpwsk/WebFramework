@@ -133,6 +133,28 @@ public class Password3
     }
 
     /// <summary>
+    /// Constructor to turn an old Password2 object into a new Password3 one.
+    /// </summary>
+    public Password3(Password2 old)
+    {
+        Algorithm = DerivationAlgorithm.PBKDF2;
+        Parameters = new()
+        {
+            { "PRF", old.Algorithm switch
+                {
+                    KeyDerivationPrf.HMACSHA1 => "HMACSHA1",
+                    KeyDerivationPrf.HMACSHA256 => "HMACSHA256",
+                    KeyDerivationPrf.HMACSHA512 => "HMACSHA512",
+                    _ => throw new NotImplementedException("Unknown base algorithm for PBKDF2.")
+                }},
+            { "Iterations", old.PassCount.ToString() },
+            { "HashLength", old.Hash.Length.ToString() }
+        };
+        Salt = old.Salt;
+        Hash = old.Hash;
+    }
+
+    /// <summary>
     /// Checks whether the given password matches the one that is saved in this object (at least whether the resulting hash matches).
     /// </summary>
     internal bool Check(string password)
