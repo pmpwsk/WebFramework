@@ -26,8 +26,8 @@ public static class Parsers
         };
         if (Server.Config.Domains.CanonicalDomains.TryGetValue(domain, out string? tempOrigin) && tempOrigin != null)
             if (!domains.Contains(tempOrigin)) domains.Add(tempOrigin);
-        /*if (Server.Config.Domains.CanonicalDomains.TryGetValue("any", out tempOrigin) && tempOrigin != null)
-            if (!domains.Contains(tempOrigin)) domains.Add(tempOrigin);*/
+        if (Server.Config.Domains.CanonicalDomains.TryGetValue("any", out tempOrigin) && tempOrigin != null)
+            if (!domains.Contains(tempOrigin)) domains.Add(tempOrigin);
         if (!domains.Contains("any")) domains.Add("any");
         return domains;
     }
