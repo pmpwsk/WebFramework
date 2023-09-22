@@ -1,4 +1,5 @@
 using System.Runtime.Serialization.Json;
+using uwap.WebFramework.Accounts;
 
 namespace uwap.Database;
 
@@ -33,5 +34,31 @@ public static class Serialization
         T obj = (T)(serializer.ReadObject(stream) ?? throw new Exception("Failed to deserialize the provided JSON."));
         stream.Close();
         return obj;
+    }
+
+    /// <summary>
+    /// Deserializes the given JSON as a byte array into a User and returns it.<br/>
+    /// If the serialized object is a User_Old2 object, it will be upgraded and updateDatabase will be true.
+    /// </summary>
+    /// <param name="updateDatabase">Whether the returned object is different from the originally serialized object (= should be written back to the disk).</param>
+    public static User DeserializeUser(byte[] json, out bool updateDatabase)
+    {
+        DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(User));
+        using MemoryStream stream = new MemoryStream(json);
+        User result = (User)(serializer.ReadObject(stream) ?? throw new Exception("Failed to deserialize the provided JSON."));
+        stream.Close();
+        try
+        {
+            if (result.Username == null)
+                throw new Exception("The serialized user object is old and needs to be upgraded.");
+
+            updateDatabase = false;
+            return result;
+        }
+        catch
+        {
+            updateDatabase = true;
+            return new User(Deserialize<User_Old2>(json));
+        }
     }
 }
