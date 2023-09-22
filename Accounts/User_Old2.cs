@@ -4,7 +4,7 @@ using uwap.Database;
 namespace uwap.WebFramework.Accounts;
 
 /// <summary>
-/// Old version of the User class to allow old objects to still be parsed and upgraded.
+/// Old version of the User class (only properties!) to allow old objects to still be parsed and upgraded.
 /// </summary>
 [DataContract]
 public class User_Old2 : ITableValue

@@ -27,6 +27,21 @@ public partial class User : ITableValue
     }
 
     /// <summary>
+    /// Constructor to turn an old User object into a new one.
+    /// </summary>
+    public User(User_Old2 old)
+    {
+        Id = old.Id;
+        _Username = old._Username;
+        _MailAddress = old._MailAddress;
+        _AccessLevel = old._AccessLevel;
+        Password = old.Password;
+        MailToken = old.MailToken;
+        Signup = old.Signup;
+        _TwoFactor = old._TwoFactor;
+    }
+
+    /// <summary>
     /// This user's ID (should be unique to the user table the user was created for).
     /// </summary>
     [DataMember] public string Id {get; private set;}
