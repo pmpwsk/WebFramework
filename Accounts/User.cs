@@ -39,6 +39,8 @@ public partial class User : ITableValue
         MailToken = old.MailToken;
         Signup = old.Signup;
         _TwoFactor = old._TwoFactor;
+        _AuthTokens = old._AuthTokens;
+        _Settings = old._Settings;
     }
 
     /// <summary>
