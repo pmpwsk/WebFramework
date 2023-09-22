@@ -239,7 +239,17 @@ public partial class User : ITableValue
     {
         if (Password == null) return false;
         if (request != null && AccountManager.IsBanned(request.Context)) return false;
-        if (Password.Check(password)) return true;
+        if (Password.Check(password))
+        {
+            if (AccountManager.Settings.AutoUpgradePasswordHashes && !Password.MatchesDefault())
+            {
+                Lock();
+                Password = new(password);
+                UnlockSave();
+                Console.WriteLine("Password hash upgraded!");
+            }
+            return true;
+        }
         if (request != null) AccountManager.ReportFailedAuth(request.Context);
         return false;
     }

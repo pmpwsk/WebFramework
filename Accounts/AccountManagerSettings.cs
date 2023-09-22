@@ -62,6 +62,11 @@ public static partial class AccountManager
         public static TimeSpan TokenRenewalAfter = TimeSpan.FromDays(1);
 
         /// <summary>
+        /// Whether to automatically upgrade password hashes to the set default hash settings when users log in and their hash settings doesn't match the default settings.
+        /// </summary>
+        public static bool AutoUpgradePasswordHashes = true;
+
+        /// <summary>
         /// Settings for failed login attempts.
         /// </summary>
         public static class FailedAttempts
