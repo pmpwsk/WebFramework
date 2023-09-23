@@ -112,7 +112,19 @@ public static partial class MailManager
             MailSendResult.Attempt? fromSelf = null;
             if (EnableFromSelf)
             {
-                fromSelf = SendFromSelf(message, out serversFound);
+                if (message.To.Mailboxes.Count() > 1 || message.Cc.Mailboxes.Any() || message.Bcc.Any()) throw new Exception("Only one recipient is supported.");
+                if (!message.To.Mailboxes.Any()) throw new Exception("No recipient was set.");
+                MailboxAddress to = message.To.Mailboxes.First();
+                var servers = GetServers(to.Domain);
+                if (!servers.Any())
+                {
+                    serversFound = false;
+                    fromSelf = new(MailSendResult.ResultType.Failed, new() { $"No mail server found for domain '{to.Domain}'." });
+                }
+                else
+                {
+                    fromSelf = SendFromSelf(message, servers);
+                }
             }
             MailSendResult.Attempt? fromBackup = null;
             if ((fromSelf == null || fromSelf.ResultType != MailSendResult.ResultType.Success) && allowBackup && serversFound && BackupSender != null)
