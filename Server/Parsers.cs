@@ -394,4 +394,17 @@ public static class Parsers
             return "";
         else return path.Remove(0, dot);
     }
+
+    /// <summary>
+    /// Returns something like this: "[0], [1], [2] and [3]".
+    /// </summary>
+    public static string EnumerationText(this string[] values)
+    {
+        return values.Length switch
+        {
+            0 => "",
+            1 => values[0],
+            _ => string.Join(", ", values.SkipLast(1)) + " and " + values.Last(),
+        };
+    }
 }
