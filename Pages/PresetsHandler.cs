@@ -44,7 +44,7 @@ public class PresetsHandler
         true);
         if (Server.DebugMode)
         {
-            MailSendResult result = new(new(true, new() { "Debug mail server." }, "Not actually sent."), null);
+            MailSendResult result = new(new(MailSendResult.ResultType.Success, new() { "Debug mail server.", "Not actually sent." }), null);
             MailManager.Out.InvokeMailSent(message, result);
             return result;
         }

@@ -54,11 +54,11 @@ public class MailBackupRelay : IMailBackup
             if (Credentials != null) client.Authenticate(Credentials);
             string response = client.Send(message);
             client.Disconnect(true);
-            return new(true, new(), $"Response: {response}");
+            return new(MailSendResult.ResultType.Success, new() { $"Response: {response}" });
         }
         catch (Exception ex)
         {
-            return new(false, new(), $"Error: {ex.Message}");
+            return new(MailSendResult.ResultType.Failed, new() { $"Error: {ex.Message}" });
         }
     }
 }
