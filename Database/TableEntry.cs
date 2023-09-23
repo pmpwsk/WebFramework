@@ -172,6 +172,7 @@ public class TableEntry<T> : ITableEntry where T : ITableValue
     {
         try
         {
+            Lock();
             byte[] objectJson;
             try
             {
@@ -213,6 +214,14 @@ public class TableEntry<T> : ITableEntry where T : ITableValue
         catch (Exception ex)
         {
             Console.WriteLine($"Error checking and fixing key {Key} in table {Table}: {ex.Message}");
+        }
+        finally
+        {
+            try
+            {
+                UnlockIgnore();
+            }
+            catch { }
         }
     }
 
