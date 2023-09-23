@@ -155,6 +155,136 @@ public static partial class MailManager
         /// <summary>
         /// Attempts to send the given email directly.
         /// </summary>
+        private static MailSendResult.Attempt SendFromSelf(MimeMessage message, out bool serversFound)
+        {
+            List<string> log = new();
+            try
+            {
+                if (!message.To.Mailboxes.Any())
+                    throw new Exception("No TO was set.");
+                if (message.Cc.Mailboxes.Any() || message.Bcc.Mailboxes.Any())
+                    throw new Exception("CC and BCC are not supported yet.");
+
+                MailSendResult.ResultType? resultType = null;
+                Dictionary<string, Dictionary<string, string?>> serversForDomains = new(); //key1=mail domain, key2=server ip, value=server domain
+                foreach (string mailDomain in message.To.Mailboxes.Select(x => x.Domain).Distinct())
+                {
+                    var servers = GetServers(mailDomain);
+                    if (servers.Any())
+                        serversForDomains[mailDomain] = servers;
+                    else log.Add($"No mail servers found for '{mailDomain}'.");
+                }
+                if (!serversForDomains.Any())
+                    throw new Exception("No mail servers were found.");
+
+                using var client = new SmtpClient();
+                if (ServerDomain != null)
+                    client.LocalDomain = ServerDomain;
+                while (serversForDomains.Any())
+                {
+                    var due = serversForDomains.First();
+                    bool? success = null;
+                    try
+                    {
+                        if (!due.Value.Any())
+                        { //already sent or failed
+                            log.Add($"No mail servers left for {due.Value}, skipping.");
+                            continue;
+                        }
+                        success = false;
+                        KeyValuePair<string,string?>? succeededServer = null;
+                        foreach (var kv in due.Value)
+                        {
+                            using var cts = new CancellationTokenSource(Timeout);
+                            try
+                            {
+                                Stopwatch stopwatch = Stopwatch.StartNew();
+                                Socket socket = new(SocketType.Stream, ProtocolType.Tcp);
+                                socket.Connect(kv.Key, 25);
+                                client.Connect(socket, kv.Value ?? kv.Key, 25, MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable, cts.Token);
+                                stopwatch.Stop();
+                                log.Add($"Connected to {ServerString(kv)} for {Parsers.EnumerationText(serversForDomains.Where(x => x.Value.ContainsKey(kv.Key)).Select(x => x.Key))} (Secure={client.IsSecure}) after {stopwatch.ElapsedMilliseconds}ms.");
+                                if (client.IsConnected)
+                                {
+                                    succeededServer = kv;
+                                    foreach (var dKV in serversForDomains)
+                                        dKV.Value.Remove(kv.Key);
+                                    break;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                log.Add($"Failed to connect to {ServerString(kv)} for {Parsers.EnumerationText(serversForDomains.Where(x => x.Value.ContainsKey(kv.Key)).Select(x => x.Key))}: {ex.Message}");
+                            }
+                        }
+                        if (succeededServer == null || !client.IsConnected)
+                        {
+                            log.Add($"Failed to connect to a mail server for {due.Key}.");
+                            continue;
+                        }
+
+                        try
+                        {
+                            string response = client.Send(message);
+                            success = true;
+                            log.Add($"Response: {response}");
+                            log.Add($"Mail for {Parsers.EnumerationText(serversForDomains.Where(x => x.Value.ContainsKey(succeededServer.Value.Key)).Select(x => x.Key))} was sent to {ServerString(succeededServer.Value)}.");
+
+                            //remove all entries from serversForDomains that would accept this server
+                            foreach (var dKV in serversForDomains)
+#pragma warning disable CA1853 // Unnecessary call to 'Dictionary.ContainsKey(key)' >>> This isn't actually the case!
+                                if (dKV.Value.ContainsKey(succeededServer.Value.Key))
+                                    serversForDomains.Remove(dKV.Key);
+#pragma warning restore CA1853 // Unnecessary call to 'Dictionary.ContainsKey(key)'
+                        }
+                        catch (SmtpCommandException ex)
+                        {
+                            log.Add($"SMTP error for {due.Key}: {ex.Message} {ex.StatusCode} {ex.ErrorCode} {ex.HelpLink}");
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Add($"Failed to send to {due.Key}: {ex.Message}");
+                        }
+                        finally
+                        {
+                            try
+                            {
+                                client.Disconnect(true);
+                            }
+                            catch { }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Add($"Failed to send to {due.Key}: {ex.Message}");
+                    }
+                    finally
+                    {
+                        if (success != null)
+                        {
+                            if (resultType == null)
+                                resultType = success.Value ? MailSendResult.ResultType.Success : MailSendResult.ResultType.Failed;
+                            else if ((success.Value && resultType == MailSendResult.ResultType.Failed) || ((!success.Value) && resultType == MailSendResult.ResultType.Success))
+                                resultType = MailSendResult.ResultType.Mixed;
+                            serversForDomains.Remove(due.Key);
+                        }
+                    }
+                }
+                client.Dispose();
+                serversFound = true;
+                return new MailSendResult.Attempt(resultType ?? MailSendResult.ResultType.Failed, log);
+            }
+            catch (Exception ex)
+            {
+                log.Add($"Error: {ex.Message}");
+                serversFound = ex.Message != "No mail servers were found.";
+                return new MailSendResult.Attempt(MailSendResult.ResultType.Failed, log);
+            }
+        }
+
+        /// <summary>
+        /// Attempts to send the given email directly.
+        /// </summary>
         private static MailSendResult.Attempt SendFromSelf(MimeMessage message, Dictionary<string, string?> servers)
         {
             List<string> connectionLog = new();
