@@ -47,18 +47,12 @@ public class MailSendResult
         public readonly List<string> ConnectionLog;
 
         /// <summary>
-        /// The response string from the receiving server.
-        /// </summary>
-        public readonly string Response;
-
-        /// <summary>
         /// Creates a new object for data about an individual mail sending attempt using the given information.
         /// </summary>
-        public Attempt(bool success, List<string> connectionLog, string response)
+        public Attempt(bool success, List<string> connectionLog)
         {
             Success = success;
             ConnectionLog = connectionLog;
-            Response = response;
         }
     }
 }
