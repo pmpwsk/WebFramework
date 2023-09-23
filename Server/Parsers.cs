@@ -398,12 +398,12 @@ public static class Parsers
     /// <summary>
     /// Returns something like this: "[0], [1], [2] and [3]".
     /// </summary>
-    public static string EnumerationText(this string[] values)
+    public static string EnumerationText(this IEnumerable<string> values)
     {
-        return values.Length switch
+        return values.Count() switch
         {
             0 => "",
-            1 => values[0],
+            1 => values.First(),
             _ => string.Join(", ", values.SkipLast(1)) + " and " + values.Last(),
         };
     }
