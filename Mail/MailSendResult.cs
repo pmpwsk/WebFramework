@@ -13,6 +13,27 @@ namespace uwap.WebFramework.Mail;
 public class MailSendResult
 {
     /// <summary>
+    /// The possible types of results.
+    /// </summary>
+    public enum ResultType
+    {
+        /// <summary>
+        /// The message was sent to all recipents.
+        /// </summary>
+        Success,
+
+        /// <summary>
+        /// The message was sent to some recipients, but not all of them.
+        /// </summary>
+        Mixed,
+
+        /// <summary>
+        /// The message was sent to none of the recipients.
+        /// </summary>
+        Failed
+    }
+
+    /// <summary>
     /// Data about the attempt to send the message directly or null if no such attempt was made.
     /// </summary>
     public readonly Attempt? FromSelf;
@@ -37,9 +58,9 @@ public class MailSendResult
     public class Attempt
     {
         /// <summary>
-        /// Whether the attempt was successful.
+        /// Whether the attempt was successful, mixed or failed.
         /// </summary>
-        public readonly bool Success;
+        public readonly ResultType ResultType;
 
         /// <summary>
         /// The connection log as a list of lines.
@@ -49,9 +70,9 @@ public class MailSendResult
         /// <summary>
         /// Creates a new object for data about an individual mail sending attempt using the given information.
         /// </summary>
-        public Attempt(bool success, List<string> connectionLog)
+        public Attempt(ResultType resultType, List<string> connectionLog)
         {
-            Success = success;
+            ResultType = resultType;
             ConnectionLog = connectionLog;
         }
     }
