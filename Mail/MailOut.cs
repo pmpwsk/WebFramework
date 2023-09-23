@@ -57,21 +57,11 @@ public static partial class MailManager
         /// Generates a mail message using the given information.
         /// </summary>
         public static MimeMessage GenerateMessage(MailboxAddress from, MailboxAddress to, string subject, string text, bool isHtml)
-            => GenerateMessage(from, new[] { to }, subject, text, isHtml);
-
-        /// <summary>
-        /// Generates a mail message using the given information.
-        /// </summary>
-        public static MimeMessage GenerateMessage(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string text, bool isHtml)
         {
-            if (!to.Any())
-                throw new ArgumentException("No recipients were set.");
-
             var message = new MimeMessage();
 
             message.From.Add(from);
-            foreach (var t in to)
-                message.To.Add(t);
+            message.To.Add(to);
             message.Subject = subject;
             message.Body = new TextPart(isHtml ? "html" : "plain")
             {
