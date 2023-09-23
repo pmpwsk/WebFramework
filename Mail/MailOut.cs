@@ -109,7 +109,7 @@ public static partial class MailManager
                 if (!servers.Any())
                 {
                     serversFound = false;
-                    fromSelf = new(false, new(), $"No mail server found for domain '{to.Domain}'.");
+                    fromSelf = new(false, new() { $"No mail server found for domain '{to.Domain}'." });
                 }
                 else
                 {
@@ -125,7 +125,7 @@ public static partial class MailManager
                 }
                 catch (Exception ex)
                 {
-                    fromBackup = new(false, new(), $"Error: {ex.Message}");
+                    fromBackup = new(false, new() { $"Error: {ex.Message}" });
                 }
             }
 
@@ -183,21 +183,25 @@ public static partial class MailManager
                 }
                 if (!client.IsConnected)
                 {
-                    return new MailSendResult.Attempt(false, connectionLog, "Failed to connect to a mail server.");
+                    connectionLog.Add("Failed to connect to a mail server.");
+                    return new MailSendResult.Attempt(false, connectionLog);
                 }
 
                 try
                 {
                     string response = client.Send(message);
-                    return new MailSendResult.Attempt(true, connectionLog, $"Response: {response}");
+                    connectionLog.Add($"Response: {response}");
+                    return new MailSendResult.Attempt(true, connectionLog);
                 }
                 catch (SmtpCommandException ex1)
                 {
-                    return new MailSendResult.Attempt(false, connectionLog, $"SMTP Error: {ex1.Message} {ex1.StatusCode} {ex1.ErrorCode} {ex1.HelpLink}");
+                    connectionLog.Add($"SMTP Error: {ex1.Message} {ex1.StatusCode} {ex1.ErrorCode} {ex1.HelpLink}");
+                    return new MailSendResult.Attempt(false, connectionLog);
                 }
                 catch (Exception ex1)
                 {
-                    return new MailSendResult.Attempt(false, connectionLog, $"Error: {ex1.Message}");
+                    connectionLog.Add($"Error: {ex1.Message}");
+                    return new MailSendResult.Attempt(false, connectionLog);
                 }
                 finally
                 {
@@ -210,7 +214,8 @@ public static partial class MailManager
             }
             catch (Exception ex2)
             {
-                return new MailSendResult.Attempt(false, connectionLog, $"Error: {ex2.Message}");
+                connectionLog.Add($"Error: {ex2.Message}");
+                return new MailSendResult.Attempt(false, connectionLog);
             }
         }
 
