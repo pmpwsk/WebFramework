@@ -100,7 +100,7 @@ public static partial class MailManager
                 fromSelf = SendFromSelf(mailGen, leftAddresses, messageIds);
             }
             MailSendResult.Attempt? fromBackup = null;
-            if (BackupSender != null && leftAddresses.Any())
+            if (allowBackup && BackupSender != null && leftAddresses.Any())
             {
                 try
                 {
