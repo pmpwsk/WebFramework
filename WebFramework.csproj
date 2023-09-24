@@ -4,7 +4,7 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.3.4.1</Version>
+    <Version>1.4</Version>
     <Company>uwap.org</Company>
     <PackageProjectUrl>https://uwap.org/projects/webframework</PackageProjectUrl>
     <Description>Cross-platform .NET library written in C# that allows you to create a web server for dynamic and/or static websites and web apps with ease.</Description>
