@@ -59,7 +59,7 @@ public static partial class MailManager
         /// Generates a mail message using the given information, signs it (if possible) and sends it to the appropriate server.
         /// </summary>
         public static MailSendResult Send(MailboxAddress from, MailboxAddress to, string subject, string text, bool isHtml, bool allowBackup = true)
-            => Send(from, new[] { to }, subject, text, isHtml, out var _, allowBackup);
+            => Send(from, new[] { to }, subject, text, isHtml, out _, allowBackup);
 
         /// <summary>
         /// Generates a mail message using the given information, signs it (if possible) and sends it to the appropriate server, and returns the resulting message IDs as a list.
@@ -71,28 +71,40 @@ public static partial class MailManager
         /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers.
         /// </summary>
         public static MailSendResult Send(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string text, bool isHtml, bool allowBackup = true)
-            => Send(from, to, subject, text, isHtml, out var _, allowBackup);
+            => Send(from, to, subject, text, isHtml, out _, allowBackup);
 
         /// <summary>
         /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers, and returns the resulting message IDs as a list.
         /// </summary>
         public static MailSendResult Send(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string text, bool isHtml, out List<string> messageIds, bool allowBackup = true)
+            => Send(new MailGen(from, to, subject, text, isHtml), out messageIds, allowBackup);
+
+        /// <summary>
+        /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers.
+        /// </summary>
+        public static MailSendResult Send(MailGen mailGen, bool allowBackup = true)
+            => Send(mailGen, out _, allowBackup);
+
+        /// <summary>
+        /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers, and returns the resulting message IDs as a list.
+        /// </summary>
+        public static MailSendResult Send(MailGen mailGen, out List<string> messageIds, bool allowBackup = true)
         {
             messageIds = new();
             List<MailboxAddress> leftAddresses = new();
-            foreach (var a in to)
+            foreach (var a in mailGen.To)
                 leftAddresses.Add(a);
             MailSendResult.Attempt? fromSelf = null;
             if (EnableFromSelf)
             {
-                fromSelf = SendFromSelf(from, leftAddresses, subject, text, isHtml, messageIds);
+                fromSelf = SendFromSelf(mailGen, leftAddresses, messageIds);
             }
             MailSendResult.Attempt? fromBackup = null;
             if (BackupSender != null && leftAddresses.Any())
             {
                 try
                 {
-                    fromBackup = BackupSender.Send(GenerateMessage(from, leftAddresses, subject, text, isHtml, true, out var messageId));
+                    fromBackup = BackupSender.Send(GenerateMessage(mailGen, true, out var messageId, leftAddresses));
                     messageIds.Add(messageId);
                 }
                 catch (Exception ex)
@@ -103,7 +115,7 @@ public static partial class MailManager
 
             MailSendResult result = new(fromSelf, fromBackup);
 
-            InvokeMailSent(GenerateMessage(from, to, subject, text, isHtml, true, out var messageId2), result);
+            InvokeMailSent(GenerateMessage(mailGen, true, out var messageId2), result);
             messageIds.Add(messageId2);
             return result;
         }
@@ -151,15 +163,20 @@ public static partial class MailManager
         /// <summary>
         /// Generates a mail message using the given message object.
         /// </summary>
-        public static MimeMessage GenerateMessage(MailGen mailGen, bool sign, out string messageId)
+        public static MimeMessage GenerateMessage(MailGen mailGen, bool sign, out string messageId, IEnumerable<MailboxAddress>? replaceToWithThis = null)
         {
-            if (!mailGen.To.Any())
+            if (replaceToWithThis == null)
+            {
+                if (!mailGen.To.Any())
+                    throw new Exception("No recipient was set.");
+            }
+            else if (!replaceToWithThis.Any())
                 throw new Exception("No recipient was set.");
 
             var message = new MimeMessage();
 
             message.From.Add(mailGen.From);
-            foreach (var t in mailGen.To)
+            foreach (var t in replaceToWithThis ?? mailGen.To)
                 message.To.Add(t);
             message.Subject = mailGen.Subject;
             message.Body = new TextPart(mailGen.IsHtml ? "html" : "plain")
@@ -260,7 +277,7 @@ public static partial class MailManager
         /// <summary>
         /// Attempts to send the given email directly.
         /// </summary>
-        private static MailSendResult.Attempt SendFromSelf(MailboxAddress from, List<MailboxAddress> leftAddresses, string subject, string text, bool isHtml, List<string> messageIds)
+        private static MailSendResult.Attempt SendFromSelf(MailGen mailGen, List<MailboxAddress> leftAddresses, List<string> messageIds)
         {
             List<string> log = new();
             try
@@ -349,7 +366,7 @@ public static partial class MailManager
 
                         try
                         {
-                            string response = client.Send(GenerateMessage(from, new[] { due.Key }, subject, text, isHtml, true, out string messageId));
+                            string response = client.Send(GenerateMessage(mailGen, true, out string messageId, new[] { due.Key }));
                             messageIds.Add(messageId);
                             success = true;
                             log.Add($"Response: {response}");
