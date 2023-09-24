@@ -38,7 +38,7 @@ public partial class User : ITableValue
         Password = old.Password==null ? null : new(old.Password);
         MailToken = old.MailToken;
         Signup = old.Signup;
-        _TwoFactor = old._TwoFactor;
+        _TwoFactor = new(old._TwoFactor);
         _AuthTokens = old._AuthTokens;
         _Settings = old._Settings;
     }
@@ -174,42 +174,6 @@ public partial class User : ITableValue
     [DataMember] public DateTime Signup {get;private set;} = DateTime.UtcNow;
 
     /// <summary>
-    /// This user's two-factor authentication object or null if it has not been enabled or generated.
-    /// </summary>
-    [DataMember] private TwoFactorData? _TwoFactor = null;
-    /// <summary>
-    /// Gets or sets this user's two-factor authentication object or null if it has not been enabled or generated.
-    /// </summary>
-    public TwoFactorData? TwoFactor
-    {
-        get => _TwoFactor;
-        set
-        {
-            Lock();
-            _TwoFactor = value;
-            UnlockSave();
-        }
-    }
-
-    /// <summary>
-    /// Checks whether two-factor authentication was generated and verified (=enabled).
-    /// </summary>
-    public bool TwoFactorEnabled => TwoFactor != null && TwoFactor.Verified;
-
-    /// <summary>
-    /// Sets the two-factor authentication object to verified if it exists.
-    /// </summary>
-    public void Verify2FA()
-    {
-        if (TwoFactor != null && !TwoFactor.Verified)
-        {
-            Lock();
-            TwoFactor.Verified = true;
-            UnlockSave();
-        }
-    }
-
-    /// <summary>
     /// Checks whether the given token is the token for mail verification and sets it to null (=verified) if it's the correct one.
     /// </summary>
     /// <param name="request">The request to handle failed attempts to verify the mail address as login attempts.</param>
@@ -251,30 +215,5 @@ public partial class User : ITableValue
         }
         if (request != null) AccountManager.ReportFailedAuth(request.Context);
         return false;
-    }
-
-    /// <summary>
-    /// Checks whether the given code is valid right now.
-    /// </summary>
-    /// <param name="request">The request to handle failed login attempts.</param>
-    public bool Validate2FA(string code, IRequest request)
-    {
-        if (TwoFactor == null) return false;
-        Lock();
-        bool result = TwoFactor.Validate(code, request, out bool updateDatabase);
-        if (result && request.Cookies.Contains("AuthToken"))
-        {
-            string combinedToken = request.Cookies["AuthToken"];
-            string authToken = combinedToken.Remove(0, 12);
-            if (Auth.Exists(authToken))
-            {
-                Auth[authToken] = new AuthTokenData(false, MailToken != null);
-                updateDatabase = true;
-            }
-        }
-        if (updateDatabase)
-            UnlockSave();
-        else UnlockIgnore();
-        return result;
     }
 }

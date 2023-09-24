@@ -162,7 +162,7 @@ public static class Presets
             string password = request.Query["password"], code = request.Query["code"];
             if (user.ValidatePassword(password, null))
             {
-                if (user.TwoFactorEnabled && !user.Validate2FA(code, request))
+                if (user.TwoFactor.TOTPEnabled(out var totp) && !totp.Validate(code, request, true))
                 {
                     AccountManager.ReportFailedAuth(request.Context);
                     await request.Write("no");

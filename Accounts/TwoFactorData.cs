@@ -11,7 +11,7 @@ namespace uwap.WebFramework.Accounts;
 /// Contains the two-factor authentication data for an account (the account saves null if 2FA is disabled).
 /// </summary>
 [DataContract]
-public class TwoFactorData
+public class TwoFactorData_Old
 {
     /// <summary>
     /// Whether this two-factor authentication object has been verified.<br/>
@@ -22,7 +22,7 @@ public class TwoFactorData
     /// <summary>
     /// The private/secret key using which two-factor codes are generated (as a byte array).
     /// </summary>
-    [DataMember] private byte[] _SecretKey;
+    [DataMember] internal byte[] _SecretKey;
     /// <summary>
     /// The private/secret key using which two-factor codes are generated (as a base32 string).
     /// </summary>
@@ -31,7 +31,7 @@ public class TwoFactorData
     /// <summary>
     /// The list of recovery codes that are still available to use.
     /// </summary>
-    [DataMember] private List<string> RecoveryCodes;
+    [DataMember] internal List<string> RecoveryCodes;
     /// <summary>
     /// The list of recovery codes that are still available to use (as a read-only list).
     /// </summary>
@@ -46,7 +46,7 @@ public class TwoFactorData
     /// <summary>
     /// Creates a new object to save two-factor authentication data for an account using a new random secret key.
     /// </summary>
-    public TwoFactorData()
+    public TwoFactorData_Old()
     {
         _SecretKey = KeyGeneration.GenerateRandomKey(OtpHashMode.Sha1);
         RecoveryCodes = GenerateRecoveryCodes();
@@ -55,7 +55,7 @@ public class TwoFactorData
     /// <summary>
     /// Creates a new object to save two-factor authentication data for an account using the given secret key.
     /// </summary>
-    private TwoFactorData(byte[] secretKey)
+    private TwoFactorData_Old(byte[] secretKey)
     {
         _SecretKey = secretKey;
         RecoveryCodes = GenerateRecoveryCodes();
@@ -64,7 +64,7 @@ public class TwoFactorData
     /// <summary>
     /// Clones the current object and replaces the recovery codes of the new object with a new list of codes.
     /// </summary>
-    public TwoFactorData CloneWithNewRecovery()
+    public TwoFactorData_Old CloneWithNewRecovery()
         => new(_SecretKey);
 
     /// <summary>

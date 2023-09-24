@@ -146,8 +146,8 @@ public class PresetsHandler
         request.Init(out Page page, out var e);
         User? user = request.User;
         if (user == null) throw new Exception("Not logged in.");
-        string? twoFactorText = user.TwoFactorEnabled ? null : "disabled";
-        string? twoFactorStyle = user.TwoFactorEnabled ? null : "display: none";
+        string? twoFactorText = user.TwoFactor.TOTPEnabled() ? null : "disabled";
+        string? twoFactorStyle = user.TwoFactor.TOTPEnabled() ? null : "display: none";
         e.Add(new ContainerElement(null, new List<IContent>
         {
             new Heading("Password:"),

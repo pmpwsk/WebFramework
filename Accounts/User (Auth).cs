@@ -91,7 +91,7 @@ public partial class User : ITableValue
             string token;
             do token = Parsers.RandomString(64);
                 while (Exists(token));
-            bool twoFactor = User.TwoFactor != null && User.TwoFactor.Verified;
+            bool twoFactor = User.TwoFactor.TOTPEnabled();
             this[token] = new AuthTokenData(twoFactor, twoFactor || User.MailToken != null);
             return token;
         }

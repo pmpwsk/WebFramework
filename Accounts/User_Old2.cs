@@ -31,7 +31,7 @@ public class User_Old2 : ITableValue
     public DateTime Signup = DateTime.UtcNow;
 
     [DataMember]
-    public TwoFactorData? _TwoFactor = null;
+    public TwoFactorData_Old? _TwoFactor = null;
 
     [DataMember]
     public Dictionary<string, AuthTokenData> _AuthTokens = new();
