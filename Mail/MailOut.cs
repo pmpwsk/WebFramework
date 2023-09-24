@@ -369,6 +369,7 @@ public static partial class MailManager
                             string response = client.Send(GenerateMessage(mailGen, true, out string messageId, new[] { due.Key }));
                             messageIds.Add(messageId);
                             success = true;
+                            leftAddresses.Remove(due.Key);
                             log.Add($"Response: {response}");
                         }
                         catch (SmtpCommandException ex)
