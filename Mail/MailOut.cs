@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography.Xml;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace uwap.WebFramework.Mail;
 
@@ -134,6 +135,43 @@ public static partial class MailManager
 
             messageId = ServerDomain == null ? MimeUtils.GenerateMessageId() : MimeUtils.GenerateMessageId(ServerDomain);
             message.MessageId = messageId;
+
+            if (sign)
+                Sign(message);
+
+            return message;
+        }
+
+        /// <summary>
+        /// Generates a mail message using the given message object.
+        /// </summary>
+        public static MimeMessage GenerateMessage(MailGen mailGen, bool sign)
+            => GenerateMessage(mailGen, sign, out var _);
+
+        /// <summary>
+        /// Generates a mail message using the given message object.
+        /// </summary>
+        public static MimeMessage GenerateMessage(MailGen mailGen, bool sign, out string messageId)
+        {
+            if (!mailGen.To.Any())
+                throw new Exception("No recipient was set.");
+
+            var message = new MimeMessage();
+
+            message.From.Add(mailGen.From);
+            foreach (var t in mailGen.To)
+                message.To.Add(t);
+            message.Subject = mailGen.Subject;
+            message.Body = new TextPart(mailGen.IsHtml ? "html" : "plain")
+            {
+                Text = mailGen.Text,
+            };
+
+            messageId = ServerDomain == null ? MimeUtils.GenerateMessageId() : MimeUtils.GenerateMessageId(ServerDomain);
+            message.MessageId = messageId;
+
+            if (mailGen.IsReplyToMessageId != null)
+                message.InReplyTo = mailGen.IsReplyToMessageId;
 
             if (sign)
                 Sign(message);
