@@ -58,27 +58,41 @@ public static partial class MailManager
         /// Generates a mail message using the given information, signs it (if possible) and sends it to the appropriate server.
         /// </summary>
         public static MailSendResult Send(MailboxAddress from, MailboxAddress to, string subject, string text, bool isHtml, bool allowBackup = true)
-            => Send(from, new[] { to }, subject, text, isHtml, allowBackup);
+            => Send(from, new[] { to }, subject, text, isHtml, out var _, allowBackup);
+
+        /// <summary>
+        /// Generates a mail message using the given information, signs it (if possible) and sends it to the appropriate server, and returns the resulting message IDs as a list.
+        /// </summary>
+        public static MailSendResult Send(MailboxAddress from, MailboxAddress to, string subject, string text, bool isHtml, out List<string> messageIds, bool allowBackup = true)
+            => Send(from, new[] { to }, subject, text, isHtml, out messageIds, allowBackup);
 
         /// <summary>
         /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers.
         /// </summary>
         public static MailSendResult Send(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string text, bool isHtml, bool allowBackup = true)
+            => Send(from, to, subject, text, isHtml, out var _, allowBackup);
+
+        /// <summary>
+        /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers, and returns the resulting message IDs as a list.
+        /// </summary>
+        public static MailSendResult Send(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string text, bool isHtml, out List<string> messageIds, bool allowBackup = true)
         {
+            messageIds = new();
             List<MailboxAddress> leftAddresses = new();
             foreach (var a in to)
                 leftAddresses.Add(a);
             MailSendResult.Attempt? fromSelf = null;
             if (EnableFromSelf)
             {
-                fromSelf = SendFromSelf(from, leftAddresses, subject, text, isHtml);
+                fromSelf = SendFromSelf(from, leftAddresses, subject, text, isHtml, messageIds);
             }
             MailSendResult.Attempt? fromBackup = null;
             if (BackupSender != null && leftAddresses.Any())
             {
                 try
                 {
-                    fromBackup = BackupSender.Send(GenerateMessage(from, leftAddresses, subject, text, isHtml, true));
+                    fromBackup = BackupSender.Send(GenerateMessage(from, leftAddresses, subject, text, isHtml, true, out var messageId));
+                    messageIds.Add(messageId);
                 }
                 catch (Exception ex)
                 {
@@ -88,7 +102,8 @@ public static partial class MailManager
 
             MailSendResult result = new(fromSelf, fromBackup);
 
-            InvokeMailSent(GenerateMessage(from, to, subject, text, isHtml, true), result);
+            InvokeMailSent(GenerateMessage(from, to, subject, text, isHtml, true, out var messageId2), result);
+            messageIds.Add(messageId2);
             return result;
         }
 
@@ -96,12 +111,12 @@ public static partial class MailManager
         /// Generates a mail message using the given information.
         /// </summary>
         public static MimeMessage GenerateMessage(MailboxAddress from, MailboxAddress to, string subject, string text, bool isHtml, bool sign)
-            => GenerateMessage(from, new[] { to }, subject, text, isHtml, sign);
+            => GenerateMessage(from, new[] { to }, subject, text, isHtml, sign, out var _);
 
         /// <summary>
         /// Generates a mail message using the given information.
         /// </summary>
-        private static MimeMessage GenerateMessage(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string text, bool isHtml, bool sign)
+        private static MimeMessage GenerateMessage(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string text, bool isHtml, bool sign, out string messageId)
         {
             if (!to.Any())
                 throw new Exception("No recipient was set.");
@@ -117,8 +132,8 @@ public static partial class MailManager
                 Text = text,
             };
 
-            if (ServerDomain != null)
-                message.MessageId = MimeUtils.GenerateMessageId(ServerDomain);
+            messageId = ServerDomain == null ? MimeUtils.GenerateMessageId() : MimeUtils.GenerateMessageId(ServerDomain);
+            message.MessageId = messageId;
 
             if (sign)
                 Sign(message);
@@ -207,7 +222,7 @@ public static partial class MailManager
         /// <summary>
         /// Attempts to send the given email directly.
         /// </summary>
-        private static MailSendResult.Attempt SendFromSelf(MailboxAddress from, List<MailboxAddress> leftAddresses, string subject, string text, bool isHtml)
+        private static MailSendResult.Attempt SendFromSelf(MailboxAddress from, List<MailboxAddress> leftAddresses, string subject, string text, bool isHtml, List<string> messageIds)
         {
             List<string> log = new();
             try
@@ -296,7 +311,8 @@ public static partial class MailManager
 
                         try
                         {
-                            string response = client.Send(GenerateMessage(from, due.Key, subject, text, isHtml, true));
+                            string response = client.Send(GenerateMessage(from, new[] { due.Key }, subject, text, isHtml, true, out string messageId));
+                            messageIds.Add(messageId);
                             success = true;
                             log.Add($"Response: {response}");
                         }
