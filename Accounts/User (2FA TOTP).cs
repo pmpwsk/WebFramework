@@ -63,10 +63,10 @@ public class TwoFactorTotp
     /// </summary>
     /// <param name="request">The current request (used to handle failed attempts and tokens).</param>
     /// <param name="tolerateRecovery">Whether to tolerate the usage of a recovery code.</param>
-    internal bool Validate(string code, IRequest request, bool tolerateRecovery)
+    public bool Validate(string code, IRequest? request, bool tolerateRecovery)
     {
         //banned?
-        if (AccountManager.IsBanned(request.Context))
+        if (request != null && AccountManager.IsBanned(request.Context))
         {
             return false;
         }
@@ -90,7 +90,7 @@ public class TwoFactorTotp
             if (Data.UsedTimeSteps.Count > 3) Data.UsedTimeSteps.Remove(Data.UsedTimeSteps.Min());
 
             //does an auth token even exist? (this should be the case, but you never know)
-            if (request.Cookies.Contains("AuthToken"))
+            if (request != null && request.Cookies.Contains("AuthToken"))
             {
                 //get and decode the auth token to find the user (assuming that it's the user of the current 2FA object)
                 string combinedToken = request.Cookies["AuthToken"];
