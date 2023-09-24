@@ -38,6 +38,11 @@ public class MailGen
     public string? IsReplyToMessageId;
 
     /// <summary>
+    /// The function that should be applied after generating the message (but before signing), or null.
+    /// </summary>
+    public Action<MimeMessage>? CustomChange;
+
+    /// <summary>
     /// Creates a new object to generate a mail message.
     /// </summary>
     public MailGen(MailboxAddress from, MailboxAddress to, string subject, string text, bool isHtml)
@@ -54,5 +59,6 @@ public class MailGen
         Text = text;
         IsHtml = isHtml;
         IsReplyToMessageId = null;
+        CustomChange = null;
     }
 }

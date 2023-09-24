@@ -190,6 +190,8 @@ public static partial class MailManager
             if (mailGen.IsReplyToMessageId != null)
                 message.InReplyTo = mailGen.IsReplyToMessageId;
 
+            mailGen.CustomChange?.Invoke(message);
+
             if (sign)
                 Sign(message);
 
