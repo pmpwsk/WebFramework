@@ -104,7 +104,7 @@ public class TableEntry<T> : ITableEntry where T : ITableValue
             LockingContext = context;
             context.Response.OnCompleted(RequestCompleted, context);
         }
-        CheckAndFix();
+        CheckAndFix(false);
     }
 
     /// <summary>
@@ -168,11 +168,11 @@ public class TableEntry<T> : ITableEntry where T : ITableValue
     /// Checks the entry for errors and attempts to fix them.<br/>
     /// If errors are found, more information is written to the console.
     /// </summary>
-    public void CheckAndFix()
+    public void CheckAndFix(bool lockFirst = true)
     {
         try
         {
-            Lock();
+            if (lockFirst) Lock();
             byte[] objectJson;
             try
             {
@@ -219,7 +219,7 @@ public class TableEntry<T> : ITableEntry where T : ITableValue
         {
             try
             {
-                UnlockIgnore();
+                if (lockFirst) UnlockIgnore();
             }
             catch { }
         }
