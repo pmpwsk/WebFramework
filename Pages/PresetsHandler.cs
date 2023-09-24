@@ -41,7 +41,7 @@ public class PresetsHandler
         new MailboxAddress(user.Username, useThisAddress ?? user.MailAddress),
         subject,
         $"Hi, {user.Username}!\n{text}".Replace("\n", "<br />"),
-        true);
+        true, true);
         if (Server.DebugMode)
         {
             MailSendResult result = new(new(MailSendResult.ResultType.Success, new() { "Debug mail server.", "Not actually sent." }), null);
