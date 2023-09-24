@@ -113,7 +113,7 @@ public class TwoFactorTotp
         else
         {
             //invalid, report as a failed attempt
-            AccountManager.ReportFailedAuth(request.Context);
+            if (request != null) AccountManager.ReportFailedAuth(request.Context);
             return false;
         }
     }
