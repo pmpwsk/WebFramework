@@ -19,4 +19,23 @@ public class PostRequest : SimpleResponseRequest
     /// The posted form object.
     /// </summary>
     public IFormCollection Form => Context.Request.Form;
+
+    private string? _BodyText = null;
+    /// <summary>
+    /// The request body, interpreted as text.
+    /// </summary>
+    public string BodyText
+    {
+        get
+        {
+            if (_BodyText == null)
+            {
+                using StreamReader reader = new(Context.Request.Body, true);
+                _BodyText = reader.ReadToEnd();
+                reader.Close();
+                reader.Dispose();
+            }
+            return _BodyText;
+        }
+    }
 }
