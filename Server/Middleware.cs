@@ -261,7 +261,7 @@ public static partial class Server
                     {
                         context.Response.Headers.Add("Cache-Control", "no-cache, private");
                         context.Response.ContentType = "text/plain;charset=utf-8";
-                        if (context.Request.Form.Files.Count == 0)
+                        if ((!context.Request.HasFormContentType) || context.Request.Form.Files.Count == 0)
                         { //regular post
                             PostRequest request = new(context, user, userTable, loginState);
                             try
