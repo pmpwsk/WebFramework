@@ -6,7 +6,7 @@ namespace uwap.WebFramework;
 /// <summary>
 /// Intended for upload requests (POST requests with files).
 /// </summary>
-public class UploadRequest : TextRequest
+public class UploadRequest : SimpleResponseRequest
 {
     /// <summary>
     /// Creates a new upload request object with the given context, user, user table and login state.

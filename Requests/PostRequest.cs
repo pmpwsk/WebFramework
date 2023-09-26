@@ -6,7 +6,7 @@ namespace uwap.WebFramework;
 /// <summary>
 /// Intended for POST requests without files.
 /// </summary>
-public class PostRequest : TextRequest
+public class PostRequest : SimpleResponseRequest
 {
     /// <summary>
     /// Creates a new POST request object with the given context, user, user table and login state.

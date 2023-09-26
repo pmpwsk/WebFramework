@@ -6,7 +6,7 @@ namespace uwap.WebFramework;
 /// <summary>
 /// Intended for backend requests, either to path /api/... or routed over an app request.
 /// </summary>
-public class ApiRequest : TextRequest
+public class ApiRequest : SimpleResponseRequest
 {
     /// <summary>
     /// Creates a new API request object with the given context, user, user table and login state.

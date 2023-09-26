@@ -6,7 +6,7 @@ namespace uwap.WebFramework;
 /// <summary>
 /// Abstract class that adds CORS and text responses to IRequest.
 /// </summary>
-public abstract class TextRequest : IRequest
+public abstract class SimpleResponseRequest : IRequest
 {
     /// <summary>
     /// The only origin domain the data gotten from the response should be used for (or null to disable).
@@ -71,7 +71,7 @@ public abstract class TextRequest : IRequest
     /// <summary>
     /// Creates a new TextRequest.
     /// </summary>
-    public TextRequest(HttpContext context, User? user, UserTable? userTable, LoginState loginState)
+    public SimpleResponseRequest(HttpContext context, User? user, UserTable? userTable, LoginState loginState)
         : base(context, user, userTable, loginState) { }
 
     /// <summary>
