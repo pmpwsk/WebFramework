@@ -25,22 +25,20 @@ public class PostRequest : SimpleResponseRequest
     /// </summary>
     public IFormCollection Form => Context.Request.Form;
 
-    private string? _BodyText = null;
     /// <summary>
     /// The request body, interpreted as text.
     /// </summary>
-    public string BodyText
+    public async Task<string> GetBodyText()
     {
-        get
+        using StreamReader reader = new(Context.Request.Body, true);
+        try
         {
-            if (_BodyText == null)
-            {
-                using StreamReader reader = new(Context.Request.Body, true);
-                _BodyText = reader.ReadToEnd();
-                reader.Close();
-                reader.Dispose();
-            }
-            return _BodyText;
+            return await reader.ReadToEndAsync();
+        }
+        finally
+        {
+            reader.Close();
+            reader.Dispose();
         }
     }
 }
