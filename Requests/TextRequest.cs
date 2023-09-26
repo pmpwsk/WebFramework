@@ -9,6 +9,17 @@ namespace uwap.WebFramework;
 public abstract class TextRequest : IRequest
 {
     /// <summary>
+    /// The only origin domain the data gotten from the response should be used for (or null to disable).
+    /// </summary>
+    public string? CorsDomain
+    {
+        set
+        {
+            if (value != null) Context.Response.Headers.Add("Access-Control-Allow-Origin", value);
+        }
+    }
+
+    /// <summary>
     /// Different possible states an API request can be in.
     /// </summary>
     private enum ResponseState

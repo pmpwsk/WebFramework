@@ -9,17 +9,6 @@ namespace uwap.WebFramework;
 public class ApiRequest : TextRequest
 {
     /// <summary>
-    /// The only origin domain the data gotten from the response should be used for (or null to disable).
-    /// </summary>
-    public string? CorsDomain
-    {
-        set
-        {
-            if (value != null) Context.Response.Headers.Add("Access-Control-Allow-Origin", value);
-        }
-    }
-
-    /// <summary>
     /// Creates a new API request object with the given context, user, user table and login state.
     /// </summary>
     public ApiRequest(HttpContext context, User? user, UserTable? userTable, LoginState loginState) : base(context, user, userTable, loginState)
