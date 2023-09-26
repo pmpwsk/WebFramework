@@ -34,9 +34,9 @@ public static partial class MailManager
 
         /// <summary>
         /// The size limit for incoming mail messages in bytes.<br/>
-        /// Default: 16MB
+        /// Default: 64MB
         /// </summary>
-        public static int SizeLimit = 16777216;
+        public static int SizeLimit = 67108864;
 
         /// <summary>
         /// Whether to open a listening endpoint for IPv6.<br/>
