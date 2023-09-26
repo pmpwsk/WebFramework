@@ -9,11 +9,6 @@ namespace uwap.WebFramework;
 public class PostRequest : TextRequest
 {
     /// <summary>
-    /// Whether the request has been finished.
-    /// </summary>
-    private bool Finished = false;
-
-    /// <summary>
     /// The only origin domain the data gotten from the response should be used for (or null to disable).
     /// </summary>
     public string? CorsDomain
@@ -35,17 +30,4 @@ public class PostRequest : TextRequest
     /// The posted form object.
     /// </summary>
     public IFormCollection Form => Context.Request.Form;
-    
-    /// <summary>
-    /// Marks this request as finished and writes a default message for the status code.
-    /// </summary>
-    public async Task Finish()
-    {
-        if (Finished) { }
-        else
-        {
-            Finished = true;
-            await WriteStatus();
-        }
-    }
 }
