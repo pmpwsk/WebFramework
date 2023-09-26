@@ -16,6 +16,11 @@ public class PostRequest : SimpleResponseRequest
     }
 
     /// <summary>
+    /// Whether the request has set a content type for a form.
+    /// </summary>
+    public bool HasForm => Context.Request.HasFormContentType;
+
+    /// <summary>
     /// The posted form object.
     /// </summary>
     public IFormCollection Form => Context.Request.Form;
