@@ -6,7 +6,7 @@ namespace uwap.WebFramework;
 /// <summary>
 /// Intended for POST requests without files.
 /// </summary>
-public class PostRequest : IRequest
+public class PostRequest : TextRequest
 {
     /// <summary>
     /// Whether the request has been finished.

@@ -6,7 +6,7 @@ namespace uwap.WebFramework;
 /// <summary>
 /// Intended for upload requests (POST requests with files).
 /// </summary>
-public class UploadRequest : IRequest
+public class UploadRequest : TextRequest
 {
     /// <summary>
     /// Whether the request has been finished.

@@ -6,7 +6,7 @@ namespace uwap.WebFramework;
 /// <summary>
 /// Intended for backend requests, either to path /api/... or routed over an app request.
 /// </summary>
-public class ApiRequest : IRequest
+public class ApiRequest : TextRequest
 {
     /// <summary>
     /// Different possible states an API request can be in.
