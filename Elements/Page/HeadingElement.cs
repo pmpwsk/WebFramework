@@ -67,7 +67,9 @@ public class HeadingElement : IContainerElement
                 yield return "\t\t" + button.Export();
             yield return "\t</div>";
 
-            yield return "\t<div class=\"clear\"></div>";
+            if (Title == null && ((!Contents.Any()) || (Contents.Count == 1 && Contents.First() is Paragraph paragraph && paragraph.Text.Length <= 20)))
+                yield return "\t<div class=\"clear-o\"></div>";
+            else yield return "\t<div class=\"clear\"></div>";
         }
 
         yield return Closer;
