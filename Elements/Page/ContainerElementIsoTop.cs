@@ -41,7 +41,7 @@ public class ContainerElementIsoTop : ContainerElement
             else yield return $"\t<h2>{Title}</h2>";
         }
 
-        if (Buttons.Count != 0)
+        if (Buttons.Any())
         {
             yield return "\t<div class=\"buttons\">";
             foreach (IButton button in Buttons)
@@ -53,6 +53,9 @@ public class ContainerElementIsoTop : ContainerElement
         foreach (IContent content in Contents)
             foreach (string line in content.Export())
                 yield return $"\t{line}";
+
+        if (Buttons.Any())
+            yield return "\t<div class=\"clear\"></div>";
 
         yield return Closer;
     }
