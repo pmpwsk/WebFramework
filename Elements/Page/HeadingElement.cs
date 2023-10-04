@@ -60,12 +60,14 @@ public class HeadingElement : IContainerElement
             foreach (string line in content.Export())
                 yield return $"\t{line}";
 
-        if (Buttons.Count != 0)
+        if (Buttons.Any())
         {
             yield return "\t<div class=\"buttons\">";
             foreach(IButton button in Buttons)
                 yield return "\t\t" + button.Export();
             yield return "\t</div>";
+
+            yield return "\t<div class=\"clear\"></div>";
         }
 
         yield return Closer;
