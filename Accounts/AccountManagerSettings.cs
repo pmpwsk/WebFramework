@@ -71,7 +71,7 @@ public static partial class AccountManager
         /// If you end up removing a domain from this list later on, make sure the cookies with the wildcard are deleted first. They may not be deleted by the browser when the server requests the deletion once the domain is gone from the list, causing the client to get banned for invalid authentication attempts after a few requests.<br/>
         /// Make sure that all servers for the domain and its subdomains should be allowed to see auth tokens!<br/>
         /// If you're using different servers for the domain and different subdomains, make sure that the auth tokens are synchronized between the servers, otherwise they will delete each other's cookies.<br/>
-        /// Example: including "uwap.org" here will share auth cookies between uwap.org, mail.uwap.org, notes.uwap.org and so on.
+        /// Example: including "uwap.org" here will share auth cookies between uwap.org, mail.uwap.org, notes.uwap.org and so on, but not subsubdomain.subdomain.uwap.org and so on.
         /// </summary>
         public static List<string> WildcardDomains = new();
 
