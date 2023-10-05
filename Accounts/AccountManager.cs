@@ -85,7 +85,12 @@ public static partial class AccountManager
     /// Adds a cookie for the given authentication token to the given context.
     /// </summary>
     internal static void AddAuthTokenCookie(string combinedToken, HttpContext context)
-        => context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions(){Expires=DateTime.UtcNow+Settings.TokenExpiration,SameSite=SameSiteMode.Strict});
+    {
+        string? wildcard = GetWildcardDomain(context.Host());
+        if (wildcard == null)
+            context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = DateTime.UtcNow + Settings.TokenExpiration, SameSite = SameSiteMode.Strict });
+        else context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = DateTime.UtcNow + Settings.TokenExpiration, Domain = wildcard });
+    }
 
     /// <summary>
     /// Returns the auth cookie wildcard domain to be used for the given domain or null if no matching domain was set.
