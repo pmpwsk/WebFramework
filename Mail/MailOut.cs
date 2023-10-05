@@ -77,7 +77,17 @@ public static partial class MailManager
         /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers, and returns the resulting message IDs as a list.
         /// </summary>
         public static MailSendResult Send(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string text, bool isHtml, out List<string> messageIds, bool allowBackup = true)
-            => Send(new MailGen(from, to, subject, text, isHtml), out messageIds, allowBackup);
+        {
+            if (isHtml)
+                return Send(new MailGen(from, to, subject, null, text), out messageIds, allowBackup);
+            else return Send(new MailGen(from, to, subject, text, null), out messageIds, allowBackup);
+        }
+
+        /// <summary>
+        /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers, and returns the resulting message IDs as a list.
+        /// </summary>
+        public static MailSendResult Send(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string? textBody, string? htmlBody, out List<string> messageIds, bool allowBackup = true)
+            => Send(new MailGen(from, to, subject, textBody, htmlBody), out messageIds, allowBackup);
 
         /// <summary>
         /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers.
@@ -179,10 +189,26 @@ public static partial class MailManager
             foreach (var t in replaceToWithThis ?? mailGen.To)
                 message.To.Add(t);
             message.Subject = mailGen.Subject;
-            message.Body = new TextPart(mailGen.IsHtml ? "html" : "plain")
+
+            var builder = new BodyBuilder();
+            if (mailGen.TextBody != null)
+                builder.TextBody = mailGen.TextBody;
+            if (mailGen.HtmlBody != null)
+                builder.HtmlBody = mailGen.HtmlBody;
+            foreach (var attachment in mailGen.Attachments)
             {
-                Text = mailGen.Text,
-            };
+                if (attachment.ContentType != null)
+                {
+                    try
+                    {
+                        builder.Attachments.Add(attachment.Name, attachment.Bytes, ContentType.Parse(attachment.ContentType));
+                        continue;
+                    }
+                    catch { }
+                }
+                builder.Attachments.Add(attachment.Name, attachment.Bytes);
+            }
+            message.Body = builder.ToMessageBody();
 
             messageId = ServerDomain == null ? MimeUtils.GenerateMessageId() : MimeUtils.GenerateMessageId(ServerDomain);
             message.MessageId = messageId;
