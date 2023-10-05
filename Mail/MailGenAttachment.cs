@@ -10,7 +10,7 @@ public class MailGenAttachment
     /// <summary>
     /// The file's name.
     /// </summary>
-    public string? Name;
+    public string Name;
 
     /// <summary>
     /// The file's content type.
@@ -25,7 +25,7 @@ public class MailGenAttachment
     /// <summary>
     /// Creates a new mail attachment object.
     /// </summary>
-    public MailGenAttachment(string path, string? name, string? contentType)
+    public MailGenAttachment(string path, string name, string? contentType)
     {
         Bytes = File.ReadAllBytes(path);
         Name = name;
