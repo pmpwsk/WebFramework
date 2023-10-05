@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using System.Diagnostics.CodeAnalysis;
 
 namespace uwap.WebFramework;
 
@@ -62,4 +63,26 @@ public class CookieManager
     /// </summary>
     public bool Contains(string key)
         => Request.ContainsKey(key) && Request[key] != null;
+
+    /// <summary>
+    /// Returns the value of the cookie with the given key or null if no such cookie was sent.
+    /// </summary>
+    public string? TryGet(string key) => Request.TryGetValue(key, out var value) ? ((string?)value) ?? "" : null;
+
+    /// <summary>
+    /// Returns whether the request contains a cookie with the given key and the associated value as an out-argument if true.
+    /// </summary>
+    public bool TryGetValue(string key, [MaybeNullWhen(false)] out string value)
+    {
+        if (Request.TryGetValue(key, out var v))
+        {
+            value = ((string?)v) ?? "";
+            return true;
+        }
+        else
+        {
+            value = null;
+            return false;
+        }
+    }
 }
