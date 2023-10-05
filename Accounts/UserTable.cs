@@ -207,7 +207,6 @@ public class UserTable : Table<User>
         if (!context.Request.Cookies.ContainsKey("AuthToken")) return;
         string combinedToken = context.Request.Cookies["AuthToken"] ?? "";
         if (!logoutOthers) context.Response.Cookies.Delete("AuthToken", new CookieOptions { Domain = AccountManager.GetWildcardDomain(context.Domain())});
-        if (combinedToken.Length != 30) return;
         string id = combinedToken.Remove(12);
         string authToken = combinedToken.Remove(0, 12);
         if (!ContainsKey(id)) return;
