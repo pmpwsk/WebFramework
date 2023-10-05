@@ -88,6 +88,20 @@ public static partial class AccountManager
         => context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions(){Expires=DateTime.UtcNow+Settings.TokenExpiration,SameSite=SameSiteMode.Strict});
 
     /// <summary>
+    /// Returns the auth cookie wildcard domain to be used for the given domain or null if no matching domain was set.
+    /// </summary>
+    internal static string? GetWildcardDomain(string domain)
+    {
+        string? wildcard;
+        if (Settings.WildcardDomains.Contains(domain))
+            wildcard = domain;
+        else wildcard = Settings.WildcardDomains.FirstOrDefault(x => domain.EndsWith('.' + x) && !domain.Substring(0, domain.Length - x.Length - 1).Contains('.'));
+
+        if (wildcard != null) return '.' + wildcard;
+        else return null;
+    }
+
+    /// <summary>
     /// Creates a new authentication token for the given user and adds a cookie for it to the given context.
     /// </summary>
     internal static void Login(User user, IRequest request)
