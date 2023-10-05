@@ -190,9 +190,8 @@ public class UserTable : Table<User>
         else
         {
             if (tokenData.Expires < DateTime.UtcNow + AccountManager.Settings.TokenExpiration - AccountManager.Settings.TokenRenewalAfter)
-            { //renew token if the last renewal was less than 1 day ago
-                this[id].Auth[authToken] = new AuthTokenData(false, false);
-                AccountManager.AddAuthTokenCookie(combinedToken, context); //apply new expiration date in the browser too
+            { //renew token if the renewal is due
+                AccountManager.AddAuthTokenCookie(user.Id + user.Auth.Renew(authToken), context);
             }
             return LoginState.LoggedIn;
         }
