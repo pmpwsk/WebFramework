@@ -83,6 +83,27 @@ public partial class User : ITableValue
         }
 
         /// <summary>
+        /// Removes the given token from the token dictionary, then adds and returns a new token.<br/>
+        /// The newly created token will not require 2FA and will not be temporary, so this shouldn't be used for temporary tokens for sessions that aren't fully logged in!
+        /// </summary>
+        public string Renew(string oldToken)
+        {
+            User.Lock();
+            if (!User._AuthTokens.Remove(oldToken))
+            {
+                User.UnlockIgnore();
+                throw new ArgumentException("The given token isn't present in the token dictionary.");
+            }
+
+            string token;
+            do token = Parsers.RandomString(64);
+            while (Exists(token));
+            User._AuthTokens[token] = new AuthTokenData(false, false);
+            User.UnlockSave();
+            return token;
+        }
+
+        /// <summary>
         /// Generates a new authentication token and returns it.<br/>
         /// If the user is using 2FA, the token will still need it before the login process is finished.
         /// </summary>
