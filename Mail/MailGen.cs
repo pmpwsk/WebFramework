@@ -23,19 +23,24 @@ public class MailGen
     public string Subject;
 
     /// <summary>
-    /// The text of the email.
+    /// The text body of the email.
     /// </summary>
-    public string Text;
+    public string? TextBody;
 
     /// <summary>
-    /// Whether the text contains HTML code or not.
+    /// The HTML body of the email.
     /// </summary>
-    public bool IsHtml;
+    public string? HtmlBody;
 
     /// <summary>
     /// The ID of the message this message is a reply to, or null if it's not meant to be a reply.
     /// </summary>
     public string? IsReplyToMessageId;
+
+    /// <summary>
+    /// The list of attachments.
+    /// </summary>
+    public List<MailGenAttachment> Attachments;
 
     /// <summary>
     /// The function that should be applied after generating the message (but before signing), or null.
@@ -45,20 +50,21 @@ public class MailGen
     /// <summary>
     /// Creates a new object to generate a mail message.
     /// </summary>
-    public MailGen(MailboxAddress from, MailboxAddress to, string subject, string text, bool isHtml)
-        : this(from, new[] { to }, subject, text, isHtml) { }
+    public MailGen(MailboxAddress from, MailboxAddress to, string subject, string? textBody, string? htmlBody)
+        : this(from, new[] { to }, subject, textBody, htmlBody) { }
 
     /// <summary>
     /// Creates a new object to generate a mail message.
     /// </summary>
-    public MailGen(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string text, bool isHtml)
+    public MailGen(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string? textBody, string? htmlBody)
     {
         From = from;
         To = to;
         Subject = subject;
-        Text = text;
-        IsHtml = isHtml;
+        TextBody = textBody;
+        HtmlBody = htmlBody;
         IsReplyToMessageId = null;
+        Attachments = new();
         CustomChange = null;
     }
 }
