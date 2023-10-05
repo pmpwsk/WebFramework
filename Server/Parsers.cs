@@ -90,6 +90,11 @@ public static class Parsers
         }
     }
     /// <summary>
+    /// Host without port.
+    /// </summary>
+    public static string Domain(this HttpContext c)
+        => Host(c).Before(':');
+    /// <summary>
     /// Client IP address or null if unknown.
     /// </summary>
     public static string? IP(this HttpContext context)

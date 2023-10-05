@@ -93,7 +93,7 @@ public static partial class Server
                     return;
                 }
 
-                if (Config.Domains.Redirect.TryGetValue(context.Host(), out string? redirectTarget))
+                if (Config.Domains.Redirect.TryGetValue(context.Domain(), out string? redirectTarget))
                 {
                     context.Response.Redirect(context.Proto() + redirectTarget + context.Path() + context.Query(), true);
                     return;
@@ -209,7 +209,7 @@ public static partial class Server
                                 IPlugin? plugin = PluginManager.GetPlugin(domains, context.Path(), out string relPath, out string pathPrefix);
                                 if (plugin != null)
                                 {
-                                    byte[]? file = plugin.GetFile(relPath, pathPrefix, context.Host());
+                                    byte[]? file = plugin.GetFile(relPath, pathPrefix, context.Domain());
                                     string? timestamp = plugin.GetFileVersion(relPath);
                                     if (file != null && timestamp != null)
                                     {
