@@ -107,9 +107,26 @@ public abstract class IRequest
         get
         {
             string? url = Query.TryGet("redirect");
-            if (url == null || (!url.StartsWith("/")) || url.StartsWith("/api/"))
+            if (url == null || url.Contains("/api/"))
                 return "/";
-            else return url;
+            if (url.StartsWith('/'))
+                return url;
+
+            string? domain = null;
+            if (url.StartsWith("https://"))
+                domain = url.Remove(0, 8);
+            else if (url.StartsWith("http://"))
+                domain = url.Remove(0, 7);
+
+            if (domain == null)
+                return "/";
+            int slash = domain.IndexOf('/');
+            if (slash == -1)
+                return "/";
+            domain = domain.Remove(slash);
+            if (domain == Domain || AccountManager.GetWildcardDomain(domain) == AccountManager.GetWildcardDomain(Domain))
+                return url;
+            return "/";
         }
     }
 
