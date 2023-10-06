@@ -82,7 +82,7 @@ public abstract class IRequest
     /// <summary>
     /// The requested domain.
     /// </summary>
-    public string Domain => Context.Request.Host.Host;
+    public string Domain => Context.Domain();
 
     /// <summary>
     /// The response status to be sent.
