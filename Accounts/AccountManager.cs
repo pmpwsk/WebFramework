@@ -95,7 +95,7 @@ public static partial class AccountManager
     /// <summary>
     /// Returns the auth cookie wildcard domain to be used for the given domain or null if no matching domain was set.
     /// </summary>
-    internal static string? GetWildcardDomain(string domain)
+    public static string? GetWildcardDomain(string domain)
     {
         string? wildcard;
         if (Settings.WildcardDomains.Contains(domain))
