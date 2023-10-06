@@ -25,10 +25,19 @@ public class Selector : IContent
     /// <summary>
     /// Creates a new dropdown/popup selector for a container with the given items.
     /// </summary>
-    public Selector(string id, IEnumerable<string> items)
+    public Selector(string id, string selectedItem, params string[] items)
     {
         Id = id;
-        Items = items.Select(x => new SelectorItem(x)).ToList();
+        Items = items.Select(x => new SelectorItem(x, x == selectedItem)).ToList();
+    }
+
+    /// <summary>
+    /// Creates a new dropdown/popup selector for a container with the given items.
+    /// </summary>
+    public Selector(string id, IEnumerable<string> items, string? selectedItem = null)
+    {
+        Id = id;
+        Items = items.Select(x => new SelectorItem(x, x == selectedItem)).ToList();
     }
 
     /// <summary>
@@ -75,26 +84,33 @@ public struct SelectorItem
     public string Value;
 
     /// <summary>
+    /// Whether this item is selected (only one item should be selected).
+    /// </summary>
+    public bool Selected;
+
+    /// <summary>
     /// Creates a new selector item with the given text and the given value.
     /// </summary>
-    public SelectorItem(string text, string value)
+    public SelectorItem(string text, string value, bool selected = false)
     {
         Text = text;
         Value = value;
+        Selected = selected;
     }
 
     /// <summary>
     /// Creates a new selector item with the given text/value (identical).
     /// </summary>
-    public SelectorItem(string textAndValue)
+    public SelectorItem(string textAndValue, bool selected = false)
     {
         Text = textAndValue;
         Value = textAndValue;
+        Selected = selected;
     }
 
     /// <summary>
     /// The item as HTML code.
     /// </summary>
     public string Export()
-        => $"<option value=\"{Value}\">{Text}</option>";
+        => $"<option{(Selected ? " selected" : "")} value=\"{Value}\">{Text}</option>";
 }
