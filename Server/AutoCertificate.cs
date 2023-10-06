@@ -3,6 +3,7 @@ using Certes;
 using Certes.Acme;
 using Certes.Pkcs;
 using uwap.WebFramework.Mail;
+using uwap.WebFramework.Plugins;
 
 namespace uwap.WebFramework;
 
@@ -113,6 +114,9 @@ public static partial class Server
             if (!domains.Contains(domain))
                 domains.Add(domain);
         foreach (string domain in Config.Domains.Redirect.Keys)
+            if (!domains.Contains(domain))
+                domains.Add(domain);
+        foreach (string domain in PluginManager.GetDomains())
             if (!domains.Contains(domain))
                 domains.Add(domain);
         if (MailManager.ServerDomain != null && !domains.Contains(MailManager.ServerDomain))
