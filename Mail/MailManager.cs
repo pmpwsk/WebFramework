@@ -42,5 +42,5 @@ public static partial class MailManager
     /// <summary>
     /// The DNS lookup object that should be used to look up mail servers (to send mail and evaluate mail authentication).
     /// </summary>
-    private static LookupClient DnsLookup = new();
+    public static LookupClient DnsLookup { get; private set; } = new();
 }
