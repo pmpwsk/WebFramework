@@ -158,4 +158,14 @@ public static class PluginManager
             AddPlugins(plugins, $"{name}/{p.Key}", p.Value);
         }
     }
+
+    /// <summary>
+    /// Enumerates the domains that plugins have been mapped to (not "any").
+    /// </summary>
+    public static IEnumerable<string> GetDomains()
+    {
+        foreach (string domain in Plugins.Children.Keys)
+            if (domain != "any")
+                yield return domain;
+    }
 }
