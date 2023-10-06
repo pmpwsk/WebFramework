@@ -40,7 +40,7 @@ public static partial class MailManager
                     stream.Position = 0;
 
                     var message = await MimeKit.MimeMessage.LoadAsync(stream, cancellationToken);
-                    return HandleMail.Invoke(context, message, new MailAuthResult(context, message));
+                    return HandleMail.Invoke(context, message, new MailConnectionData(context, message));
                 }
                 catch (Exception ex)
                 {

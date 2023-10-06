@@ -24,4 +24,4 @@ public delegate MailboxFilterResult AcceptDelegate(ISessionContext context, IMai
 /// <summary>
 /// A delegate that is used for methods that handle given mail messages (along with the given mail context and authentication result) after they have been accepted by an accepting method.
 /// </summary>
-public delegate SmtpResponse HandleDelegate(ISessionContext context, MimeMessage message, MailAuthResult authResult);
+public delegate SmtpResponse HandleDelegate(ISessionContext context, MimeMessage message, MailConnectionData authResult);
