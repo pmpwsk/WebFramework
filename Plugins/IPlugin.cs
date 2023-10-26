@@ -34,6 +34,11 @@ public interface IPlugin
     public Task Handle(PostRequest req, string relPath, string pathPrefix);
 
     /// <summary>
+    /// Handles the given event request with the given relative path and plugin path (without the domain or preceding slash).
+    /// </summary>
+    public Task Handle(EventRequest req, string relPath, string pathPrefix);
+
+    /// <summary>
     /// Does something that should be done regularly (every time the worker is active).
     /// </summary>
     public Task Work();
