@@ -42,6 +42,13 @@ public abstract class Plugin : IPlugin
     }
 
     //documentation is inherited from IPlugin
+    public virtual Task Handle(EventRequest req, string rest, string pathPrefix)
+    {
+        req.Status = 501;
+        return Task.CompletedTask;
+    }
+
+    //documentation is inherited from IPlugin
     public virtual Task Work()
     {
         return Task.CompletedTask;
