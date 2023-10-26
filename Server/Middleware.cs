@@ -204,6 +204,25 @@ public static partial class Server
                                 }
                                 try { await request.Finish(); } catch { }
                             } break;
+                            case "event": //event request
+                            {
+                                context.Response.ContentType = "text/event-stream";
+                                EventRequest request = new(context, user, userTable, loginState);
+                                try
+                                {
+                                    string path2 = request.Path;
+                                    if (path2.StartsWith("/event"))
+                                        path2 = path2.Remove(0, 6);
+                                    if (await PluginManager.Handle(domains, path2, request)) { }
+                                    else if (EventRequestReceived != null) await EventRequestReceived.Invoke(request);
+                                    else request.Status = 501;
+                                }
+                                catch (Exception ex)
+                                {
+                                    request.Exception = ex;
+                                    request.Status = 500;
+                                }
+                            } break;
                             default: //app request
                             {
                                 IPlugin? plugin = PluginManager.GetPlugin(domains, context.Path(), out string relPath, out string pathPrefix);
