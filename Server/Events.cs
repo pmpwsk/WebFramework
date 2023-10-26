@@ -30,6 +30,11 @@ public delegate Task UploadRequestHandler(UploadRequest request);
 /// </summary>
 public delegate Task PostRequestHandler(PostRequest request);
 
+/// <summary>
+/// Delegate for asynchronous event request handlers.
+/// </summary>
+public delegate Task EventRequestHandler(EventRequest request);
+
 public static partial class Server
 {
     /// <summary>
