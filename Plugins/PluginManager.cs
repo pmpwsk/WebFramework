@@ -104,6 +104,18 @@ public static class PluginManager
     }
 
     /// <summary>
+    /// Handles the given event request with the plugin that most closely matches the given path for any of the given domains, or does nothing and returns false if no matching plugin was found.<br/>
+    /// Domains should be sorted by their priority among plugins with the same depth (the most relevant domain should be first).
+    /// </summary>
+    public static async Task<bool> Handle(IEnumerable<string> domains, string path, EventRequest req)
+    {
+        var plugin = GetPlugin(domains, path, out string relPath, out string pathPrefix);
+        if (plugin == null) return false;
+        await plugin.Handle(req, relPath, pathPrefix);
+        return true;
+    }
+
+    /// <summary>
     /// Maps the given plugin to the given URL (domain and path, domain 'any' is supported).<br/>
     /// If another plugin is mapped to the same URL, it is replaced.
     /// </summary>
