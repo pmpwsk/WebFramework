@@ -66,4 +66,9 @@ public static partial class Server
     /// Called when a POST request without files has been received.
     /// </summary>
     public static event PostRequestHandler? PostRequestReceived = null;
+
+    /// <summary>
+    /// Called when an event request has been received.
+    /// </summary>
+    public static event EventRequestHandler? EventRequestReceived = null;
 }
