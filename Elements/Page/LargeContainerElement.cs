@@ -9,10 +9,10 @@ public class LargeContainerElement : ContainerElement
     protected override bool Large => true;
 
     /// <summary>
-    /// Creates a new large container element without content.
+    /// Creates a new large container element with the given pieces of content.
     /// </summary>
-    public LargeContainerElement(string? title)
-        : base(title) { }
+    public LargeContainerElement(string? title, params IContent[] contents)
+        : base(title, contents) { }
 
     /// <summary>
     /// Creates a new large container element with the given text as a paragraph.

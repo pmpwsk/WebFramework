@@ -6,11 +6,15 @@ namespace uwap.WebFramework.Elements;
 public class HeadingElement : IContainerElement
 {
     /// <summary>
-    /// Creates a new heading element without content.
+    /// Creates a new heading element with the given pieces of content.
     /// </summary>
-    public HeadingElement(string title)
+    public HeadingElement(string title, params IContent[] contents)
     {
         Title = title;
+        Class = null;
+        Style = null;
+        Id = null;
+        Contents = contents.ToList();
     }
 
     /// <summary>

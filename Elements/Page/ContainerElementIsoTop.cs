@@ -6,10 +6,10 @@ namespace uwap.WebFramework.Elements;
 public class ContainerElementIsoTop : ContainerElement
 {
     /// <summary>
-    /// Creates a new isolated top container element without content.
+    /// Creates a new isolated top container element with the given pieces of content.
     /// </summary>
-    public ContainerElementIsoTop(string? title)
-        : base(title) { }
+    public ContainerElementIsoTop(string? title, params IContent[] contents)
+        : base(title, contents) { }
 
     /// <summary>
     /// Creates a new isolated top container element with the given text as a paragraph (use "" here to create a container without content).
