@@ -11,11 +11,15 @@ public class ContainerElement : IContainerElement
     protected virtual bool Large => false;
 
     /// <summary>
-    /// Creates a new container element without content.
+    /// Creates a new container element with the given pieces of content.
     /// </summary>
-    public ContainerElement(string? title)
+    public ContainerElement(string? title, params IContent[] contents)
     {
         Title = title;
+        Class = null;
+        Style = null;
+        Id = null;
+        Contents = contents.ToList();
     }
 
     /// <summary>
