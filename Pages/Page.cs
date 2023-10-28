@@ -127,7 +127,7 @@ public class Page : IPage
         else
         {
             string title = Title;
-            if (Server.Config.Domains.TitleExtensions.TryGetValueAny(out var titleExtension, domains))
+            if (Server.Config.Domains.TitleExtensions.TryGetValueAny(out var titleExtension, domains) && titleExtension != null)
                 title += " | " + titleExtension;
             yield return $"\t<title>{title}</title>";
         }
