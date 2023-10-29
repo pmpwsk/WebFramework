@@ -51,4 +51,4 @@ This library is based on ASP.NET, so it's best to create an empty ASP.NET projec
 - [Otp.NET](https://github.com/kspearrin/Otp.NET) to generate and check time-based one-time passwords (TOTP) for two-factor authentication
 - [QRCoder](https://github.com/codebude/QRCoder) to generate QR codes for 2FA setup strings
 - [Isopoh.Cryptography.Argon2](https://github.com/mheyman/Isopoh.Cryptography.Argon2) to hash passwords using Argon2
-- [IPAddressRange](https://github.com/jsakamoto/ipaddressrange) to parse IP address ranges and check whether a given IP address is within that range (used for mail authentication).
+- [IPAddressRange](https://github.com/jsakamoto/ipaddressrange) to parse IP address ranges and check whether a given IP address is within that range (used for mail authentication)
