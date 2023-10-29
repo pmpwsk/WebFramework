@@ -3,7 +3,7 @@ namespace uwap.WebFramework.Elements;
 /// <summary>
 /// Unsorted list for a container.
 /// </summary>
-public class UList : IContent
+public class BulletList : IContent
 {
     //documentation inherited from IElement
     protected override string ElementType => "ul";
@@ -16,7 +16,7 @@ public class UList : IContent
     /// <summary>
     /// Creates a new unsorted list for a container with the given items.
     /// </summary>
-    public UList(List<string> list, string? classes = null, string? styles = null, string? id = null)
+    public BulletList(List<string> list, string? classes = null, string? styles = null, string? id = null)
     {
         List = list;
         Class = classes;
@@ -27,7 +27,7 @@ public class UList : IContent
     /// <summary>
     /// Creates a new unsorted list for a container with the given items.
     /// </summary>
-    public UList(params string[] items)
+    public BulletList(params string[] items)
     {
         List = items.ToList();
         Class = null;

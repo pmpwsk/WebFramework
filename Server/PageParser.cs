@@ -172,9 +172,9 @@ public static partial class Server
             if (line.StartsWith('-'))
             {
                 line = line.Remove(0, 1).Trim();
-                if (container.Contents.Any() && container.Contents.Last() is UList bullets)
+                if (container.Contents.Any() && container.Contents.Last() is BulletList bullets)
                     bullets.List.Add(line);
-                else container.Contents.Add(new UList(line));
+                else container.Contents.Add(new BulletList(line));
             }
             else if (ParseSpecialElement(line, out string p1, out string? p2, out string target))
             {
