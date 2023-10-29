@@ -46,8 +46,9 @@ This library is based on ASP.NET, so it's best to create an empty ASP.NET projec
 ## Used libraries
 - [Certes](https://github.com/fszlin/certes) to talk to Let's Encrypt
 - [DnsClient.NET](https://github.com/MichaCo/DnsClient.NET) for DNS requests to find mail servers and check mail authentication
-- [MailKit](https://github.com/jstedfast/MailKit) to decode and encode emails from/to SMTP-compliant messages and send emails on the SMTP level once a suitable mail server for the recipient has been found
+- [MailKit](https://github.com/jstedfast/MailKit) to decode and encode emails from/to SMTP-compliant messages, send emails on the SMTP level once a suitable mail server for the recipient has been found, and validate DKIM signatures of messages against the keys found in the DNS records
 - [SmtpServer](https://github.com/cosullivan/SmtpServer) to listen for incoming emails on the raw SMTP level
 - [Otp.NET](https://github.com/kspearrin/Otp.NET) to generate and check time-based one-time passwords (TOTP) for two-factor authentication
 - [QRCoder](https://github.com/codebude/QRCoder) to generate QR codes for 2FA setup strings
 - [Isopoh.Cryptography.Argon2](https://github.com/mheyman/Isopoh.Cryptography.Argon2) to hash passwords using Argon2
+- [IPAddressRange](https://github.com/jsakamoto/ipaddressrange) to parse IP address ranges and check whether a given IP address is within that range (used for mail authentication).
