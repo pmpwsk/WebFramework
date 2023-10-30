@@ -1,7 +1,7 @@
 namespace uwap.WebFramework.Elements;
 
 /// <summary>
-/// Unsorted list for a container.
+/// Unordered bullet list for a container.
 /// </summary>
 public class BulletList : IContent
 {
@@ -14,7 +14,7 @@ public class BulletList : IContent
     public List<string> List;
 
     /// <summary>
-    /// Creates a new unsorted list for a container with the given items.
+    /// Creates a new unordered list for a container with the given items.
     /// </summary>
     public BulletList(List<string> list, string? classes = null, string? styles = null, string? id = null)
     {
@@ -25,7 +25,7 @@ public class BulletList : IContent
     }
 
     /// <summary>
-    /// Creates a new unsorted list for a container with the given items.
+    /// Creates a new unordered list for a container with the given items.
     /// </summary>
     public BulletList(params string[] items)
     {
