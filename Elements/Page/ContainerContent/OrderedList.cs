@@ -1,13 +1,14 @@
 namespace uwap.WebFramework.Elements;
 
 /// <summary>
-/// Unsorted list for a container.
+/// Ordered list for a container.
 /// </summary>
 public class OrderedList : IContent
 {
     //documentation inherited from IElement
     protected override string ElementType => "ol";
 
+    //documentation inherited from IElement
     protected override string? ElementProperties
     {
         get
@@ -46,7 +47,7 @@ public class OrderedList : IContent
     public Types Type;
 
     /// <summary>
-    /// Creates a new unsorted list for a container with the given items.
+    /// Creates a new ordered list for a container with the given items.
     /// </summary>
     public OrderedList(List<string> list, Types type = Types.Numbers, string? classes = null, string? styles = null, string? id = null)
     {
@@ -58,7 +59,7 @@ public class OrderedList : IContent
     }
 
     /// <summary>
-    /// Creates a new unsorted list for a container with the given items.
+    /// Creates a new ordered list for a container with the given items.
     /// </summary>
     public OrderedList(params string[] items)
     {
