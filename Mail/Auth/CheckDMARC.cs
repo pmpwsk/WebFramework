@@ -2,6 +2,9 @@
 
 public static partial class MailAuth
 {
+    /// <summary>
+    /// Checks DMARC for the given message.
+    /// </summary>
     public static MailAuthVerdictDMARC CheckDMARC(string returnDomain, string fromDomain, MailAuthVerdictSPF spfVerdict, MailAuthVerdictDKIM dkimVerdict, Dictionary<DomainSelectorPair, bool> dkimResults)
     {
         try
@@ -42,6 +45,9 @@ public static partial class MailAuth
         }
     }
 
+    /// <summary>
+    /// Attempts to get and parse the appropriate DMARC settings for the given domain.
+    /// </summary>
     private static bool GetDmarcSettings(string domain, bool preferSubdomain, out DmarcPolicy policy, out DmarcAlignment alignmentSPF, out DmarcAlignment alignmentDKIM)
     {
         var fields = ResolveTXT($"_dmarc.{domain}", null, new[] { new[] { "p" } });
@@ -114,6 +120,9 @@ public static partial class MailAuth
         return false;
     }
 
+    /// <summary>
+    /// Converts a given DMARC policy to the corresponding failed DMARC verdict.
+    /// </summary>
     private static MailAuthVerdictDMARC ToVerdict(DmarcPolicy policy)
         => policy switch
         {
@@ -123,6 +132,9 @@ public static partial class MailAuth
             _ => throw new Exception("The given policy wasn't recognized."),
         };
 
+    /// <summary>
+    /// Checks whether two domains satisfy the 'relaxed' DMARC alignment.
+    /// </summary>
     private static bool DmarcRelaxedRelation(string domain1, string domain2)
         => domain1 == domain2 || domain1.EndsWith($".{domain2}") || domain2.EndsWith($".{domain1}");
 }
