@@ -5,6 +5,9 @@ namespace uwap.WebFramework.Mail;
 
 public static partial class MailAuth
 {
+    /// <summary>
+    /// DKIM key locator for DKIM checking using MimeKit.
+    /// </summary>
     private class DkimPublicKeyLocator : DkimPublicKeyLocatorBase
     {
         public override AsymmetricKeyParameter LocatePublicKey(string methods, string domain, string selector, CancellationToken cancellationToken = default)
