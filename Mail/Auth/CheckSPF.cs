@@ -6,9 +6,15 @@ namespace uwap.WebFramework.Mail;
 
 public static partial class MailAuth
 {
+    /// <summary>
+    /// Checks SPF for the given message and returns the domain that passed if the result is "Pass".
+    /// </summary>
     public static MailAuthVerdictSPF CheckSPF(string domain, IPAddress ip, out string? passedDomain)
         => CheckSPF(domain, ip, 0, false, out passedDomain);
 
+    /// <summary>
+    /// Internal SPF checking, called recursively with limited depth.
+    /// </summary>
     private static MailAuthVerdictSPF CheckSPF(string domain, IPAddress ip, int depth, bool isInclude, out string? passedDomain)
     {
         passedDomain = null;
@@ -105,6 +111,9 @@ public static partial class MailAuth
         }
     }
 
+    /// <summary>
+    /// Checks whether a given domain might resolve to the given IP address.
+    /// </summary>
     private static bool MatchAorAAAA(string domain, IPAddress ip, int depth = 0)
     {
         try
@@ -146,6 +155,9 @@ public static partial class MailAuth
         }
     }
 
+    /// <summary>
+    /// Checks whether the given string is an IP address or an IP range and whether the given IP equals that or is within the range.
+    /// </summary>
     private static bool EqualsOrContainsIP(string addressOrRangeString, IPAddress ip)
     {
         if (IPAddress.TryParse(addressOrRangeString, out var fieldIP))
