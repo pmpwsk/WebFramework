@@ -6,6 +6,9 @@ namespace uwap.WebFramework.Mail;
 
 public static partial class MailAuth
 {
+    /// <summary>
+    /// Checks DKIM for the given message and returns the individual results for each signature (domain and selector).
+    /// </summary>
     public static MailAuthVerdictDKIM CheckDKIM(MimeMessage message, out Dictionary<DomainSelectorPair, bool> individualResults)
     {
         try
@@ -66,6 +69,9 @@ public static partial class MailAuth
         }
     }
 
+    /// <summary>
+    /// Attempts to parse the given DKIM signature to extract the domain and selector from it.
+    /// </summary>
     private static bool GetDomainAndSelector(string dkimSignature, [MaybeNullWhen(false)] out string domain, [MaybeNullWhen(false)] out string selector)
     {
         domain = null;
