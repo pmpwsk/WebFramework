@@ -43,7 +43,7 @@ public class EventRequest : IRequest
     /// </summary>
     public async Task KeepAlive(CancellationToken cancellationToken = default)
     {
-        while (cancellationToken == default || !cancellationToken.IsCancellationRequested)
+        while ((!Context.RequestAborted.IsCancellationRequested) && (cancellationToken == default || !cancellationToken.IsCancellationRequested))
         {
             await Send(":keepalive");
             await Task.Delay(30000, cancellationToken);
