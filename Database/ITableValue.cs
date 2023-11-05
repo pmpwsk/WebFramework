@@ -38,7 +38,8 @@ public abstract class ITableValue
     }
 
     /// <summary>
-    /// Restores this value's entry to the last persistent state and unlocks it.
+    /// Restores this value's entry to the last persistent state and unlocks it.<br/>
+    /// Note that the old value object should not be used anymore afterwards, since there will be a new object.
     /// </summary>
     public void UnlockRestore()
     {
