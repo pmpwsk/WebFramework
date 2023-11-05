@@ -221,6 +221,12 @@ public static partial class Server
             /// Default: empty dictionary
             /// </summary>
             public static Dictionary<string, string> Redirect = new();
+
+            /// <summary>
+            /// If this is set to true, the canonical origin domain of the requested domain and of "any" may be used to serve files and plugins if no better option was found.<br/>
+            /// Default: true
+            /// </summary>
+            public static bool UseCanonicalForHandling = true;
         }
 
         /// <summary>
