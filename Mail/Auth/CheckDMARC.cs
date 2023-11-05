@@ -15,7 +15,7 @@ public static partial class MailAuth
 
             //SPF or DKIM didn't (fully) pass
             if (spfVerdict != MailAuthVerdictSPF.Pass || dkimVerdict != MailAuthVerdictDKIM.Pass)
-                ToVerdict(p);
+                return ToVerdict(p);
 
             //SPF alignment wrong
             if (aspf switch
@@ -24,7 +24,7 @@ public static partial class MailAuth
                 DmarcAlignment.Relaxed => !DmarcRelaxedRelation(returnDomain, fromDomain),
                 _ => throw new Exception("The given alignment wasn't recognized.")
             })
-                ToVerdict(p);
+                return ToVerdict(p);
 
             //DKIM alignment wrong
             var dkimDomains = dkimResults.Where(x => x.Value).Select(x => x.Key.Domain).Distinct();
@@ -34,7 +34,7 @@ public static partial class MailAuth
                 DmarcAlignment.Relaxed => dkimDomains.All(x => !DmarcRelaxedRelation(x, fromDomain)),
                 _ => throw new Exception("The given alignment wasn't recognized.")
             })
-                ToVerdict(p);
+                return ToVerdict(p);
 
             //nothing is wrong
             return MailAuthVerdictDMARC.Pass;
