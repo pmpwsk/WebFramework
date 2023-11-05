@@ -13,31 +13,33 @@ public static partial class MailAuth
             if (!GetDmarcSettings(returnDomain, false, out var p, out var aspf, out var adkim))
                 return MailAuthVerdictDMARC.Unset;
 
-            //SPF or DKIM didn't (fully) pass
-            if (spfVerdict != MailAuthVerdictSPF.Pass || dkimVerdict != MailAuthVerdictDKIM.Pass)
-                return ToVerdict(p);
-
-            //SPF alignment wrong
-            if (aspf switch
+            //spf?
+            if (spfVerdict == MailAuthVerdictSPF.Pass && aspf switch
             {
-                DmarcAlignment.Strict => returnDomain != fromDomain,
-                DmarcAlignment.Relaxed => !DmarcRelaxedRelation(returnDomain, fromDomain),
+                DmarcAlignment.Strict => returnDomain == fromDomain,
+                DmarcAlignment.Relaxed => DmarcRelaxedRelation(returnDomain, fromDomain),
                 _ => throw new Exception("The given alignment wasn't recognized.")
             })
-                return ToVerdict(p);
+                return MailAuthVerdictDMARC.Pass;
 
-            //DKIM alignment wrong
+            //dkim?
             var dkimDomains = dkimResults.Where(x => x.Value).Select(x => x.Key.Domain).Distinct();
-            if (adkim switch
+            if ((dkimVerdict == MailAuthVerdictDKIM.Pass || dkimVerdict == MailAuthVerdictDKIM.Mixed) && adkim switch
             {
-                DmarcAlignment.Strict => dkimDomains.All(x => x != fromDomain),
-                DmarcAlignment.Relaxed => dkimDomains.All(x => !DmarcRelaxedRelation(x, fromDomain)),
+                DmarcAlignment.Strict => dkimDomains.Any(x => x == fromDomain),
+                DmarcAlignment.Relaxed => dkimDomains.Any(x => DmarcRelaxedRelation(x, fromDomain)),
                 _ => throw new Exception("The given alignment wasn't recognized.")
             })
-                return ToVerdict(p);
+                return MailAuthVerdictDMARC.Pass;
 
-            //nothing is wrong
-            return MailAuthVerdictDMARC.Pass;
+            //neither spf nor dkim were good
+            return p switch
+            {
+                DmarcPolicy.Quarantine => MailAuthVerdictDMARC.FailWithQuarantine,
+                DmarcPolicy.Reject => MailAuthVerdictDMARC.FailWithReject,
+                DmarcPolicy.None => MailAuthVerdictDMARC.FailWithoutAction,
+                _ => throw new Exception("The given policy wasn't recognized."),
+            };
         }
         catch
         {
@@ -119,18 +121,6 @@ public static partial class MailAuth
         alignmentDKIM = DmarcAlignment.Relaxed;
         return false;
     }
-
-    /// <summary>
-    /// Converts a given DMARC policy to the corresponding failed DMARC verdict.
-    /// </summary>
-    private static MailAuthVerdictDMARC ToVerdict(DmarcPolicy policy)
-        => policy switch
-        {
-            DmarcPolicy.Quarantine => MailAuthVerdictDMARC.FailWithQuarantine,
-            DmarcPolicy.Reject => MailAuthVerdictDMARC.FailWithReject,
-            DmarcPolicy.None => MailAuthVerdictDMARC.FailWithoutAction,
-            _ => throw new Exception("The given policy wasn't recognized."),
-        };
 
     /// <summary>
     /// Checks whether two domains satisfy the 'relaxed' DMARC alignment.
