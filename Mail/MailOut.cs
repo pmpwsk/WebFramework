@@ -108,7 +108,8 @@ public static partial class MailManager
             messageIds = new();
             List<MailboxAddress> leftAddresses = new();
             foreach (var a in mailGen.To)
-                leftAddresses.Add(a);
+                if (BeforeSend == null || BeforeSend.Invoke(mailGen, a))
+                    leftAddresses.Add(a);
             MailSendResult.Attempt? fromSelf = null;
             if (EnableFromSelf)
             {
