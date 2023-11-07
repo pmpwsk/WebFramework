@@ -1,17 +1,6 @@
-﻿using Microsoft.Extensions.Options;
-using MimeKit;
-using SmtpServer;
-using SmtpServer.Mail;
-using SmtpServer.Protocol;
-using SmtpServer.Storage;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using SmtpServer;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace uwap.WebFramework.Mail;
 

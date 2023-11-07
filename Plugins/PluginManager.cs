@@ -1,9 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Org.BouncyCastle.Asn1.Ocsp;
-using System.Diagnostics.CodeAnalysis;
-using System.Xml.Linq;
-
-namespace uwap.WebFramework.Plugins;
+﻿namespace uwap.WebFramework.Plugins;
 
 /// <summary>
 /// Manages plugins and handles requests for them.

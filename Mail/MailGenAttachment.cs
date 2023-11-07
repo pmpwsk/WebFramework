@@ -1,6 +1,4 @@
-﻿using MimeKit;
-
-namespace uwap.WebFramework.Mail;
+﻿namespace uwap.WebFramework.Mail;
 
 /// <summary>
 /// Contains data for a mail attachment so it can be generated and sent out later.

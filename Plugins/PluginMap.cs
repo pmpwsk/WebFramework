@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
-
-namespace uwap.WebFramework.Plugins;
+﻿namespace uwap.WebFramework.Plugins;
 
 /// <summary>
 /// Recursively stores plugins, every URL segment is a node on the path to a given plugin.

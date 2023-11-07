@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace uwap.WebFramework.Plugins;
+﻿namespace uwap.WebFramework.Plugins;
 
 /// <summary>
 /// Interface to create plugins for request handling and a worker method.<br/>

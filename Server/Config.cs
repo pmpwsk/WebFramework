@@ -1,5 +1,3 @@
-using System.Web;
-
 namespace uwap.WebFramework;
 
 public static partial class Server

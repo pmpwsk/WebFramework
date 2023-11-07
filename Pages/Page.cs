@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Configuration;
-using static QRCoder.PayloadGenerator;
 using uwap.WebFramework.Plugins;
 
 namespace uwap.WebFramework.Elements;

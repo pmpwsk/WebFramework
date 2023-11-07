@@ -1,7 +1,4 @@
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Primitives;
 using QRCoder;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;

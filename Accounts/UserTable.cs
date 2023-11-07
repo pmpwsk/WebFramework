@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System.Runtime.CompilerServices;
 using uwap.Database;
 
 namespace uwap.WebFramework.Accounts;

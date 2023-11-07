@@ -1,17 +1,5 @@
-﻿using MimeKit.Cryptography;
-using MimeKit.Utils;
-using MimeKit;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DnsClient;
+﻿using DnsClient;
 using System.Net;
-using SmtpServer.Protocol;
-using SmtpServer;
-using SmtpServer.Storage;
-using SmtpServer.Mail;
 
 namespace uwap.WebFramework.Mail;
 

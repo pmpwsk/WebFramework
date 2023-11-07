@@ -1,14 +1,11 @@
 ﻿using DnsClient;
 using MailKit.Net.Smtp;
-using Microsoft.Extensions.Hosting;
 using MimeKit;
 using MimeKit.Cryptography;
 using MimeKit.Utils;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
-using System.Security.Cryptography.Xml;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace uwap.WebFramework.Mail;
 

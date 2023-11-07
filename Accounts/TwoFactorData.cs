@@ -1,9 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
 using OtpNet;
-using QRCoder;
-using uwap.WebFramework;
-using uwap.WebFramework.Accounts;
 
 namespace uwap.WebFramework.Accounts;
 
