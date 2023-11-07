@@ -111,7 +111,7 @@ public static partial class MailManager
                 if (BeforeSend == null || BeforeSend.Invoke(mailGen, a))
                     leftAddresses.Add(a);
             MailSendResult.Attempt? fromSelf = null;
-            if (EnableFromSelf)
+            if (EnableFromSelf && leftAddresses.Any())
             {
                 fromSelf = SendFromSelf(mailGen, leftAddresses, messageIds);
             }
