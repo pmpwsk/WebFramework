@@ -139,49 +139,9 @@ public static partial class MailManager
         }
 
         /// <summary>
-        /// Generates a mail message using the given information.
-        /// </summary>
-        public static MimeMessage GenerateMessage(MailboxAddress from, MailboxAddress to, string subject, string text, bool isHtml, bool sign)
-            => GenerateMessage(from, new[] { to }, subject, text, isHtml, sign, out var _);
-
-        /// <summary>
-        /// Generates a mail message using the given information.
-        /// </summary>
-        private static MimeMessage GenerateMessage(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string text, bool isHtml, bool sign, out string messageId)
-        {
-            if (!to.Any())
-                throw new Exception("No recipient was set.");
-
-            var message = new MimeMessage();
-
-            message.From.Add(from);
-            foreach (var t in to)
-                message.To.Add(t);
-            message.Subject = subject;
-            message.Body = new TextPart(isHtml ? "html" : "plain")
-            {
-                Text = text,
-            };
-
-            messageId = ServerDomain == null ? MimeUtils.GenerateMessageId() : MimeUtils.GenerateMessageId(ServerDomain);
-            message.MessageId = messageId;
-
-            if (sign)
-                Sign(message);
-
-            return message;
-        }
-
-        /// <summary>
         /// Generates a mail message using the given message object.
         /// </summary>
-        public static MimeMessage GenerateMessage(MailGen mailGen, bool sign)
-            => GenerateMessage(mailGen, sign, out var _);
-
-        /// <summary>
-        /// Generates a mail message using the given message object.
-        /// </summary>
-        public static MimeMessage GenerateMessage(MailGen mailGen, bool sign, out string messageId, IEnumerable<MailboxAddress>? replaceToWithThis = null)
+        private static MimeMessage GenerateMessage(MailGen mailGen, bool sign, out string messageId, IEnumerable<MailboxAddress>? replaceToWithThis = null)
         {
             if (replaceToWithThis == null)
             {
@@ -247,50 +207,6 @@ public static partial class MailManager
                     signer.Sign(message, new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.To });
                 }
             }
-        }
-
-        /// <summary>
-        /// Attempts to send the given email - first directly (if enabled), then using the backup (if set and not forbidden).
-        /// </summary>
-        /// <param name="allowBackup">Whether to allow sending using a backup (if one has been set).</param>
-        public static MailSendResult Send(MimeMessage message, bool allowBackup = true)
-        {
-            Sign(message);
-            bool serversFound = true;
-            MailSendResult.Attempt? fromSelf = null;
-            if (EnableFromSelf)
-            {
-                if (message.To.Mailboxes.Count() > 1 || message.Cc.Mailboxes.Any() || message.Bcc.Any()) throw new Exception("Only one recipient is supported.");
-                if (!message.To.Mailboxes.Any()) throw new Exception("No recipient was set.");
-                MailboxAddress to = message.To.Mailboxes.First();
-                var servers = GetServers(to.Domain);
-                if (!servers.Any())
-                {
-                    serversFound = false;
-                    fromSelf = new(MailSendResult.ResultType.Failed, new() { $"No mail server found for domain '{to.Domain}'." });
-                }
-                else
-                {
-                    fromSelf = SendFromSelf(message, servers);
-                }
-            }
-            MailSendResult.Attempt? fromBackup = null;
-            if ((fromSelf == null || fromSelf.ResultType != MailSendResult.ResultType.Success) && allowBackup && serversFound && BackupSender != null)
-            {
-                try
-                {
-                    fromBackup = BackupSender.Send(message);
-                }
-                catch (Exception ex)
-                {
-                    fromBackup = new(MailSendResult.ResultType.Failed, new() { $"Error: {ex.Message}" });
-                }
-            }
-
-            MailSendResult result = new(fromSelf, fromBackup);
-
-            InvokeMailSent(message, result);
-            return result;
         }
 
         /// <summary>
@@ -443,73 +359,6 @@ public static partial class MailManager
             {
                 log.Add($"Error: {ex.Message}");
                 return new MailSendResult.Attempt(MailSendResult.ResultType.Failed, log);
-            }
-        }
-
-        /// <summary>
-        /// Attempts to send the given email directly.
-        /// </summary>
-        private static MailSendResult.Attempt SendFromSelf(MimeMessage message, Dictionary<string, string?> servers)
-        {
-            List<string> connectionLog = new();
-            try
-            {
-                using var client = new SmtpClient();
-                if (ServerDomain != null)
-                    client.LocalDomain = ServerDomain;
-                foreach (var domain in servers)
-                {
-                    using var cts = new CancellationTokenSource(Timeout);
-                    try
-                    {
-                        Stopwatch stopwatch = Stopwatch.StartNew();
-                        Socket socket = new(SocketType.Stream, ProtocolType.Tcp);
-                        socket.Connect(domain.Key, 25);
-                        client.Connect(socket, domain.Value ?? domain.Key, 25, MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable, cts.Token);
-                        stopwatch.Stop();
-                        connectionLog.Add($"Connected to {ServerString(domain)} (Secure={client.IsSecure}) after {stopwatch.ElapsedMilliseconds}ms.");
-                        if (client.IsConnected) break;
-                    }
-                    catch (Exception ex)
-                    {
-                        connectionLog.Add($"Error connecting to {ServerString(domain)}: {ex.Message}");
-                    }
-                }
-                if (!client.IsConnected)
-                {
-                    connectionLog.Add("Failed to connect to a mail server.");
-                    return new MailSendResult.Attempt(MailSendResult.ResultType.Failed, connectionLog);
-                }
-
-                try
-                {
-                    string response = client.Send(message);
-                    connectionLog.Add($"Response: {response}");
-                    return new MailSendResult.Attempt(MailSendResult.ResultType.Success, connectionLog);
-                }
-                catch (SmtpCommandException ex1)
-                {
-                    connectionLog.Add($"SMTP Error: {ex1.Message} {ex1.StatusCode} {ex1.ErrorCode} {ex1.HelpLink}");
-                    return new MailSendResult.Attempt(MailSendResult.ResultType.Failed, connectionLog);
-                }
-                catch (Exception ex1)
-                {
-                    connectionLog.Add($"Error: {ex1.Message}");
-                    return new MailSendResult.Attempt(MailSendResult.ResultType.Failed, connectionLog);
-                }
-                finally
-                {
-                    try
-                    {
-                        client.Disconnect(true);
-                    }
-                    catch { }
-                }
-            }
-            catch (Exception ex2)
-            {
-                connectionLog.Add($"Error: {ex2.Message}");
-                return new MailSendResult.Attempt(MailSendResult.ResultType.Failed, connectionLog);
             }
         }
 
