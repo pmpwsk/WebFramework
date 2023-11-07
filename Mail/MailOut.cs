@@ -25,6 +25,11 @@ public static partial class MailManager
         public static event SentDelegate? MailSent;
 
         /// <summary>
+        /// The method that is called to determine whether a mail message should be sent to the given recipient externally (returning true to send externally, false otherwise).
+        /// </summary>
+        public static event BeforeSendDelegate? BeforeSend;
+
+        /// <summary>
         /// Whether to attempt to send emails directly.<br/>
         /// Default: true
         /// </summary>
