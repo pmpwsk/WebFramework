@@ -33,6 +33,8 @@ public class MailSendResult
         Failed
     }
 
+    public readonly Dictionary<MailboxAddress, string> Internal;
+
     /// <summary>
     /// Data about the attempt to send the message directly or null if no such attempt was made.
     /// </summary>
@@ -41,13 +43,14 @@ public class MailSendResult
     /// <summary>
     /// Data about the attempt to send the message using the backup or null if no such attempt was made.
     /// </summary>
-    public readonly Attempt? FromBackup; 
+    public readonly Attempt? FromBackup;
 
     /// <summary>
     /// Creates a new object for data about a complete mail sending attempt using the given individual attempt objects.
     /// </summary>
-    public MailSendResult(Attempt? fromSelf, Attempt? fromBackup)
+    public MailSendResult(Dictionary<MailboxAddress, string> internalLog, Attempt? fromSelf, Attempt? fromBackup)
     {
+        Internal = internalLog;
         FromSelf = fromSelf;
         FromBackup = fromBackup;
     }
