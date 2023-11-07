@@ -106,9 +106,16 @@ public static partial class MailManager
             List<MailboxAddress> leftAddresses = new();
             Dictionary<MailboxAddress, string> internalLog = new();
             foreach (var a in mailGen.To)
-                if (BeforeSend == null || BeforeSend.Invoke(mailGen, a, out var log))
+            {
+                string id = ServerDomain == null ? MimeUtils.GenerateMessageId() : MimeUtils.GenerateMessageId(ServerDomain);
+                if (BeforeSend == null || BeforeSend.Invoke(mailGen, a, id, out var log))
                     leftAddresses.Add(a);
-                else internalLog[a] = log;
+                else
+                {
+                    messageIds.Add(id);
+                    internalLog[a] = log;
+                }
+            }
             MailSendResult.Attempt? fromSelf = null;
             if (EnableFromSelf && leftAddresses.Any())
             {
