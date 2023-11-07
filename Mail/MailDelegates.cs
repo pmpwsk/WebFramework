@@ -25,4 +25,4 @@ public delegate SmtpResponse HandleDelegate(ISessionContext context, MimeMessage
 /// <summary>
 /// A delegate that is used for methods that determine whether a mail message should be sent to the given recipient externally (returning true to send externally, false otherwise).
 /// </summary>
-public delegate bool BeforeSendDelegate(MailGen mailGen, MailboxAddress currentRecipient, [MaybeNullWhen(true)] out string log);
+public delegate bool BeforeSendDelegate(MailGen mailGen, MailboxAddress currentRecipient, string potentialMessageId, [MaybeNullWhen(true)] out string log);
