@@ -107,9 +107,11 @@ public static partial class MailManager
         {
             messageIds = new();
             List<MailboxAddress> leftAddresses = new();
+            Dictionary<MailboxAddress, string> internalLog = new();
             foreach (var a in mailGen.To)
-                if (BeforeSend == null || BeforeSend.Invoke(mailGen, a))
+                if (BeforeSend == null || BeforeSend.Invoke(mailGen, a, out var log))
                     leftAddresses.Add(a);
+                else internalLog[a] = log;
             MailSendResult.Attempt? fromSelf = null;
             if (EnableFromSelf && leftAddresses.Any())
             {
@@ -129,7 +131,7 @@ public static partial class MailManager
                 }
             }
 
-            MailSendResult result = new(fromSelf, fromBackup);
+            MailSendResult result = new(internalLog, fromSelf, fromBackup);
 
             InvokeMailSent(GenerateMessage(mailGen, true, out var messageId2), result);
             messageIds.Add(messageId2);
