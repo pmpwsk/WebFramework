@@ -35,20 +35,13 @@ public class PresetsHandler
     {
         string? address = GetSupportEmail();
         if (address == null)
-            return new(null, null);
-        var message = MailManager.Out.GenerateMessage(
-        new MailboxAddress(address, address),
-        new MailboxAddress(user.Username, useThisAddress ?? user.MailAddress),
-        subject,
-        $"Hi, {user.Username}!\n{text}".Replace("\n", "<br />"),
-        true, true);
-        if (Server.DebugMode)
-        {
-            MailSendResult result = new(new(MailSendResult.ResultType.Success, new() { "Debug mail server.", "Not actually sent." }), null);
-            MailManager.Out.InvokeMailSent(message, result);
-            return result;
-        }
-        return MailManager.Out.Send(message);
+            return new(new(), null, null);
+        return MailManager.Out.Send(
+            new MailboxAddress(address, address),
+            new MailboxAddress(user.Username, useThisAddress ?? user.MailAddress),
+            subject,
+            $"Hi, {user.Username}!\n{text}".Replace("\n", "<br />"),
+            true, true);
     }
 
     /// <summary>
