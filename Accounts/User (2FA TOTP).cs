@@ -103,7 +103,7 @@ public class TwoFactorTotp
                     //set Needs2FA to false for the current auth token if it exists
                     if (user.Auth.Exists(authToken))
                     {
-                        user.Auth[authToken] = new AuthTokenData(false, request.User != null && request.User.MailToken != null);
+                        user.Auth[authToken] = new AuthTokenData(false, request.LoggedIn && request.User.MailToken != null);
                     }
                 }
             }

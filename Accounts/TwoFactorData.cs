@@ -123,11 +123,10 @@ public class TwoFactorData_Old
                 var users = request.UserTable;
                 if (users != null && users.TryGetValue(id, out var user))
                 {
-                    User user = users[id];
                     //set Needs2FA to false for the current auth token if it exists
                     if (user.Auth.Exists(authToken))
                     {
-                        user.Auth[authToken] = new AuthTokenData(false, request.User != null && request.User.MailToken != null);
+                        user.Auth[authToken] = new AuthTokenData(false, request.LoggedIn && request.User.MailToken != null);
                     }
                 }
             }

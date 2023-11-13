@@ -137,8 +137,8 @@ public class PresetsHandler
     public virtual void AddAuthElements(AppRequest request)
     {
         request.Init(out Page page, out var e);
-        User? user = request.User;
-        if (user == null) throw new Exception("Not logged in.");
+        if (!request.LoggedIn) throw new Exception("Not logged in.");
+        User user = request.User;
         string? twoFactorText = user.TwoFactor.TOTPEnabled() ? null : "disabled";
         string? twoFactorStyle = user.TwoFactor.TOTPEnabled() ? null : "display: none";
         e.Add(new ContainerElement(null, new List<IContent>

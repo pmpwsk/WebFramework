@@ -59,7 +59,7 @@ public class AppRequest : IRequest
         if (Finished) throw new Exception("The page has already been written.");
         Finished = true;
         Context.Response.ContentType = "text/plain;charset=utf-8";
-        ApiRequest request = new(Context, User, UserTable, LoginState);
+        ApiRequest request = new(Context, _User, UserTable, LoginState);
         try
         {
             await Server.CallApi(request);
@@ -80,7 +80,7 @@ public class AppRequest : IRequest
         if (Finished) throw new Exception("The page has already been written.");
         Finished = true;
         Context.Response.ContentType = null;
-        DownloadRequest request = new(Context, User, UserTable, LoginState);
+        DownloadRequest request = new(Context, _User, UserTable, LoginState);
         try
         {
             await Server.CallDownload(request);

@@ -26,7 +26,7 @@ public abstract class IRequest
     /// <summary>
     /// The current user or null if no user is logged in.
     /// </summary>
-    public readonly User? User;
+    public readonly User? _User;
 
     /// <summary>
     /// The associated user table.
@@ -49,12 +49,18 @@ public abstract class IRequest
     public IRequest(HttpContext context, User? user, UserTable? userTable, LoginState loginState)
     {
         Context = context;
-        User = user;
+        _User = user;
         _UserTable = userTable;
         LoginState = loginState;
         Cookies = new CookieManager(context);
         Query = new QueryManager(context.Request.Query);
     }
+
+    /// <summary>
+    /// The associated user. If no user is associated with the request, an exception is thrown.<br/>
+    /// A user is only associated if LoginState is LoggedIn. This can also be checked by getting bool IRequest.LoggedIn.
+    /// </summary>
+    public User User => _User ?? throw new Exception("This request doesn't contain a user.");
 
     /// <summary>
     /// The associated user table. If no table is assigned to requests to this domain, an exception is thrown.
@@ -141,7 +147,7 @@ public abstract class IRequest
     /// Whether the user is an administrator (access level = ushort.MaxValue). Also returns false if the client isn't fully logged in.
     /// </summary>
     public bool IsAdmin()
-        => LoginState == LoginState.LoggedIn && User != null && User.AccessLevel == ushort.MaxValue;
+        => LoginState == LoginState.LoggedIn && User.AccessLevel == ushort.MaxValue;
 
     /// <summary>
     /// Writes a default message for the current response code with MIME type text/plain.
