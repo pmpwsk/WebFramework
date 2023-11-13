@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using uwap.Database;
 
@@ -50,6 +51,9 @@ public partial class User : ITableValue
         /// </summary>
         public bool Exists(string authToken)
         => User._AuthTokens.ContainsKey(authToken);
+
+        public bool TryGetValue(string authToken, [MaybeNullWhen(false)] out AuthTokenData authTokenData)
+            => User._AuthTokens.TryGetValue(authToken, out authTokenData);
 
         /// <summary>
         /// Gets or sets the additional data for the given authentication token and deletes the least recently used token if the count limit was exceeded.
