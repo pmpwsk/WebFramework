@@ -158,32 +158,35 @@ public class UserTable : Table<User>
     /// </summary>
     public LoginState Authenticate(HttpContext context, out User? user)
     {
-        user = null;
-
-        if (AccountManager.IsBanned(context)) return LoginState.Banned;
+        if (AccountManager.IsBanned(context))
+        {
+            user = null;
+            return LoginState.Banned;
+        }
 
         if (!context.Request.Cookies.ContainsKey("AuthToken"))
         { //no token present
+            user = null;
             return LoginState.None;
         }
 
         string combinedToken = context.Request.Cookies["AuthToken"] ?? "";
         string id = combinedToken.Remove(12);
         string authToken = combinedToken.Remove(0, 12); //the auth token length isn't fixed
-        if ((!ContainsKey(id)) || (!this[id].Auth.Exists(authToken)))
+        if ((!TryGetValue(id, out user)) || (!user.Auth.TryGetValue(authToken, out var tokenData)))
         { //user doesn't exist or doesn't contain the token provided
             AccountManager.ReportFailedAuth(context);
             context.Response.Cookies.Delete("AuthToken");
+            user = null;
             return LoginState.None;
         }
-        AuthTokenData tokenData = this[id].Auth[authToken];
         if (tokenData.Expires < DateTime.UtcNow)
         { //token expired <- don't report this because it's probably not brute-force
             context.Response.Cookies.Delete("AuthToken");
+            user = null;
             return LoginState.None;
         }
 
-        user = this[id];
         if (tokenData.Needs2FA) return LoginState.Needs2FA;
         else if (user.MailToken != null) return LoginState.NeedsMailVerification;
         else
