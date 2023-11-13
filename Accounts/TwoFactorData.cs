@@ -121,7 +121,7 @@ public class TwoFactorData_Old
                 string id = combinedToken.Remove(12);
                 string authToken = combinedToken.Remove(0, 12);
                 var users = request.UserTable;
-                if (users != null && users.ContainsKey(id))
+                if (users != null && users.TryGetValue(id, out var user))
                 {
                     User user = users[id];
                     //set Needs2FA to false for the current auth token if it exists
