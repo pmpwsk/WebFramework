@@ -255,6 +255,22 @@ public static partial class Server
                     _AspNet = value;
                 }
             }
+
+            private static bool _Startup = true;
+            /// <summary>
+            /// Whether to output neutral logs during server startup.<br/>
+            /// Failures will always be shown.<br/>
+            /// Default: true
+            /// </summary>
+            public static bool Startup
+            {
+                get => _Startup;
+                set
+                {
+                    Complain();
+                    _Startup = value;
+                }
+            }
         }
     }
 }
