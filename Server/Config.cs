@@ -250,5 +250,13 @@ public static partial class Server
             /// </summary>
             public static bool MuteUnreachableErrors = false;
         }
+
+        /// <summary>
+        /// Settings to control what types of log entries will appear in the console.
+        /// </summary>
+        public static class Log
+        {
+
+        }
     }
 }
