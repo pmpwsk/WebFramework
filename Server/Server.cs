@@ -95,7 +95,7 @@ public static partial class Server
         });
 
         //enable/disable asp.net logs
-        if (Config.ShowAspLogs) builder.Services.AddLogging(logging => logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning));
+        if (Config.Log.AspNet) builder.Services.AddLogging(logging => logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning));
         else builder.Services.AddLogging(logging => logging.ClearProviders());
 
         //context accessor part 1

@@ -51,21 +51,6 @@ public static partial class Server
             }
         }
 
-        private static bool _ShowAspLogs = false;
-        /// <summary>
-        /// Whether to output logs from ASP.NET.<br/>
-        /// Default: false
-        /// </summary>
-        public static bool ShowAspLogs
-        {
-            get => _ShowAspLogs;
-            set
-            {
-                Complain();
-                _ShowAspLogs = value;
-            }
-        }
-
         private static int _WorkerInterval = 15;
         /// <summary>
         /// The time to wait before calling the worker again (in minutes).<br/>
@@ -256,7 +241,20 @@ public static partial class Server
         /// </summary>
         public static class Log
         {
-
+            private static bool _AspNet = false;
+            /// <summary>
+            /// Whether to output logs from ASP.NET.<br/>
+            /// Default: false
+            /// </summary>
+            public static bool AspNet
+            {
+                get => _AspNet;
+                set
+                {
+                    Complain();
+                    _AspNet = value;
+                }
+            }
         }
     }
 }
