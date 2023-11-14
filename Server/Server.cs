@@ -58,16 +58,19 @@ public static partial class Server
 
         if (Config.HttpsPort != null)
         {
-            Console.WriteLine("Loading certificates...");
+            if (Config.Log.Startup)
+                Console.WriteLine("Loading certificates...");
             //try loading certificates from ../Certificates without a password
             UpdateCertificates();
         }
 
         //load cache
-        Console.WriteLine("Loading cache...");
+        if (Config.Log.Startup)
+            Console.WriteLine("Loading cache...");
         UpdateCache();
 
-        Console.WriteLine("Configuring server...");
+        if (Config.Log.Startup)
+            Console.WriteLine("Configuring server...");
 
         //configure ports and certificate selector
         WebApplicationBuilder builder = WebApplication.CreateBuilder();
@@ -114,7 +117,8 @@ public static partial class Server
         if (Config.WorkerInterval >= 0) Worker.Change(0, Timeout.Infinite);
 
         //run :)
-        Console.WriteLine("Starting server.");
+        if (Config.Log.Startup)
+            Console.WriteLine("Starting server.");
         Running = true;
         App.Run();
     }
