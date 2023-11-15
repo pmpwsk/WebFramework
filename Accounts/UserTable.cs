@@ -184,6 +184,8 @@ public class UserTable : Table<User>
         { //token expired <- don't report this because it's probably not brute-force
             context.Response.Cookies.Delete("AuthToken");
             user = null;
+            if (Server.Config.Log.AuthTokenExpired)
+                Console.WriteLine($"User {id} used an expired auth token.");
             return LoginState.None;
         }
 
