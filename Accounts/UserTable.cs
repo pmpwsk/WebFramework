@@ -196,6 +196,8 @@ public class UserTable : Table<User>
             if (tokenData.Expires < DateTime.UtcNow + AccountManager.Settings.TokenExpiration - AccountManager.Settings.TokenRenewalAfter)
             { //renew token if the renewal is due
                 AccountManager.AddAuthTokenCookie(user.Id + user.Auth.Renew(authToken), context);
+                if (Server.Config.Log.AuthTokenRenewed)
+                    Console.WriteLine($"Renewed a token for user {id}.");
             }
             return LoginState.LoggedIn;
         }
