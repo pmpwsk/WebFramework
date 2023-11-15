@@ -277,6 +277,12 @@ public static partial class Server
             /// Default: false
             /// </summary>
             public static bool AuthTokenExpired = false;
+
+            /// <summary>
+            /// Whether to output logs about auth tokens being renewed.<br/>
+            /// Default: false
+            /// </summary>
+            public static bool AuthTokenRenewed = false;
         }
     }
 }
