@@ -271,6 +271,12 @@ public static partial class Server
                     _Startup = value;
                 }
             }
+
+            /// <summary>
+            /// Whether to output logs about auth tokens expiring and expired auth tokens being used.<br/>
+            /// Default: false
+            /// </summary>
+            public static bool AuthTokenExpired = false;
         }
     }
 }
