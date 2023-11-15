@@ -141,7 +141,11 @@ public partial class User : ITableValue
             {
                 User.Lock();
                 foreach (string token in affected)
+                {
                     User._AuthTokens.Remove(token);
+                    if (Server.Config.Log.AuthTokenExpired)
+                        Console.WriteLine($"Deleted an expired token for user {User.Id}.");
+                }
                 User.UnlockSave();
             }
         }
