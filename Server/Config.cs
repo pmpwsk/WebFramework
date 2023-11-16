@@ -291,7 +291,8 @@ public static partial class Server
         public static class Database
         {
             /// <summary>
-            /// Whether to write the new JSON to the disk if it doesn't match the old one while loading a table.
+            /// Whether to write the new JSON to the disk if it doesn't match the old one while loading a table.<br/>
+            /// Default: true
             /// </summary>
             public static bool WriteBackOnLoad = true;
         }
