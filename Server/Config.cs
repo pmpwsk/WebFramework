@@ -284,5 +284,13 @@ public static partial class Server
             /// </summary>
             public static bool AuthTokenRenewed = false;
         }
+
+        /// <summary>
+        /// Settings to control the database.
+        /// </summary>
+        public static class Database
+        {
+
+        }
     }
 }
