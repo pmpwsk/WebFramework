@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using uwap.WebFramework;
 
 namespace uwap.Database;
 
@@ -75,6 +76,15 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
             try
             {
                 T value = Serialization.Deserialize<T>(json);
+                if (Server.Config.Database.WriteBackOnLoad)
+                {
+                    byte[] newJson = Serialization.Serialize(value);
+                    if (!newJson.SequenceEqual(json))
+                    {
+                        File.WriteAllBytes(file.FullName, newJson);
+                        json = newJson;
+                    }
+                }
                 data[key] = new TableEntry<T>(Name, key, value, json);
                 value.ContainingEntry = data[key];
             }
