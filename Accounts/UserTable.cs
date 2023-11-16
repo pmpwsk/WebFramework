@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using uwap.Database;
 
 namespace uwap.WebFramework.Accounts;
@@ -74,6 +75,15 @@ public class UserTable : Table<User>
                 {
                     json = Serialization.Serialize(value);
                     File.WriteAllBytes(file.FullName, json);
+                }
+                else if (Server.Config.Database.WriteBackOnLoad)
+                {
+                    byte[] newJson = Serialization.Serialize(value);
+                    if (!newJson.SequenceEqual(json))
+                    {
+                        File.WriteAllBytes(file.FullName, newJson);
+                        json = newJson;
+                    }
                 }
                 data[key] = new TableEntry<User>(Name, key, value, json);
                 value.ContainingEntry = data[key];
