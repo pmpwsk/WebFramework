@@ -5,7 +5,7 @@ public static partial class Server
     /// <summary>
     /// The server's configuration.
     /// </summary>
-    public static class Config
+    public static partial class Config
     {
         /// <summary>
         /// Throws an exception "The server does not allow changing this setting during runtime." if the server is running, otherwise nothing happens.
