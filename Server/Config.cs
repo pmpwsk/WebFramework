@@ -290,7 +290,10 @@ public static partial class Server
         /// </summary>
         public static class Database
         {
-
+            /// <summary>
+            /// Whether to write the new JSON to the disk if it doesn't match the old one while loading a table.
+            /// </summary>
+            public static bool WriteBackOnLoad = true;
         }
     }
 }
