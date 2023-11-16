@@ -73,7 +73,7 @@ public static partial class Server
         /// Contains a few types by default, check out the source code to see them.<br/>
         /// Example: {".html", "text/html"}
         /// </summary>
-        public static Dictionary<string, string> MimeTypes = new Dictionary<string, string>()
+        public static Dictionary<string, string> MimeTypes { get; set; } = new Dictionary<string, string>()
         {
             //web stuff
             {".html", "text/html"},
@@ -110,7 +110,7 @@ public static partial class Server
         /// <summary>
         /// List of file types (extensions with a dot in front of them) of which the content should be cached (only those in ../Public and ../Private).
         /// </summary>
-        public static List<string> CacheExtensions = new List<string>
+        public static List<string> CacheExtensions { get; set; } = new List<string>
         {
             ".wfpg",
             //web stuff
@@ -127,7 +127,7 @@ public static partial class Server
         /// Contains a few types by default, check out the source code to see them.<br/>
         /// Example: {".html", 0} disables caching HTML files, {".css", 604800} caches CSS files for one week.
         /// </summary>
-        public static Dictionary<string, int> BrowserCacheMaxAge = new Dictionary<string, int>
+        public static Dictionary<string, int> BrowserCacheMaxAge { get; set; } = new Dictionary<string, int>
         {
             {".html", 0},
             {".css", 604800}, //1 week
@@ -152,14 +152,14 @@ public static partial class Server
         /// The CORS domain to be used in responses that serve files from ../Public.<br/>
         /// Browsers will only allow the file to be used in pages of the set domain.
         /// </summary>
-        public static string? FileCorsDomain = null;
+        public static string? FileCorsDomain { get; set; } = null;
 
         /// <summary>
         /// The dictionary of known status messages for HTTP status codes.<br/>
         /// Contains the most common codes by default, check out the source code to see them.<br/>
         /// Example: {404, "Not found."}
         /// </summary>
-        public static Dictionary<int, string> StatusMessages = new Dictionary<int, string>()
+        public static Dictionary<int, string> StatusMessages { get; set; } = new Dictionary<int, string>()
         {
             {200, "Success."},
             {201, "Created." },
@@ -183,33 +183,33 @@ public static partial class Server
             /// Text to be appended to titles (value) of each domain (key, "any" is supported) or null to disable appending anything to titles of the domain.<br/>
             /// Default: empty dictionary
             /// </summary>
-            public static Dictionary<string, string?> TitleExtensions = new();
+            public static Dictionary<string, string?> TitleExtensions { get; set; } = new();
 
             /// <summary>
             /// Copyright names (value) to be used in the footer of each domain (key, "any" is supported) or null to disable the copyright message for the domain.<br/>
             /// Default: empty dictionary
             /// </summary>
-            public static Dictionary<string, string?> CopyrightNames = new();
+            public static Dictionary<string, string?> CopyrightNames { get; set; } = new();
 
             /// <summary>
             /// Dictionary for canonical headers, key domains are presented as mirrors of the value domain.<br/>
             /// This also affects plugins, titles, favicons, copyright messages and file serving as backups in case nothing was found for the actual domain (the general fallback is "any").<br/>
             /// Default: empty dictionary
             /// </summary>
-            public static Dictionary<string, string?> CanonicalDomains = new();
+            public static Dictionary<string, string?> CanonicalDomains { get; set; } = new();
 
             /// <summary>
             /// Redirects from the key domains to the value domains.<br/>
             /// Example: {"www.uwap.org", "uwap.org"} to redirect from www.uwap.org/path?query to uwap.org/path?query
             /// Default: empty dictionary
             /// </summary>
-            public static Dictionary<string, string> Redirect = new();
+            public static Dictionary<string, string> Redirect { get; set; } = new();
 
             /// <summary>
             /// If this is set to true, the canonical origin domain of the requested domain and of "any" may be used to serve files and plugins if no better option was found.<br/>
             /// Default: true
             /// </summary>
-            public static bool UseCanonicalForHandling = true;
+            public static bool UseCanonicalForHandling { get; set; } = true;
         }
 
         /// <summary>
@@ -221,19 +221,19 @@ public static partial class Server
             /// The email address that should be used to request certificates or null if AutoCertificate should be disabled.<br/>
             /// Default: null
             /// </summary>
-            public static string? Email = null;
+            public static string? Email { get; set; } = null;
 
             /// <summary>
             /// The domains that should always get certificates, in addition to the domains that have been discovered elsewhere.
             /// Default: empty list
             /// </summary>
-            public static List<string> Domains = new();
+            public static List<string> Domains { get; set; } = new();
 
             /// <summary>
             /// Whether to complain in the console if the server is unavailable over any of the domains (= no certificates can be requested for those domains).<br/>
             /// Default: false
             /// </summary>
-            public static bool MuteUnreachableErrors = false;
+            public static bool MuteUnreachableErrors { get; set; } = false;
         }
 
         /// <summary>
@@ -276,13 +276,13 @@ public static partial class Server
             /// Whether to output logs about auth tokens expiring and expired auth tokens being used.<br/>
             /// Default: false
             /// </summary>
-            public static bool AuthTokenExpired = false;
+            public static bool AuthTokenExpired { get; set; } = false;
 
             /// <summary>
             /// Whether to output logs about auth tokens being renewed.<br/>
             /// Default: false
             /// </summary>
-            public static bool AuthTokenRenewed = false;
+            public static bool AuthTokenRenewed { get; set; } = false;
         }
 
         /// <summary>
@@ -294,7 +294,7 @@ public static partial class Server
             /// Whether to write the new JSON to the disk if it doesn't match the old one while loading a table.<br/>
             /// Default: true
             /// </summary>
-            public static bool WriteBackOnLoad = true;
+            public static bool WriteBackOnLoad { get; set; } = true;
         }
     }
 }
