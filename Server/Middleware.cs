@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Http;
 using System.Web;
 using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Plugins;
-using static uwap.WebFramework.Server.Config;
 
 namespace uwap.WebFramework;
 
@@ -72,7 +71,7 @@ public static partial class Server
                 string path = context.Request.Path;
                 
                 //reply with acme challenge from automatic certificates
-                if (AutoCertificate.Email != null && context.Request.Path.ToString().StartsWith("/.well-known/acme-challenge/"))
+                if (Config.AutoCertificate.Email != null && context.Request.Path.ToString().StartsWith("/.well-known/acme-challenge/"))
                 {
                     context.Response.ContentType = "text/plain;charset=utf-8";
                     ApiRequest request = new(context, null, null, LoginState.None);
@@ -386,10 +385,10 @@ public static partial class Server
     private static bool AddFileHeaders(this HttpContext context, string extension, string timestamp)
     {
         //content type
-        if (MimeTypes.TryGetValue(extension, out string? type)) context.Response.ContentType = type;
+        if (Config.MimeTypes.TryGetValue(extension, out string? type)) context.Response.ContentType = type;
 
         //browser cache
-        if (BrowserCacheMaxAge.TryGetValue(extension, out int maxAge))
+        if (Config.BrowserCacheMaxAge.TryGetValue(extension, out int maxAge))
         {
             if (maxAge == 0) context.Response.Headers.Add("Cache-Control", "no-cache, private");
             else
