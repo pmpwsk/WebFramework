@@ -144,7 +144,7 @@ public abstract class SimpleResponseRequest : IRequest
         {
             case ResponseState.None:
                 string extension = new FileInfo(path).Extension;
-                if (Server.Config.MimeTypes.ContainsKey(extension)) Context.Response.ContentType = Server.Config.MimeTypes[extension];
+                if (Server.Config.MimeTypes.TryGetValue(extension, out string? type)) Context.Response.ContentType = type;
                 await Context.Response.SendFileAsync(path);
                 State = ResponseState.Finished; break;
             case ResponseState.Text:
@@ -162,7 +162,7 @@ public abstract class SimpleResponseRequest : IRequest
         switch (State)
         {
             case ResponseState.None:
-                if (extension != null && Server.Config.MimeTypes.ContainsKey(extension)) Context.Response.ContentType = Server.Config.MimeTypes[extension];
+                if (extension != null && Server.Config.MimeTypes.TryGetValue(extension, out string? type)) Context.Response.ContentType = type;
                 await Context.Response.BodyWriter.WriteAsync(bytes);
                 State = ResponseState.Finished; break;
             case ResponseState.Text:

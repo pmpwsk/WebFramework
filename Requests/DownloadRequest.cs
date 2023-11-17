@@ -56,11 +56,11 @@ public class DownloadRequest : IRequest
         if (Finished) throw new Exception("Something has already been sent.");
         else
         {
-            if (filename == null) filename = new FileInfo(path).Name;
+            filename ??= new FileInfo(path).Name;
             if (filename.Contains('.'))
             {
                 string extension = filename.Remove(0, filename.LastIndexOf('.'));
-                if (Server.Config.MimeTypes.ContainsKey(extension)) Context.Response.ContentType = Server.Config.MimeTypes[extension];
+                if (Server.Config.MimeTypes.TryGetValue(extension, out string? type)) Context.Response.ContentType = type;
             }
             Context.Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{filename}\"");
             await Context.Response.SendFileAsync(path);
@@ -79,7 +79,7 @@ public class DownloadRequest : IRequest
             if (filename.Contains('.'))
             {
                 string extension = filename.Remove(0, filename.LastIndexOf('.'));
-                if (Server.Config.MimeTypes.ContainsKey(extension)) Context.Response.ContentType = Server.Config.MimeTypes[extension];
+                if (Server.Config.MimeTypes.TryGetValue(extension, out string? type)) Context.Response.ContentType = type;
             }
             Context.Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{filename}\"");
             await Context.Response.BodyWriter.WriteAsync(bytes);
