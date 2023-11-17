@@ -203,7 +203,7 @@ public class UserTable : Table<User>
         else if (user.MailToken != null) return LoginState.NeedsMailVerification;
         else
         {
-            if (tokenData.Expires < DateTime.UtcNow + AccountManager.Settings.TokenExpiration - AccountManager.Settings.TokenRenewalAfter)
+            if (tokenData.Expires < DateTime.UtcNow + Server.Config.Accounts.TokenExpiration - Server.Config.Accounts.TokenRenewalAfter)
             { //renew token if the renewal is due
                 AccountManager.AddAuthTokenCookie(user.Id + user.Auth.Renew(authToken), context);
                 if (Server.Config.Log.AuthTokenRenewed)

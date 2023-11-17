@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Settings = uwap.WebFramework.Server.Config.Accounts;
 
 namespace uwap.WebFramework.Accounts;
 

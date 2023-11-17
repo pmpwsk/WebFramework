@@ -99,7 +99,7 @@ public class AppRequest : IRequest
     public void RedirectToLogin()
     {
         Finished = true;
-        Redirect(AccountManager.Settings.LoginPath + "?redirect=" + HttpUtility.UrlEncode(Context.PathQuery()));
+        Redirect(Server.Config.Accounts.LoginPath + "?redirect=" + HttpUtility.UrlEncode(Context.PathQuery()));
     }
 
     /// <summary>

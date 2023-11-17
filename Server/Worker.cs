@@ -76,11 +76,11 @@ public static partial class Server
         }
 
         //account stuff
-        if (AccountManager.Settings.Enabled)
+        if (Config.Accounts.Enabled)
         {
             try //delete expired tokens
             {
-                foreach (var table in AccountManager.Settings.UserTables.Values.Distinct())
+                foreach (var table in Config.Accounts.UserTables.Values.Distinct())
                     foreach (string id in table.ListKeys())
                     {
                         table[id].Auth.DeleteExpired();
@@ -94,7 +94,7 @@ public static partial class Server
             try
             {
                 var affected = AccountManager.FailedAuth.Keys.Where(
-                    ip => DateTime.UtcNow - AccountManager.FailedAuth[ip].LastAttempt >= AccountManager.Settings.FailedAttempts.BanDuration);
+                    ip => DateTime.UtcNow - AccountManager.FailedAuth[ip].LastAttempt >= Config.Accounts.FailedAttempts.BanDuration);
                 foreach (string ip in affected)
                     AccountManager.FailedAuth.Remove(ip);
             }
@@ -105,7 +105,7 @@ public static partial class Server
 
             try
             {
-                foreach (var userTable in AccountManager.Settings.UserTables.Values.Distinct())
+                foreach (var userTable in Config.Accounts.UserTables.Values.Distinct())
                     userTable.FixAccessories();
             }
             catch (Exception ex)

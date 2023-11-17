@@ -77,7 +77,7 @@ public class PresetsHandler
     /// </summary>
     public virtual void Navigation(AppRequest request, Page page)
     {
-        if (AccountManager.Settings.Enabled)
+        if (Server.Config.Accounts.Enabled)
             page.Navigation = new List<IButton>
             {
                 new Button(request.Domain, "/")

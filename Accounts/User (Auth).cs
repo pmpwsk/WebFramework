@@ -66,7 +66,7 @@ public partial class User : ITableValue
                 User.Lock();
 
                 //find and delete least recently used token if there are too many tokens now
-                if ((!User._AuthTokens.ContainsKey(authToken)) && User._AuthTokens.Count >= AccountManager.Settings.MaxAuthTokens)
+                if ((!User._AuthTokens.ContainsKey(authToken)) && User._AuthTokens.Count >= Server.Config.Accounts.MaxAuthTokens)
                 {
                     KeyValuePair<string, AuthTokenData>? oldestToken = null;
                     foreach (var token in User._AuthTokens)

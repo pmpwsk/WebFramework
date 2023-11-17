@@ -204,7 +204,7 @@ public partial class User : ITableValue
         if (request != null && AccountManager.IsBanned(request.Context)) return false;
         if (Password.Check(password))
         {
-            if (AccountManager.Settings.AutoUpgradePasswordHashes && !Password.MatchesDefault())
+            if (Server.Config.Accounts.AutoUpgradePasswordHashes && !Password.MatchesDefault())
             {
                 Lock();
                 Password = new(password);

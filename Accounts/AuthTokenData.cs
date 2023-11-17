@@ -24,7 +24,7 @@ public class AuthTokenData
     /// <param name="needs2FA">Whether the token still needs two-factor authentication.</param>
     public AuthTokenData(bool needs2FA, bool temporary)
     {
-        Expires = DateTime.UtcNow + (temporary ? TimeSpan.FromMinutes(10) : AccountManager.Settings.TokenExpiration);
+        Expires = DateTime.UtcNow + (temporary ? TimeSpan.FromMinutes(10) : Server.Config.Accounts.TokenExpiration);
         Needs2FA = needs2FA;
     }
 }

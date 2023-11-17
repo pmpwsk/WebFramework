@@ -98,7 +98,7 @@ public static partial class Server
                 }
 
                 User? user;
-                UserTable? userTable = AccountManager.Settings.Enabled ? AccountManager.GetUserTable(context) : null;
+                UserTable? userTable = Server.Config.Accounts.Enabled ? AccountManager.GetUserTable(context) : null;
                 LoginState loginState;
 
                 if (userTable != null)
@@ -124,27 +124,27 @@ public static partial class Server
                             if (await context.ServeFile($"{d}{path}.html")) return;
                         }
 
-                        if (path.StartsWith("/api/") || AccountManager.Settings.LoginAllowedPaths == null || AccountManager.Settings.LoginAllowedPaths.Contains(path)) { }
+                        if (path.StartsWith("/api/") || Server.Config.Accounts.LoginAllowedPaths == null || Server.Config.Accounts.LoginAllowedPaths.Contains(path)) { }
                         else if (loginState == LoginState.NeedsMailVerification)
                         {
-                            if (path != AccountManager.Settings.MailVerifyPath)
+                            if (path != Server.Config.Accounts.MailVerifyPath)
                             {
                                 IPlugin? plugin = PluginManager.GetPlugin(domains, context.Path(), out string relPath, out string pathPrefix);
                                 if (plugin == null || plugin.GetFileVersion(relPath) == null)
                                 {
-                                    context.Response.Redirect($"{AccountManager.Settings.MailVerifyPath}?redirect={HttpUtility.UrlEncode(context.PathQuery())}");
+                                    context.Response.Redirect($"{Server.Config.Accounts.MailVerifyPath}?redirect={HttpUtility.UrlEncode(context.PathQuery())}");
                                     break;
                                 }
                             }
                         }
                         else if (loginState == LoginState.Needs2FA)
                         {
-                            if (path != AccountManager.Settings.TwoFactorPath)
+                            if (path != Server.Config.Accounts.TwoFactorPath)
                             {
                                 IPlugin? plugin = PluginManager.GetPlugin(domains, context.Path(), out string relPath, out string pathPrefix);
                                 if (plugin == null || plugin.GetFileVersion(relPath) == null)
                                 {
-                                    context.Response.Redirect($"{AccountManager.Settings.TwoFactorPath}?redirect={HttpUtility.UrlEncode(context.PathQuery())}");
+                                    context.Response.Redirect($"{Server.Config.Accounts.TwoFactorPath}?redirect={HttpUtility.UrlEncode(context.PathQuery())}");
                                     break;
                                 }
                             }
