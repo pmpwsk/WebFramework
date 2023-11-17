@@ -20,7 +20,7 @@ public class DownloadRequest : IRequest
     {
         set
         {
-            if (value != null) Context.Response.Headers.Add("Access-Control-Allow-Origin", value);
+            if (value != null) Context.Response.Headers.Append("Access-Control-Allow-Origin", value);
         }
     }
 
@@ -62,7 +62,7 @@ public class DownloadRequest : IRequest
                 string extension = filename.Remove(0, filename.LastIndexOf('.'));
                 if (Server.Config.MimeTypes.ContainsKey(extension)) Context.Response.ContentType = Server.Config.MimeTypes[extension];
             }
-            Context.Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{filename}\"");
+            Context.Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{filename}\"");
             await Context.Response.SendFileAsync(path);
             Finished = true;
         }
@@ -81,7 +81,7 @@ public class DownloadRequest : IRequest
                 string extension = filename.Remove(0, filename.LastIndexOf('.'));
                 if (Server.Config.MimeTypes.ContainsKey(extension)) Context.Response.ContentType = Server.Config.MimeTypes[extension];
             }
-            Context.Response.Headers.Add("Content-Disposition", $"attachment; filename=\"{filename}\"");
+            Context.Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{filename}\"");
             await Context.Response.BodyWriter.WriteAsync(bytes);
             Finished = true;
         }

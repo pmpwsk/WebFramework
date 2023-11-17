@@ -57,7 +57,7 @@ public static partial class Server
         {
             try
             {
-                context.Response.Headers.Add("server", Config.ServerHeader);
+                context.Response.Headers.Append("server", Config.ServerHeader);
                 context.Response.StatusCode = 200;
 
                 if (PauseRequests)
@@ -149,7 +149,7 @@ public static partial class Server
                             }
                         }
 
-                        context.Response.Headers.Add("Cache-Control", "no-cache, private");
+                        context.Response.Headers.Append("Cache-Control", "no-cache, private");
 
                         //handle based on the first segment
                         string prefix = context.Request.Path.Value??"/";
@@ -275,7 +275,7 @@ public static partial class Server
                     } break;
                     case "POST": //post method
                     {
-                        context.Response.Headers.Add("Cache-Control", "no-cache, private");
+                        context.Response.Headers.Append("Cache-Control", "no-cache, private");
                         context.Response.ContentType = "text/plain;charset=utf-8";
                         if ((!context.Request.HasFormContentType) || context.Request.Form.Files.Count == 0)
                         { //regular post
@@ -315,13 +315,13 @@ public static partial class Server
                         }
                     } break;
                     case "HEAD": //just the headers should be returned
-                        context.Response.Headers.Add("Cache-Control", "no-cache, private");
+                        context.Response.Headers.Append("Cache-Control", "no-cache, private");
                         if (context.Path() != "/")
                             context.Response.StatusCode = 404; //currently, only path / is "handled" to allow for web server discovery using HEAD requests
                         break;
                     default: //method not supported
                     {
-                        context.Response.Headers.Add("Cache-Control", "no-cache, private");
+                        context.Response.Headers.Append("Cache-Control", "no-cache, private");
                         context.Response.StatusCode = 405;
                         await context.Response.WriteAsync(Parsers.StatusMessage(405));
                     } break;
@@ -390,21 +390,21 @@ public static partial class Server
         //browser cache
         if (Config.BrowserCacheMaxAge.TryGetValue(extension, out int maxAge))
         {
-            if (maxAge == 0) context.Response.Headers.Add("Cache-Control", "no-cache, private");
+            if (maxAge == 0) context.Response.Headers.Append("Cache-Control", "no-cache, private");
             else
             {
                 if (!context.Response.Headers.ContainsKey("Cache-Control"))
-                    context.Response.Headers.Add("Cache-Control", "public, max-age=" + maxAge);
+                    context.Response.Headers.Append("Cache-Control", "public, max-age=" + maxAge);
                 else context.Response.Headers["Cache-Control"] = "public, max-age=" + maxAge;
                 try
                 {
                     if (context.Request.Headers.TryGetValue("If-None-Match", out var oldTag) && oldTag == timestamp)
                     {
                         context.Response.StatusCode = 304;
-                        if (Config.FileCorsDomain != null) context.Response.Headers.Add("Access-Control-Allow-Origin", Config.FileCorsDomain);
+                        if (Config.FileCorsDomain != null) context.Response.Headers.Append("Access-Control-Allow-Origin", Config.FileCorsDomain);
                         return true; //browser already has the current version
                     }
-                    else context.Response.Headers.Add("ETag", timestamp);
+                    else context.Response.Headers.Append("ETag", timestamp);
                 }
                 catch { }
             }

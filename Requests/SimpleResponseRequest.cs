@@ -15,7 +15,7 @@ public abstract class SimpleResponseRequest : IRequest
     {
         set
         {
-            if (value != null) Context.Response.Headers.Add("Access-Control-Allow-Origin", value);
+            if (value != null) Context.Response.Headers.Append("Access-Control-Allow-Origin", value);
         }
     }
 
