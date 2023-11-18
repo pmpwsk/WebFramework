@@ -67,6 +67,8 @@ public class PresetsHandler
                 else return new Button("Login", "/account/login?redirect=" + HttpUtility.UrlEncode(request.Path + request.Context.Request.QueryString), "right");
             case LoginState.LoggedIn:
                 return new Button("Account", "/account", "right");
+            case LoginState.Banned:
+                return new Button("Banned", "#", "right");
             default:
                 return new Button("Logout", "/account/logout" + request.CurrentRedirectQuery(), "right");
         }
