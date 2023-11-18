@@ -58,7 +58,7 @@ public abstract class IRequest
 
     /// <summary>
     /// The associated user. If no user is associated with the request, an exception is thrown.<br/>
-    /// A user is only associated if LoginState is LoggedIn. This can also be checked by getting bool IRequest.LoggedIn.
+    /// A user is only associated if LoginState is not None or Banned. This can also be checked by getting bool IRequest.HasUser.
     /// </summary>
     public User User => _User ?? throw new Exception("This request doesn't contain a user.");
 
