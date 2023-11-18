@@ -217,6 +217,11 @@ public class Page : IPage
         //content
         yield return "\t\t<div class=\"content\">";
         yield return "\t\t\t<div class=\"content-items\">";
+        if (request.LoginState == Accounts.LoginState.Banned && Server.Config.Accounts.FailedAttempts.BanMessage != null)
+        {
+            foreach (string line in Server.Config.Accounts.FailedAttempts.BanMessage.Export())
+                yield return "\t\t\t\t" + line;
+        }
         if (error)
         {
             if (request.Status == 301 || request.Status == 302)
