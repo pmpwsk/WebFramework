@@ -1,4 +1,5 @@
 ﻿using uwap.WebFramework.Accounts;
+using uwap.WebFramework.Elements;
 
 namespace uwap.WebFramework;
 
@@ -101,6 +102,11 @@ public static partial class Server
                 /// Default: 4 hours
                 /// </summary>
                 public static TimeSpan BanDuration { get; set; } = TimeSpan.FromHours(4);
+
+                /// <summary>
+                /// The element to display as the first element on a Page object if the requesting IP address is banned.
+                /// </summary>
+                public static IPageElement? BanMessage { get; set; } = new ContainerElement("You have been temporarily banned from authenticating yourself to avoid brute-force attacks. You may try to log in again later.", "", "red");
             }
         }
     }
