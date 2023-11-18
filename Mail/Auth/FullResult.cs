@@ -25,6 +25,12 @@ public static partial class MailAuth
         public readonly bool Secure;
 
         /// <summary>
+        /// The PTR record for the sending IP address or null if no such record exists.
+        /// </summary>
+        [DataMember]
+        public readonly string? PTR;
+
+        /// <summary>
         /// The result of SPF checking.
         /// </summary>
         [DataMember]
@@ -49,6 +55,7 @@ public static partial class MailAuth
         {
             IPAddress = connectionData.IP.Address.ToString();
             Secure = connectionData.Secure;
+            PTR = CheckPTR(connectionData.IP.Address);
 
             string fromDomain = message.From.Mailboxes.First().Domain;
             string? returnHeader = message.Headers[HeaderId.ReturnPath];
@@ -64,6 +71,7 @@ public static partial class MailAuth
             {
                 logToPopulate.Add("From: " + IPAddress);
                 logToPopulate.Add("Secure: " + Secure.ToString());
+                logToPopulate.Add("PTR: " + (PTR ?? "none"));
 
                 logToPopulate.Add($"SPF: {SPF}{(spfPassedDomain == null ? "" : $" with {spfPassedDomain}")}");
 
