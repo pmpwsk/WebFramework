@@ -63,6 +63,11 @@ public abstract class IRequest
     public User User => _User ?? throw new Exception("This request doesn't contain a user.");
 
     /// <summary>
+    /// Whether a user is associated with the request.
+    /// </summary>
+    public bool HasUser => _User != null;
+
+    /// <summary>
     /// The associated user table. If no table is assigned to requests to this domain, an exception is thrown.
     /// </summary>
     public UserTable UserTable => _UserTable ?? throw new Exception("This request isn't referencing a user table.");
