@@ -108,6 +108,12 @@ public static partial class Server
                 /// Default: new ContainerElement("You have been temporarily banned from authenticating yourself to avoid brute-force attacks. You may try to log in again later.", "", "red")
                 /// </summary>
                 public static IPageElement? BanMessage { get; set; } = new ContainerElement("You have been temporarily banned from authenticating yourself to avoid brute-force attacks. You may try to log in again later.", "", "red");
+
+                /// <summary>
+                /// Whether to create log entries about IP addresses getting banned for failed authentication.<br/>
+                /// Default: false
+                /// </summary>
+                public static bool LogBans { get; set; } = false;
             }
         }
     }
