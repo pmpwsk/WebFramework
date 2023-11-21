@@ -104,7 +104,8 @@ public static partial class Server
                 public static TimeSpan BanDuration { get; set; } = TimeSpan.FromHours(4);
 
                 /// <summary>
-                /// The element to display as the first element on a Page object if the requesting IP address is banned.
+                /// The element to display as the first element on a Page object if the requesting IP address is banned.<br/>
+                /// Default: new ContainerElement("You have been temporarily banned from authenticating yourself to avoid brute-force attacks. You may try to log in again later.", "", "red")
                 /// </summary>
                 public static IPageElement? BanMessage { get; set; } = new ContainerElement("You have been temporarily banned from authenticating yourself to avoid brute-force attacks. You may try to log in again later.", "", "red");
             }
