@@ -60,6 +60,8 @@ public static partial class AccountManager
         {
             fa.FailedAttempts++;
             fa.LastAttempt = DateTime.UtcNow;
+            if (Settings.FailedAttempts.LogBans && fa.FailedAttempts >= Settings.FailedAttempts.Limit)
+                Console.WriteLine($"Banned IP \"{ip}\" for too many failed authentication attempts.");
         }
         else
         {
