@@ -38,7 +38,7 @@ public static partial class AccountManager
     /// <summary>
     /// The dictionary for failed auth entries for each IP hash that currently has failed attempts.
     /// </summary>
-    public static Dictionary<string,FailedAuthEntry> FailedAuth = new();
+    private static Dictionary<string,FailedAuthEntry> FailedAuth = [];
 
     /// <summary>
     /// Returns the user table for the domain of the given context (or "any") or returns null if no matches were found.
@@ -58,8 +58,8 @@ public static partial class AccountManager
         string key = Convert.ToHexString(ip.ToSha256());
         if (FailedAuth.TryGetValue(key, out var fa) && (DateTime.UtcNow-fa.LastAttempt)<Settings.FailedAttempts.BanDuration)
         {
-            FailedAuth[key].FailedAttempts++;
-            FailedAuth[key].LastAttempt = DateTime.UtcNow;
+            fa.FailedAttempts++;
+            fa.LastAttempt = DateTime.UtcNow;
         }
         else
         {
@@ -75,8 +75,18 @@ public static partial class AccountManager
         if (ip == null) return false;
         string key = Convert.ToHexString(ip.ToSha256());
         if (FailedAuth.TryGetValue(key, out var fa) && (DateTime.UtcNow-fa.LastAttempt)<Settings.FailedAttempts.BanDuration)
-            return FailedAuth[key].FailedAttempts >= Settings.FailedAttempts.Limit;
+            return fa.FailedAttempts >= Settings.FailedAttempts.Limit;
         else return false;
+    }
+
+    /// <summary>
+    /// Deletes all expired failed authentication bans.
+    /// </summary>
+    public static void DeleteExpiredBans()
+    {
+        foreach (var kv in FailedAuth)
+            if (DateTime.UtcNow - FailedAuth[kv.Key].LastAttempt >= Settings.FailedAttempts.BanDuration)
+                FailedAuth.Remove(kv.Key);
     }
 
     /// <summary>
@@ -98,7 +108,7 @@ public static partial class AccountManager
         string? wildcard;
         if (Settings.WildcardDomains.Contains(domain))
             wildcard = domain;
-        else wildcard = Settings.WildcardDomains.FirstOrDefault(x => domain.EndsWith('.' + x) && !domain.Substring(0, domain.Length - x.Length - 1).Contains('.'));
+        else wildcard = Settings.WildcardDomains.FirstOrDefault(x => domain.EndsWith('.' + x) && !domain[..(domain.Length - x.Length - 1)].Contains('.'));
 
         if (wildcard != null) return '.' + wildcard;
         else return null;

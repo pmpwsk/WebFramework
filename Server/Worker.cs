@@ -93,10 +93,7 @@ public static partial class Server
 
             try
             {
-                var affected = AccountManager.FailedAuth.Keys.Where(
-                    ip => DateTime.UtcNow - AccountManager.FailedAuth[ip].LastAttempt >= Config.Accounts.FailedAttempts.BanDuration);
-                foreach (string ip in affected)
-                    AccountManager.FailedAuth.Remove(ip);
+                AccountManager.DeleteExpiredBans();
             }
             catch (Exception ex)
             {
