@@ -81,10 +81,8 @@ public static partial class Server
             try //delete expired tokens
             {
                 foreach (var table in Config.Accounts.UserTables.Values.Distinct())
-                    foreach (string id in table.ListKeys())
-                    {
-                        table[id].Auth.DeleteExpired();
-                    }
+                    foreach (var kv in table)
+                        kv.Value.Auth.DeleteExpired();
             }
             catch (Exception ex)
             {
