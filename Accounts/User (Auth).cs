@@ -1,7 +1,9 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using uwap.Database;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace uwap.WebFramework.Accounts;
 
@@ -31,7 +33,7 @@ public partial class User : ITableValue
     /// <summary>
     /// Contains methods to manage authentication for the associated user.
     /// </summary>
-    public class AuthManager
+    public class AuthManager : IEnumerable<KeyValuePair<string, AuthTokenData>>
     {
         /// <summary>
         /// The user this object is associated with.
@@ -183,5 +185,23 @@ public partial class User : ITableValue
         /// </summary>
         public ReadOnlyCollection<string> ListAll()
             => User._AuthTokens.Keys.ToList().AsReadOnly();
+
+        /// <summary>
+        /// Enumerates all values.
+        /// </summary>
+        public IEnumerator<KeyValuePair<string, AuthTokenData>> GetEnumerator()
+        {
+            foreach (var kv in User._AuthTokens)
+                yield return kv;
+        }
+
+        /// <summary>
+        /// Enumerates all values.
+        /// </summary>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            foreach (var kv in User._AuthTokens)
+                yield return kv;
+        }
     }
 }
