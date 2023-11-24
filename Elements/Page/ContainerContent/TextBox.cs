@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace uwap.WebFramework.Elements;
 
 /// <summary>
@@ -66,7 +68,30 @@ public class TextBox : IContent
                 TextBoxRole.Phone => $"type=\"tel\" spellcheck=\"false\" autocomplete=\"tel\"",
                 TextBoxRole.None or _ => $"type=\"text\""
             });
-            if (Text != null) properties.Add($"value=\"{Text}\"");
+            if (Text != null)
+            {
+                StringBuilder text = new();
+                foreach (char c in Text ?? "")
+                    switch (c)
+                    {
+                        case '\n':
+                            text.Append("&#13;&#10;");
+                            break;
+                        case '"':
+                            text.Append("&quot;");
+                            break;
+                        case '<':
+                            text.Append("&lt;");
+                            break;
+                        case '>':
+                            text.Append("&gt;");
+                            break;
+                        default:
+                            text.Append(c);
+                            break;
+                    }
+                properties.Add($"value=\"{text}\"");
+            }
             //if (OnEnter != null) properties.Add($"onkeydown=\"if (event.key == 'Enter') {OnEnter}\"");
             if (Autofocus) properties.Add("autofocus");
             if (OnInput != null) properties.Add($"oninput=\"{OnInput}\"");
