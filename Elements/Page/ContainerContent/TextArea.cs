@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace uwap.WebFramework.Elements;
 
 public class TextArea : IContent
@@ -62,6 +64,23 @@ public class TextArea : IContent
     //documentation inherited from IContent
     public override IEnumerable<string> Export()
     {
-        yield return Opener + (Text ?? "") + Closer;
+        StringBuilder text = new();
+        foreach (char c in Text ?? "")
+            switch (c)
+            {
+                case '\n':
+                    text.Append("&#13;&#10;");
+                    break;
+                case '<':
+                    text.Append("&lt;");
+                    break;
+                case '>':
+                    text.Append("&gt;");
+                    break;
+                default:
+                    text.Append(c);
+                    break;
+            }
+        yield return Opener + text.ToString() + Closer;
     }
 }
