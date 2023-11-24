@@ -273,6 +273,16 @@ public static class Parsers
     /// <summary>
     /// Returns the part of the given string after the last occurrence of the given separator.
     /// </summary>
+    public static string After(this string value, string separator)
+    {
+        int index = value.LastIndexOf(separator);
+        if (index == -1) return value;
+        return value.Remove(0, index + separator.Length);
+    }
+
+    /// <summary>
+    /// Returns the part of the given string after the last occurrence of the given separator.
+    /// </summary>
     public static string After(this string value, char separator)
     {
         int index = value.LastIndexOf(separator);
