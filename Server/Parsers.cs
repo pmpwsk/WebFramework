@@ -253,6 +253,9 @@ public static class Parsers
         return part1.ToUpper() + part2;
     }
 
+    /// <summary>
+    /// Returns the part of the given string before the first occurrence of the given separator.
+    /// </summary>
     public static string Before(this string value, string separator)
     {
         int index = value.IndexOf(separator);
