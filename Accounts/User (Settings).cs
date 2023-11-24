@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using uwap.Database;
@@ -31,7 +32,7 @@ public partial class User : ITableValue
     /// <summary>
     /// Contains methods to manage settings for the associated user.
     /// </summary>
-    public class SettingsManager
+    public class SettingsManager : IEnumerable<KeyValuePair<string, string>>
     {
         /// <summary>
         /// The user this object is associated with.
@@ -99,5 +100,23 @@ public partial class User : ITableValue
         /// <returns>Whether a setting with the given key has been found.</returns>
         public bool TryGetValue(string key, [MaybeNullWhen(false)] out string value)
             => User._Settings.TryGetValue(key, out value);
+
+        /// <summary>
+        /// Enumerates all values.
+        /// </summary>
+        public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
+        {
+            foreach (var kv in User._Settings)
+                yield return kv;
+        }
+
+        /// <summary>
+        /// Enumerates all values.
+        /// </summary>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            foreach (var kv in User._Settings)
+                yield return kv;
+        }
     }
 }
