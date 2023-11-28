@@ -185,6 +185,22 @@ public partial class User : ITableValue
             Lock();
             MailToken = null;
             UnlockSave();
+
+            //does an auth token even exist? (this should be the case, but you never know)
+            if (request != null && request.Cookies.Contains("AuthToken"))
+            {
+                //get and decode the auth token
+                string combinedToken = request.Cookies["AuthToken"];
+                string id = combinedToken.Remove(12);
+                string authToken = combinedToken.Remove(0, 12);
+                if (Id == id && Auth.Exists(authToken))
+                {
+                    //renew
+                    if (Server.Config.Log.AuthTokenRenewed)
+                        Console.WriteLine($"Renewed a token after mail verification for user {Id}.");
+                    AccountManager.AddAuthTokenCookie(Id + Auth.Renew(authToken), request.Context, false);
+                }
+            }
             return true;
         }
         else
