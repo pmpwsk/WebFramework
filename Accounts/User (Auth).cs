@@ -112,13 +112,14 @@ public partial class User : ITableValue
         /// Generates a new authentication token and returns it.<br/>
         /// If the user is using 2FA, the token will still need it before the login process is finished.
         /// </summary>
-        public string AddNew()
+        public string AddNew(out bool temporary)
         {
             string token;
             do token = Parsers.RandomString(64);
                 while (Exists(token));
             bool twoFactor = User.TwoFactor.TOTPEnabled();
-            this[token] = new AuthTokenData(twoFactor, twoFactor || User.MailToken != null);
+            temporary = twoFactor || User.MailToken != null;
+            this[token] = new AuthTokenData(twoFactor, temporary);
             return token;
         }
 

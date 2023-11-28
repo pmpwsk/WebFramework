@@ -94,12 +94,13 @@ public static partial class AccountManager
     /// <summary>
     /// Adds a cookie for the given authentication token to the given context.
     /// </summary>
-    internal static void AddAuthTokenCookie(string combinedToken, HttpContext context)
+    internal static void AddAuthTokenCookie(string combinedToken, HttpContext context, bool temporary)
     {
+        DateTime expires = DateTime.UtcNow + (temporary ? TimeSpan.FromMinutes(10) : Settings.TokenExpiration);
         string? wildcard = GetWildcardDomain(context.Domain());
         if (wildcard == null)
-            context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = DateTime.UtcNow + Settings.TokenExpiration, SameSite = SameSiteMode.Strict });
-        else context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = DateTime.UtcNow + Settings.TokenExpiration, Domain = wildcard });
+            context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = expires, SameSite = SameSiteMode.Strict });
+        else context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = expires, Domain = wildcard });
     }
 
     /// <summary>
@@ -120,7 +121,7 @@ public static partial class AccountManager
     /// Creates a new authentication token for the given user and adds a cookie for it to the given context.
     /// </summary>
     internal static void Login(User user, IRequest request)
-        => AddAuthTokenCookie(user.Id + user.Auth.AddNew(), request.Context);
+        => AddAuthTokenCookie(user.Id + user.Auth.AddNew(out bool temporary), request.Context, temporary);
 
     /// <summary>
     /// Check whether the given username satisfies the username requirements.
