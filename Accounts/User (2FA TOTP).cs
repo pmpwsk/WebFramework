@@ -92,19 +92,16 @@ public class TwoFactorTotp
             //does an auth token even exist? (this should be the case, but you never know)
             if (request != null && request.Cookies.Contains("AuthToken"))
             {
-                //get and decode the auth token to find the user (assuming that it's the user of the current 2FA object)
+                //get and decode the auth token
                 string combinedToken = request.Cookies["AuthToken"];
                 string id = combinedToken.Remove(12);
                 string authToken = combinedToken.Remove(0, 12);
-                var users = request.UserTable;
-                if (users != null && users.ContainsKey(id))
+                if (User.Id == id && User.Auth.Exists(authToken))
                 {
-                    User user = users[id];
-                    //set Needs2FA to false for the current auth token if it exists
-                    if (user.Auth.Exists(authToken))
-                    {
-                        user.Auth[authToken] = new AuthTokenData(false, request.LoggedIn && request.User.MailToken != null);
-                    }
+                    //renew
+                    if (Server.Config.Log.AuthTokenRenewed)
+                        Console.WriteLine($"Renewed a token after 2FA for user {User.Id}.");
+                    AccountManager.AddAuthTokenCookie(User.Id + User.Auth.Renew(authToken), request.Context, false);
                 }
             }
             User.UnlockSave();
