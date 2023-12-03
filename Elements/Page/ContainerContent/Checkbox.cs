@@ -19,6 +19,11 @@ public class Checkbox : IContent
     public bool Checked;
 
     /// <summary>
+    /// JavaScript command that should be executed when the value changes.
+    /// </summary>
+    public string? OnChange = null;
+
+    /// <summary>
     /// Creates a new checkbox element with the given ID for a container.
     /// </summary>
     public Checkbox(string text, string id, bool isChecked = false)
@@ -31,6 +36,6 @@ public class Checkbox : IContent
     //documentation inherited from IContent
     public override IEnumerable<string> Export()
     {
-        yield return $"<div class=\"checkbox\"><input type=\"checkbox\" id=\"{Id}\" name=\"{Id}\"{(Checked ? " checked" : "")} /><label for=\"{Id}\">{Text}</label></div>";
+        yield return $"<div class=\"checkbox\"><input type=\"checkbox\" id=\"{Id}\" name=\"{Id}\"{(Checked ? " checked" : "")}{(OnChange == null ? null : $" onchange=\"{OnChange}\"")} /><label for=\"{Id}\">{Text}</label></div>";
     }
 }
