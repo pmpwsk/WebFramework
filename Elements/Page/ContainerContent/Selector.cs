@@ -8,6 +8,14 @@ public class Selector : IContent
     //documentation inherited from IElement
     protected override string ElementType => "select";
 
+    //documentation inherited from IElement
+    protected override string? ElementProperties => OnChange == null ? null : $"onchange=\"{OnChange}\"";
+
+    /// <summary>
+    /// JavaScript command that should be executed when the value changes.
+    /// </summary>
+    public string? OnChange = null;
+
     /// <summary>
     /// The possible items for the selector.
     /// </summary>
