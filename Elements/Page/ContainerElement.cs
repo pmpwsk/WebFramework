@@ -45,7 +45,20 @@ public class ContainerElement : IContainerElement
         Id = id;
         if (content != null) Contents.Add(content);
     }
-    
+
+    /// <summary>
+    /// Creates a new container element with the given paragraphs.
+    /// </summary>
+    public ContainerElement(string? title, IEnumerable<string> paragraphs, string? classes = null, string? styles = null, string? id = null)
+    {
+        Title = title;
+        Class = classes;
+        Style = styles;
+        Id = id;
+        foreach (string p in paragraphs)
+            Contents.Add(new Paragraph(p));
+    }
+
     /// <summary>
     /// Creates a new container element with the given list of contents.
     /// </summary>
