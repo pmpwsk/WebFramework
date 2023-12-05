@@ -42,6 +42,19 @@ public class HeadingElement : IContainerElement
     }
 
     /// <summary>
+    /// Creates a new heading element with the given paragraphs.
+    /// </summary>
+    public HeadingElement(string? title, IEnumerable<string> paragraphs, string? classes = null, string? styles = null, string? id = null)
+    {
+        Title = title;
+        Class = classes;
+        Style = styles;
+        Id = id;
+        foreach (string p in paragraphs)
+            Contents.Add(new Paragraph(p));
+    }
+
+    /// <summary>
     /// Creates a new heading element with the given list of contents.
     /// </summary>
     public HeadingElement(string? title, List<IContent>? contents, string? classes = null, string? styles = null, string? id = null)
