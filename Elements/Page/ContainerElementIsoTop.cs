@@ -24,6 +24,12 @@ public class ContainerElementIsoTop : ContainerElement
         : base(title, content, classes, styles, id) { }
 
     /// <summary>
+    /// Creates a new isolated top container element with the given paragraphs.
+    /// </summary>
+    public ContainerElementIsoTop(string? title, IEnumerable<string> paragraphs, string? classes = null, string? styles = null, string? id = null)
+        : base(title, paragraphs, classes, styles, id) { }
+
+    /// <summary>
     /// Creates a new isolated top container element with the given list of contents.
     /// </summary>
     public ContainerElementIsoTop(string? title, List<IContent>? contents, string? classes = null, string? styles = null, string? id = null)
