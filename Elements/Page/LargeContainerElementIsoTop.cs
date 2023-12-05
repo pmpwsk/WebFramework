@@ -27,6 +27,12 @@ public class LargeContainerElementIsoTop : ContainerElementIsoTop
         : base(title, content, classes, styles, id) { }
 
     /// <summary>
+    /// Creates a new large-titled isolated top container element with the given paragraphs.
+    /// </summary>
+    public LargeContainerElementIsoTop(string? title, IEnumerable<string> paragraphs, string? classes = null, string? styles = null, string? id = null)
+        : base(title, paragraphs, classes, styles, id) { }
+
+    /// <summary>
     /// Creates a new large-titled isolated top container element with the given list of contents.
     /// </summary>
     public LargeContainerElementIsoTop(string? title, List<IContent>? contents, string? classes = null, string? styles = null, string? id = null)
