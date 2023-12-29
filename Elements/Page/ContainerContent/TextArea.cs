@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace uwap.WebFramework.Elements;
 
 public class TextArea : IContent
@@ -12,11 +10,11 @@ public class TextArea : IContent
     {
         get
         {
-            List<string> properties = new List<string>();
-            if (Placeholder != "" && Placeholder != null) properties.Add($"placeholder=\"{Placeholder}\"");
+            List<string> properties = [];
+            if (Placeholder != "" && Placeholder != null) properties.Add($"placeholder=\"{Placeholder.HtmlValueSafe()}\"");
             if (Rows != null) properties.Add($"rows=\"{Rows}\"");
             if (Autofocus) properties.Add("autofocus");
-            if (OnInput != null) properties.Add($"oninput=\"{OnInput}\"");
+            if (OnInput != null) properties.Add($"oninput=\"{OnInput.HtmlValueSafe()}\"");
             return string.Join(' ', properties);
         }
     }
@@ -64,23 +62,6 @@ public class TextArea : IContent
     //documentation inherited from IContent
     public override IEnumerable<string> Export()
     {
-        StringBuilder text = new();
-        foreach (char c in Text ?? "")
-            switch (c)
-            {
-                case '\n':
-                    text.Append("&#13;&#10;");
-                    break;
-                case '<':
-                    text.Append("&lt;");
-                    break;
-                case '>':
-                    text.Append("&gt;");
-                    break;
-                default:
-                    text.Append(c);
-                    break;
-            }
-        yield return Opener + text.ToString() + Closer;
+        yield return Opener + (Text == null ? "" : Text.HtmlSafe()) + Closer;
     }
 }
