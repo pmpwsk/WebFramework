@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace uwap.WebFramework.Elements;
 
 /// <summary>
@@ -57,7 +55,7 @@ public class TextBox : IContent
         get
         {
             List<string> properties = new List<string>();
-            if (Placeholder != null) properties.Add($"placeholder=\"{Placeholder}\"");
+            if (Placeholder != null) properties.Add($"placeholder=\"{Placeholder.HtmlValueSafe()}\"");
             properties.Add(Role switch
             {
                 TextBoxRole.Username => "type=\"text\" spellcheck=\"false\" autocomplete=\"username\"",
@@ -69,32 +67,10 @@ public class TextBox : IContent
                 TextBoxRole.None or _ => $"type=\"text\""
             });
             if (Text != null)
-            {
-                StringBuilder text = new();
-                foreach (char c in Text ?? "")
-                    switch (c)
-                    {
-                        case '\n':
-                            text.Append("&#13;&#10;");
-                            break;
-                        case '"':
-                            text.Append("&quot;");
-                            break;
-                        case '<':
-                            text.Append("&lt;");
-                            break;
-                        case '>':
-                            text.Append("&gt;");
-                            break;
-                        default:
-                            text.Append(c);
-                            break;
-                    }
-                properties.Add($"value=\"{text}\"");
-            }
+                properties.Add($"value=\"{Text.HtmlValueSafe()}\"");
             //if (OnEnter != null) properties.Add($"onkeydown=\"if (event.key == 'Enter') {OnEnter}\"");
             if (Autofocus) properties.Add("autofocus");
-            if (OnInput != null) properties.Add($"oninput=\"{OnInput}\"");
+            if (OnInput != null) properties.Add($"oninput=\"{OnInput.HtmlValueSafe()}\"");
             return string.Join(' ', properties);
         }
     }
@@ -150,7 +126,7 @@ public class TextBox : IContent
     {
         if (OnEnter != null)
         {
-            yield return $"<form action=\"javascript:{OnEnter}\">";
+            yield return $"<form action=\"javascript:{OnEnter.HtmlValueSafe()}\">";
             yield return "\t" + Opener;
             yield return "\t<input type=\"submit\" style=\"visibility:hidden;width:0;height:0\"/>";
             yield return "</form>";
