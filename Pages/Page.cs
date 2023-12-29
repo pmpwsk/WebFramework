@@ -132,7 +132,7 @@ public class Page : IPage
 
         //description
         if (Description != null)
-            yield return $"\t<meta name=\"description\" content=\"{Description}\" />";
+            yield return $"\t<meta name=\"description\" content=\"{Description.HtmlValueSafe()}\" />";
 
         //canonical
         if (Server.Config.Domains.CanonicalDomains.TryGetValueAny(out var canonical, domains))
