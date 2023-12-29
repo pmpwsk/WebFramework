@@ -105,9 +105,9 @@ public static partial class Server
 
                 /// <summary>
                 /// The element to display as the first element on a Page object if the requesting IP address is banned.<br/>
-                /// Default: new ContainerElement("You have been temporarily banned from authenticating yourself to avoid brute-force attacks. You may try to log in again later.", "", "red")
+                /// Default: new ContainerElement("You have been temporarily banned from authenticating yourself to avoid brute-force attacks. This may have been caused by someone else on your network (home network or VPN). Every attempt to log in will be invalid, even if it was correct. You may try to log in again later.", "", "red")
                 /// </summary>
-                public static IPageElement? BanMessage { get; set; } = new ContainerElement("You have been temporarily banned from authenticating yourself to avoid brute-force attacks. You may try to log in again later.", "", "red");
+                public static IPageElement? BanMessage { get; set; } = new ContainerElement("You have been temporarily banned from authenticating yourself to avoid brute-force attacks. This may have been caused by someone else on your network (home network or VPN). Every attempt to log in will be invalid, even if it was correct. You may try to log in again later.", "", "red");
 
                 /// <summary>
                 /// Whether to create log entries about IP addresses getting banned for failed authentication.<br/>
