@@ -36,6 +36,6 @@ public class Checkbox : IContent
     //documentation inherited from IContent
     public override IEnumerable<string> Export()
     {
-        yield return $"<div class=\"checkbox\"><input type=\"checkbox\" id=\"{Id}\" name=\"{Id}\"{(Checked ? " checked" : "")}{(OnChange == null ? null : $" onchange=\"{OnChange}\"")} /><label for=\"{Id}\">{Text}</label></div>";
+        yield return $"<div class=\"checkbox\"><input type=\"checkbox\" id=\"{Id}\" name=\"{Id}\"{(Checked ? " checked" : "")}{(OnChange == null ? null : $" onchange=\"{OnChange.HtmlValueSafe()}\"")} /><label for=\"{Id}\">{Text.HtmlSafe()}</label></div>";
     }
 }
