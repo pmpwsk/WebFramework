@@ -200,7 +200,23 @@ public static class Parsers
     /// Replaces < with &lt; and > with &gt;.
     /// </summary>
     public static string HtmlSafe(this string source)
-        => source.Replace("<", "&lt;").Replace(">", "&gt;");
+    {
+        StringBuilder text = new();
+        foreach (char c in source)
+            switch (c)
+            {
+                case '<':
+                    text.Append("&lt;");
+                    break;
+                case '>':
+                    text.Append("&gt;");
+                    break;
+                default:
+                    text.Append(c);
+                    break;
+            }
+        return text.ToString();
+    }
 
     /// <summary>
     /// Replaces \n with &#13;&#10; and " with &quot;.
