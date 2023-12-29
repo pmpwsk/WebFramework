@@ -9,7 +9,7 @@ public class Image : IContent
     protected override string ElementType => "img";
 
     //documentation inherited from IElement
-    protected override string? ElementProperties => $"src=\"{Source}\"{(Title==null?"":$" title=\"{Title}\"")}";
+    protected override string? ElementProperties => $"src=\"{Source}\"{(Title==null?"":$" title=\"{Title.HtmlValueSafe()}\"")}";
 
     /// <summary>
     /// Source value for the image. This could be a URL or the image as base64 data with information.
@@ -17,7 +17,7 @@ public class Image : IContent
     public string Source;
 
     /// <summary>
-    /// The text that will appear as a tooltip when hoving over the image.
+    /// The text that will appear as a tooltip when hovering over the image.
     /// </summary>
     public string? Title;
 
