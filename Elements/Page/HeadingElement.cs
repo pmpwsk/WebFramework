@@ -71,20 +71,20 @@ public class HeadingElement : IContainerElement
     {
         yield return Opener;
 
-        if (Title != null) yield return $"\t<h1>{Title}</h1>";
+        if (Title != null) yield return $"\t<h1>{Title.HtmlSafe()}</h1>";
         
         foreach(IContent content in Contents)
             foreach (string line in content.Export())
                 yield return $"\t{line}";
 
-        if (Buttons.Any())
+        if (Buttons.Count != 0)
         {
             yield return "\t<div class=\"buttons\">";
             foreach(IButton button in Buttons)
                 yield return "\t\t" + button.Export();
             yield return "\t</div>";
 
-            if (Title == null && ((!Contents.Any()) || (Contents.Count == 1 && Contents.First() is Paragraph paragraph && paragraph.Text.Length <= 20)))
+            if (Title == null && ((Contents.Count == 0) || (Contents.Count == 1 && Contents.First() is Paragraph paragraph && paragraph.Text.Length <= 20)))
                 yield return "\t<div class=\"clear-o\"></div>";
             else yield return "\t<div class=\"clear\"></div>";
         }

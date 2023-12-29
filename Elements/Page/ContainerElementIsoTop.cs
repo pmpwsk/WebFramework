@@ -43,11 +43,11 @@ public class ContainerElementIsoTop : ContainerElement
         yield return "\t<div>"; //this is additional
         if (Title != null)
         {
-            if (Large) yield return $"\t<h1>{Title}</h1>";
-            else yield return $"\t<h2>{Title}</h2>";
+            if (Large) yield return $"\t<h1>{Title.HtmlSafe()}</h1>";
+            else yield return $"\t<h2>{Title.HtmlSafe()}</h2>";
         }
 
-        if (Buttons.Any())
+        if (Buttons.Count != 0)
         {
             yield return "\t<div class=\"buttons\">";
             foreach (IButton button in Buttons)
@@ -60,9 +60,9 @@ public class ContainerElementIsoTop : ContainerElement
             foreach (string line in content.Export())
                 yield return $"\t{line}";
 
-        if (Buttons.Any())
+        if (Buttons.Count != 0)
         {
-            if (Title == null && ((!Contents.Any()) || (Contents.Count == 1 && Contents.First() is Paragraph paragraph && paragraph.Text.Length <= 20)))
+            if (Title == null && ((Contents.Count == 0) || (Contents.Count == 1 && Contents.First() is Paragraph paragraph && paragraph.Text.Length <= 20)))
                 yield return "\t<div class=\"clear-o\"></div>";
             else yield return "\t<div class=\"clear\"></div>";
         }
