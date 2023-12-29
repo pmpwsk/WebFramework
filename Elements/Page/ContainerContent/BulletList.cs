@@ -29,7 +29,7 @@ public class BulletList : IContent
     /// </summary>
     public BulletList(params string[] items)
     {
-        List = items.ToList();
+        List = [.. items];
         Class = null;
         Style = null;
         Id = null;
@@ -41,7 +41,7 @@ public class BulletList : IContent
         yield return Opener;
 
         foreach (string item in List)
-            yield return $"\t<li>{item}</li>";
+            yield return $"\t<li>{item.HtmlSafe()}</li>";
 
         yield return Closer;
     }
