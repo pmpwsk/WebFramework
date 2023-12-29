@@ -63,7 +63,7 @@ public class OrderedList : IContent
     /// </summary>
     public OrderedList(params string[] items)
     {
-        List = items.ToList();
+        List = [.. items];
         Class = null;
         Style = null;
         Id = null;
@@ -75,7 +75,7 @@ public class OrderedList : IContent
         yield return Opener;
 
         foreach (string item in List)
-            yield return $"\t<li>{item}</li>";
+            yield return $"\t<li>{item.HtmlSafe()}</li>";
 
         yield return Closer;
     }
