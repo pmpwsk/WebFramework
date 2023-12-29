@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace uwap.WebFramework.Elements;
 
 /// <summary>
@@ -15,7 +13,7 @@ public class FlexibleTextArea : IContent
     protected override string? ElementClass => "textarea";
 
     //documentation inherited from IElement
-    protected override string? ElementProperties => $"role=\"textbox\" contenteditable{(Autofocus?" autofocus":"")}{(OnInput!=null?$" oninput=\"{OnInput}\"":"")}";
+    protected override string? ElementProperties => $"role=\"textbox\" contenteditable{(Autofocus?" autofocus":"")}{(OnInput!=null?$" oninput=\"{OnInput.HtmlValueSafe()}\"":"")}";
 
     /// <summary>
     /// The text that is in the text area by default or null to disable.
@@ -48,23 +46,6 @@ public class FlexibleTextArea : IContent
     //documentation inherited from IContent
     public override IEnumerable<string> Export()
     {
-        StringBuilder text = new();
-        foreach (char c in Text??"")
-            switch (c)
-            {
-                case '\n':
-                    text.Append("<br/>");
-                    break;
-                case '<':
-                    text.Append("&lt;");
-                    break;
-                case '>':
-                    text.Append("&gt;");
-                    break;
-                default:
-                    text.Append(c);
-                    break;
-            }
-        yield return Opener + text.ToString() + Closer;
+        yield return Opener + (Text == null ? "" : Text.HtmlSafe()) + Closer;
     }
 }
