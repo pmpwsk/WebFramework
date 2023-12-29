@@ -203,6 +203,28 @@ public static class Parsers
         => source.Replace("<", "&lt;").Replace(">", "&gt;");
 
     /// <summary>
+    /// Replaces \n with &#13;&#10; and " with &quot;.
+    /// </summary>
+    public static string HtmlValueSafe(this string source)
+    {
+        StringBuilder text = new();
+        foreach (char c in source)
+            switch (c)
+            {
+                case '\n':
+                    text.Append("&#13;&#10;");
+                    break;
+                case '"':
+                    text.Append("&quot;");
+                    break;
+                default:
+                    text.Append(c);
+                    break;
+            }
+        return text.ToString();
+    }
+
+    /// <summary>
     /// Attempts to get the value for one of the given keys in the given dictionary in the order they are provided in.<br/>
     /// The out-parameter will be the value of the first key that has a value, if any have been found.<br/>
     /// Returns true if a value was found, otherwise false.
