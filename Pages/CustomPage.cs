@@ -51,7 +51,7 @@ public class CustomPage : IPage
         ///head
         yield return "<head>";
         //title
-        string title = Title;
+        string title = Title.HtmlSafe();
         if (Server.Config.Domains.TitleExtensions.TryGetValueAny(out var titleExtension, Parsers.Domains(request.Domain)) && titleExtension != null)
             title += " | " + titleExtension;
         yield return $"\t<title>{title}</title>";
