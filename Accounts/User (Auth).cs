@@ -3,7 +3,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using uwap.Database;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace uwap.WebFramework.Accounts;
 
