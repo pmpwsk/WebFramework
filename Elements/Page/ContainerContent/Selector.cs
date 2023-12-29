@@ -9,7 +9,7 @@ public class Selector : IContent
     protected override string ElementType => "select";
 
     //documentation inherited from IElement
-    protected override string? ElementProperties => OnChange == null ? null : $"onchange=\"{OnChange}\"";
+    protected override string? ElementProperties => OnChange == null ? null : $"onchange=\"{OnChange.HtmlValueSafe()}\"";
 
     /// <summary>
     /// JavaScript command that should be executed when the value changes.
@@ -54,7 +54,7 @@ public class Selector : IContent
     public Selector(string id, params SelectorItem[] items)
     {
         Id = id;
-        Items = items.ToList();
+        Items = [.. items];
     }
 
     /// <summary>
@@ -119,6 +119,6 @@ public struct SelectorItem
     /// <summary>
     /// The item as HTML code.
     /// </summary>
-    public string Export()
-        => $"<option{(Selected ? " selected" : "")} value=\"{Value}\">{Text}</option>";
+    public readonly string Export()
+        => $"<option{(Selected ? " selected" : "")} value=\"{Value.HtmlValueSafe()}\">{Text.HtmlValueSafe()}</option>";
 }
