@@ -30,6 +30,6 @@ public class FileSelector : IContent
     //documentation inherited from IContent
     public override IEnumerable<string> Export()
     {
-        yield return $"<input type=\"file\" id=\"{Id}\"{(AllowMultiple ? " multiple" : "")}{(OnChange == null ? null : $" onchange=\"{OnChange}\"")}>";
+        yield return $"<input type=\"file\" id=\"{Id}\"{(AllowMultiple ? " multiple" : "")}{(OnChange == null ? null : $" onchange=\"{OnChange.HtmlValueSafe()}\"")}>";
     }
 }
