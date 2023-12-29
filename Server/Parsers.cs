@@ -205,6 +205,9 @@ public static class Parsers
         foreach (char c in source)
             switch (c)
             {
+                case '\n':
+                    text.Append("&#13;&#10;");
+                    break;
                 case '<':
                     text.Append("&lt;");
                     break;
