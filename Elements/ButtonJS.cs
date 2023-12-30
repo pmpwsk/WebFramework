@@ -6,7 +6,7 @@ namespace uwap.WebFramework.Elements;
 public class ButtonJS : IButton
 {
     //documentation inherited from IElement
-    protected override string? ElementProperties => $"href=\"javascript:\" onclick=\"{Command}\"";
+    protected override string? ElementProperties => $"href=\"javascript:\" onclick=\"{Command.HtmlValueSafe()}\"";
 
     /// <summary>
     /// The command to execute.
