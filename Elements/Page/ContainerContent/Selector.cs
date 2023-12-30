@@ -120,5 +120,5 @@ public struct SelectorItem
     /// The item as HTML code.
     /// </summary>
     public readonly string Export()
-        => $"<option{(Selected ? " selected" : "")} value=\"{Value.HtmlValueSafe()}\">{Text.HtmlValueSafe()}</option>";
+        => $"<option{(Selected ? " selected" : "")} value=\"{Value.HtmlValueSafe()}\">{Text}</option>";
 }
