@@ -19,7 +19,7 @@ public class ContainerElement : IContainerElement
         Class = null;
         Style = null;
         Id = null;
-        Contents = contents.ToList();
+        Contents = [.. contents];
     }
 
     /// <summary>
