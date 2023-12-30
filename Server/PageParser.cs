@@ -32,6 +32,8 @@ public static partial class Server
         Presets.CreatePage(request, cacheEntry.Key.After('/').RemoveLast(5).CapitalizeFirstLetter(), out Page page, out _);
         Presets.Navigation(request, page);
         ParsePage(request, page, cacheEntry);
+        if (page.Description == "")
+            page.Description = null;
     }
 
     /// <summary>
@@ -56,7 +58,7 @@ public static partial class Server
             else if (line.StartsWith("<<"))
             {
                 line = line.Remove(0, 2).TrimStart();
-                IPageElement? newElement = ParseElement(page.Sidebar, currentSidebarElement, line, true);
+                IPageElement? newElement = ParseElement(page.Sidebar, currentSidebarElement, line, true, page);
                 if (newElement != null)
                 {
                     currentSidebarElement = newElement;
@@ -73,7 +75,7 @@ public static partial class Server
             }
             else
             {
-                IPageElement? newElement = ParseElement(page.Elements, currentContentElement, line, false);
+                IPageElement? newElement = ParseElement(page.Elements, currentContentElement, line, false, page);
                 if (newElement != null)
                 {
                     currentContentElement = newElement;
@@ -156,7 +158,7 @@ public static partial class Server
     /// <summary>
     /// Parses the line and adds the element to the page.
     /// </summary>
-    private static IPageElement? ParseElement(List<IPageElement> e, IPageElement? currentElement, string line, bool sidebar)
+    private static IPageElement? ParseElement(List<IPageElement> e, IPageElement? currentElement, string line, bool sidebar, Page page)
     {
         IPageElement? result = null;
         if (currentElement != null && currentElement is ContainerElement container)
@@ -178,7 +180,13 @@ public static partial class Server
                 }
                 else container.Buttons.Add(new ButtonJS(p1, target.Replace('"', '\''), p2));
             }
-            else container.Contents.Add(new Paragraph(line.Trim()));
+            else
+            {
+                string text = line.Trim();
+                if (page.Description == "")
+                    page.Description = text;
+                container.Contents.Add(new Paragraph(text));
+            }
         }
         else if (currentElement != null && currentElement is IButtonElement buttonElement && buttonElement.Text == null)
             buttonElement.Text = line.Trim();
