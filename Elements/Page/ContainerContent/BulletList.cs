@@ -41,7 +41,7 @@ public class BulletList : IContent
         yield return Opener;
 
         foreach (string item in List)
-            yield return $"\t<li>{item.HtmlSafe()}</li>";
+            yield return $"\t<li>{item}</li>";
 
         yield return Closer;
     }
