@@ -30,6 +30,6 @@ public class Heading : IContent
     //documentation inherited from IContent
     public override IEnumerable<string> Export()
     {
-        yield return Opener + Text.HtmlSafe() + Closer;
+        yield return Opener + Text + Closer;
     }
 }
