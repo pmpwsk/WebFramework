@@ -96,12 +96,15 @@ public static partial class Server
         switch (operation)
         {
             case "title":
+            case "t":
                 page.Title = arguments;
                 break;
             case "description":
+            case "d":
                 page.Description = arguments;
                 break;
             case "import":
+            case "i":
                 if (Cache.TryGetValue($"{arguments}.wfpg", out CacheEntry? cacheEntry))
                     ParsePage(req, page, cacheEntry);
                 break;
@@ -116,6 +119,7 @@ public static partial class Server
                 else page.Styles.Add(new Style(arguments));
                 break;
             case "sidebar":
+            case "s":
                 arguments.SplitAtLast('|', out string arg1, out string arg2);
                 arg1 = arg1.TrimEnd();
                 arg2 = arg2.TrimStart();
@@ -142,6 +146,7 @@ public static partial class Server
                 }
                 break;
             case "redirect":
+            case "r":
                 if (arguments != "" && !arguments.Contains("/api/"))
                 {
                     req.Redirect(arguments);
@@ -149,6 +154,7 @@ public static partial class Server
                 }
                 break;
             case "nav":
+            case "n":
                 if (arguments == "")
                     page.Navigation.Clear();
                 break;
