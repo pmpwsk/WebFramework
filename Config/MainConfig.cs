@@ -101,7 +101,7 @@ public static partial class Server
             //fonts
             {".woff2", "font/woff2"},
             {".woff", "font/woff"},
-            {".tff", "font/ttf"},
+            {".ttf", "font/ttf"},
             {".otf", "font/otf"},
             //{".svg", "image/svg+xml"}, duplicate!
             {".eot", "application/vnd.ms-fontobject"}
