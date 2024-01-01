@@ -476,4 +476,11 @@ public static class Parsers
             _ => string.Join(", ", values.SkipLast(1)) + " and " + values.Last(),
         };
     }
+
+    /// <summary>
+    /// Returns the home path of a plugin with the given plugin prefix.<br/>
+    /// If the prefix is "", "/" will be returned, otherwise the original prefix will be returned.
+    /// </summary>
+    public static string PluginHome(this string pluginPrefix)
+        => pluginPrefix == "" ? "/" : pluginPrefix;
 }
