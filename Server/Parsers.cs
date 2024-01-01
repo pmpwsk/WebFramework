@@ -90,7 +90,13 @@ public static class Parsers
     /// Host without port.
     /// </summary>
     public static string Domain(this HttpContext c)
-        => Host(c).Before(':');
+    {
+        string host = Host(c);
+        if (host.SplitAtLast(':', out string part1, out string part2) && ushort.TryParse(part2, out _))
+            return part1;
+        else return host;
+    }
+
     /// <summary>
     /// Client IP address or null if unknown.
     /// </summary>
