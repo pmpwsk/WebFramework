@@ -483,4 +483,12 @@ public static class Parsers
     /// </summary>
     public static string PluginHome(this string pluginPrefix)
         => pluginPrefix == "" ? "/" : pluginPrefix;
+
+    
+    /// <summary>
+    /// Returns the main domain for the given domain.<br/>
+    /// Example: for uwap.org, s1.uwap.org, s2.s1.uwap.org etc., uwap.org will be returned.
+    /// </summary>
+    public static string DomainMain(this string domain)
+        => string.Join('.', domain.Split('.').TakeLast(2));
 }
