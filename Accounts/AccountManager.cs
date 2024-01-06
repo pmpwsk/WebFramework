@@ -100,8 +100,8 @@ public static partial class AccountManager
         SameSiteMode sameSite = Settings.SameSiteStrict ? SameSiteMode.Strict : SameSiteMode.Lax;
         string? wildcard = GetWildcardDomain(context.Domain());
         if (wildcard == null)
-            context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = expires, SameSite = sameSite, Path = "/" });
-        else context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = expires, SameSite = sameSite, Domain = wildcard, Path = "/" });
+            context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = expires, SameSite = sameSite, HttpOnly = Settings.HttpOnly, Path = "/" });
+        else context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = expires, SameSite = sameSite, HttpOnly = Settings.HttpOnly, Path = "/", Domain = wildcard });
     }
 
     /// <summary>
