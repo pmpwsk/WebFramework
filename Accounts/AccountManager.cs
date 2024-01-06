@@ -99,8 +99,8 @@ public static partial class AccountManager
         DateTime expires = DateTime.UtcNow + (temporary ? TimeSpan.FromMinutes(10) : Settings.TokenExpiration);
         string? wildcard = GetWildcardDomain(context.Domain());
         if (wildcard == null)
-            context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = expires, SameSite = SameSiteMode.Strict, Path = "/" });
-        else context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = expires, Domain = wildcard, Path = "/" });
+            context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = expires, SameSite = SameSiteMode.Lax, Path = "/" });
+        else context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = expires, SameSite = SameSiteMode.Lax, Domain = wildcard, Path = "/" });
     }
 
     /// <summary>
