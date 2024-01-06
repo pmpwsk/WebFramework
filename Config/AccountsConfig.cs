@@ -87,6 +87,12 @@ public static partial class Server
             public static bool SameSiteStrict { get; set; } = false;
 
             /// <summary>
+            /// Whether authentication cookies should only be accessible for HTTP requests (not from JavaScript directly).<br/>
+            /// Default: true
+            /// </summary>
+            public static bool HttpOnly { get; set; } = true;
+
+            /// <summary>
             /// Settings for failed login attempts.
             /// </summary>
             public static class FailedAttempts
