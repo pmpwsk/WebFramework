@@ -97,10 +97,11 @@ public static partial class AccountManager
     internal static void AddAuthTokenCookie(string combinedToken, HttpContext context, bool temporary)
     {
         DateTime expires = DateTime.UtcNow + (temporary ? TimeSpan.FromMinutes(10) : Settings.TokenExpiration);
+        SameSiteMode sameSite = Settings.SameSiteStrict ? SameSiteMode.Strict : SameSiteMode.Lax;
         string? wildcard = GetWildcardDomain(context.Domain());
         if (wildcard == null)
-            context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = expires, SameSite = SameSiteMode.Lax, Path = "/" });
-        else context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = expires, SameSite = SameSiteMode.Lax, Domain = wildcard, Path = "/" });
+            context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = expires, SameSite = sameSite, Path = "/" });
+        else context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions() { Expires = expires, SameSite = sameSite, Domain = wildcard, Path = "/" });
     }
 
     /// <summary>
