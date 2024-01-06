@@ -81,6 +81,12 @@ public static partial class Server
             public static List<string> WildcardDomains { get; set; } = new();
 
             /// <summary>
+            /// Whether to use SameSite=Strict (true) instead of Lax (false) for authentication cookies.<br/>
+            /// Default: false
+            /// </summary>
+            public static bool SameSiteStrict { get; set; } = false;
+
+            /// <summary>
             /// Settings for failed login attempts.
             /// </summary>
             public static class FailedAttempts
