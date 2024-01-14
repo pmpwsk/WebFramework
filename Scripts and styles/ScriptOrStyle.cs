@@ -62,6 +62,7 @@ public abstract class ScriptOrStyle
                 string? timestamp = plugin.GetFileVersion(relPath);
                 if (timestamp != null)
                     yield return BuildReference(Url + (queryIndex > -1 ? "&" : "?") + "t=" + timestamp);
+                else yield return BuildReference(Url);
             }
             else yield return BuildReference(Url);
         }
