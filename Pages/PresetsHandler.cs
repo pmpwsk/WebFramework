@@ -99,12 +99,6 @@ public class PresetsHandler
     }
 
     /// <summary>
-    /// An array of possible theme names.<br/>
-    /// Default implementation throws an exception because there are no default themes.
-    /// </summary>
-    public virtual string[] Themes => throw new Exception("No themes were set.");
-
-    /// <summary>
     /// Returns a list of styles that should be used for the given request as well as the URL of the used font in order to preload this if desired.<br/>
     /// Default implementation throws an exception because there are no default themes.
     /// </summary>
