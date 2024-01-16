@@ -44,12 +44,6 @@ public static class Presets
         => Handler.Styles(request, out fontUrl);
 
     /// <summary>
-    /// Returns the name of the theme to be used for the given request.
-    /// </summary>
-    public static string ThemeName(IRequest request)
-        => Handler.ThemeName(request);
-
-    /// <summary>
     /// Assumes that the request already has a Page (not IPage!) object and returns the page object as well as the list of elements for easy access.
     /// </summary>
     public static void Init(this AppRequest request, out Page page, out List<IPageElement> elements)
