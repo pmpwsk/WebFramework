@@ -38,11 +38,6 @@ public static class Presets
     }
 
     /// <summary>
-    /// An array of possible theme names.
-    /// </summary>
-    public static string[] Themes => Handler.Themes;
-
-    /// <summary>
     /// Returns a list of styles that should be used for the given request as well as the URL of the used font in order to preload this if desired.
     /// </summary>
     public static List<IStyle> Styles(IRequest request, out string fontUrl)
