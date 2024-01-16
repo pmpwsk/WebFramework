@@ -108,15 +108,6 @@ public class PresetsHandler
     }
 
     /// <summary>
-    /// Returns the name of the theme to be used for the given request.<br/>
-    /// Default implementation throws an exception because there are no default themes.
-    /// </summary>
-    public virtual string ThemeName(IRequest request)
-    {
-        throw new Exception("No themes were set.");
-    }
-
-    /// <summary>
     /// Adds a button to contact customer support to the page.
     /// </summary>
     public virtual void AddSupportButton(Page page)
