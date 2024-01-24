@@ -97,7 +97,7 @@ public static partial class MailManager
             serviceProvider.Add(new Store());
             serviceProvider.Add(new Filter());
             Server = new SmtpServer.SmtpServer(options, serviceProvider);
-            ServerTask = Server.StartAsync(CTS.Token/*CancellationToken.None*/);
+            ServerTask = Server.StartAsync(CTS.Token);
 
             if (cert != null)
                 Console.WriteLine("Mail server started.");
