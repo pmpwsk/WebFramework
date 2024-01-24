@@ -28,6 +28,21 @@ public static partial class MailManager
     }
 
     /// <summary>
+    /// A list of DNS servers operated by Cloudflare (IPv6 and IPv4, primary and secondary).<br/>
+    /// This is meant to be used for the DnsServers setting.
+    /// </summary>
+    public static IPEndPoint[] DnsServersCloudflare
+    {
+        get =>
+        [
+            NameServer.CloudflareIPv6,
+            NameServer.Cloudflare2IPv6,
+            NameServer.Cloudflare,
+            NameServer.Cloudflare2
+        ];
+    }
+
+    /// <summary>
     /// The DNS lookup object that should be used to look up mail servers (to send mail and evaluate mail authentication).
     /// </summary>
     public static LookupClient DnsLookup { get; private set; } = new();
