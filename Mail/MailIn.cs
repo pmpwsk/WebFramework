@@ -105,6 +105,24 @@ public static partial class MailManager
         }
 
         /// <summary>
+        /// Attempts to start the server and returns whether that action was successful.<br/>
+        /// If an exception was thrown while starting, an appropriate line will be written to the console.
+        /// </summary>
+        public static bool TryStart()
+        {
+            try
+            {
+                Start();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error starting the mail server: " + ex.Message);
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Stops the server.
         /// </summary>
         public static void Stop()
