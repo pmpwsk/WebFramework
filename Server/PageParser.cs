@@ -191,7 +191,9 @@ public static partial class Server
                 string text = line.Trim();
                 if (page.Description == "")
                     page.Description = text;
-                container.Contents.Add(new Paragraph(text));
+                if (((text.StartsWith("<br/>") && text != "<br/>") || (text.StartsWith("<br />") && text != "<br />")) && container.Contents.Count > 0 && container.Contents.Last() is Paragraph p)
+                    p.Text += text;
+                else container.Contents.Add(new Paragraph(text));
             }
         }
         else if (currentElement != null && currentElement is IButtonElement buttonElement && buttonElement.Text == null)
