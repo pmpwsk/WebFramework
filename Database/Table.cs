@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using uwap.WebFramework;
 
@@ -251,22 +252,35 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
     public List<T> ListValues() => Data.Values.Select(x => x.Value).ToList();
 
     /// <summary>
-    /// Backs up the table to ../Database/NAME_Backup.
+    /// Backs up any other files for the given table entry. Make sure to read the documentation of all of the parameters as well as the guide for WF backups on uwap.org.
     /// </summary>
-    public Dictionary<string, Exception> Backup()
-    {
-        Dictionary<string, Exception> errors = new();
+    /// <param name="id">The ID of the current backup being created, its folder (for all tables and plugins!) is [directory][id].</param>
+    /// <param name="basedOnIds">The IDs of the previous backups this backup should be based on, starting with the first one, each next one is based on the previous one and this backup should be based on the last one.</param>
+    /// <param name="entry">The table entry for which associated files are to be backed up.</param>
+    public delegate void OtherFilesBackupDelegate(string id, ReadOnlyCollection<string> basedOnIds, TableEntry<T> entry);
 
-        if (Directory.Exists($"../Database/{Name}_Backup"))
-            Directory.Delete($"../Database/{Name}_Backup", true);
-        Directory.CreateDirectory($"../Database/{Name}_Backup");
+    /// <summary>
+    /// Backs up the table to [directory][id]/[Name]. Make sure to read the documentation of all of the parameters as well as the guide for WF backups on uwap.org.
+    /// </summary>
+    /// <param name="id">The ID of the current backup being created, its folder (for all tables and plugins!) is [directory][id].</param>
+    /// <param name="basedOnIds">The IDs of the previous backups this backup should be based on, starting with the first one, each next one is based on the previous one and this backup should be based on the last one.</param>
+    /// <param name="otherFilesFunction">The function to apply while each table entry is locked (this is meant to back up other files that are associated with the entry) - or null (default) if no such function is necessary.</param>
+    public Dictionary<string, Exception> Backup(string id, ReadOnlyCollection<string> basedOnIds, OtherFilesBackupDelegate? otherFilesFunction = null)
+    {
+        Dictionary<string, Exception> errors = [];
+        string dir = $"{Server.Config.Backup.Directory}{id}/{Name}";
+
+        if (Directory.Exists(dir))
+            Directory.Delete(dir, true);
+        Directory.CreateDirectory(dir);
 
         foreach (var kv in Data)
         {
             try
             {
                 kv.Value.Lock();
-                File.Copy($"../Database/{Name}/{kv.Key}.json", $"../Database/{Name}_Backup/{kv.Key}.json");
+                File.Copy($"../Database/{Name}/{kv.Key}.json", $"{dir}/{kv.Key}.json");
+                otherFilesFunction?.Invoke(id, basedOnIds, kv.Value);
             }
             catch (Exception ex)
             {
