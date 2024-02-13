@@ -1,4 +1,6 @@
-﻿namespace uwap.WebFramework.Plugins;
+﻿using System.Collections.ObjectModel;
+
+namespace uwap.WebFramework.Plugins;
 
 /// <summary>
 /// Abstract class to create plugins without implementing every single method.<br/>
@@ -64,5 +66,10 @@ public abstract class Plugin : IPlugin
     public virtual string? GetFileVersion(string relPath)
     {
         return null;
+    }
+
+    //documentation is inherited from IPlugin
+    public virtual void Backup(string id, ReadOnlyCollection<string> basedOnIds)
+    {
     }
 }
