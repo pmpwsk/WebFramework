@@ -31,6 +31,12 @@ public static partial class Server
             /// Default: Sunday
             /// </summary>
             public static DayOfWeek FreshDay { get; set; } = DayOfWeek.Sunday;
+
+            /// <summary>
+            /// The time for backups as an offset from midnight (00:00) UTC.<br/>
+            /// Default: 0 (midnight UTC).
+            /// </summary>
+            public static TimeSpan Time { get; set; } = TimeSpan.FromHours(0);
         }
     }
 }
