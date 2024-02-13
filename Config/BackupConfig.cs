@@ -14,6 +14,17 @@ public static partial class Server
             /// Default: false
             /// </summary>
             public static bool Enabled { get; set; } = false;
+
+            private static string _Directory = "../WFBackups/";
+            /// <summary>
+            /// The path of the directory that contains all of the backups (for all tables and plugins!) with a succeeding slash.<br/>
+            /// Default: "../WFBackups/"
+            /// </summary>
+            public static string Directory
+            {
+                get => _Directory;
+                set => _Directory = value.EndsWith('/') || value.EndsWith('\\') ? value : (value + '/');
+            }
         }
     }
 }
