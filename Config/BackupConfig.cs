@@ -25,6 +25,12 @@ public static partial class Server
                 get => _Directory;
                 set => _Directory = value.EndsWith('/') || value.EndsWith('\\') ? value : (value + '/');
             }
+
+            /// <summary>
+            /// The day of the week on which a full backup should be created, instead of making it based on the previous day's backup.<br/>
+            /// Default: Sunday
+            /// </summary>
+            public static DayOfWeek FreshDay { get; set; } = DayOfWeek.Sunday;
         }
     }
 }
