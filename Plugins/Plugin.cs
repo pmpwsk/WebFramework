@@ -69,7 +69,8 @@ public abstract class Plugin : IPlugin
     }
 
     //documentation is inherited from IPlugin
-    public virtual void Backup(string id, ReadOnlyCollection<string> basedOnIds)
+    public virtual Task Backup(string id, ReadOnlyCollection<string> basedOnIds)
     {
+        return Task.CompletedTask;
     }
 }
