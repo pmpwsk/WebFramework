@@ -7,6 +7,8 @@ public static partial class Server
     {
         if (!Config.Backup.Enabled)
             return;
+        if (!BackupNecessary(out string id, out var basedOnIds))
+            return;
         if (BackupRunning)
             throw new Exception("A backup is already running!");
         BackupRunning = true;
