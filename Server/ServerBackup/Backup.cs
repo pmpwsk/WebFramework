@@ -13,6 +13,9 @@ public static partial class Server
         if (BackupRunning)
             throw new Exception("A backup is already running!");
         BackupRunning = true;
+
+        //finish
+        File.WriteAllText($"{Config.Backup.Directory}{id}/BasedOn.txt", basedOnIds.LastOrDefault() ?? "-");
         BackupRunning = false;
     }
 
