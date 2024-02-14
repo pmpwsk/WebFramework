@@ -1,4 +1,6 @@
-﻿namespace uwap.WebFramework.Plugins;
+﻿using System.Collections.ObjectModel;
+
+namespace uwap.WebFramework.Plugins;
 
 /// <summary>
 /// Manages plugins and handles requests for them.
@@ -144,6 +146,32 @@ public static class PluginManager
             catch (Exception ex)
             {
                 Console.WriteLine($"Error calling the worker method for plugin at '{p.Value}': {ex.Message}");
+            }
+        }
+
+    }
+
+    /// <summary>
+    /// Calls the backup method for every mapped plugin.<br/>
+    /// If a plugin is mapped to multiple URLs, it is only going to be called once (only if it is the exact same object).
+    /// </summary>
+    public static async Task Backup(string id, ReadOnlyCollection<string> basedOnIds)
+    {
+        Dictionary<IPlugin, string> plugins = [];
+        foreach (var p in Plugins.Children)
+        {
+            AddPlugins(plugins, p.Key, p.Value);
+        }
+
+        foreach (var p in plugins)
+        {
+            try
+            {
+                await p.Key.Backup(id, basedOnIds);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error calling the backup method for plugin at '{p.Value}': {ex.Message}");
             }
         }
 
