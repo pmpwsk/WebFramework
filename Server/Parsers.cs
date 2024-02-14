@@ -491,4 +491,10 @@ public static class Parsers
     /// </summary>
     public static string DomainMain(this string domain)
         => string.Join('.', domain.Split('.').TakeLast(2));
+
+    /// <summary>
+    /// Returns the Base64 encoded version of the given string's UTF8 representation.
+    /// </summary>
+    public static string ToBase64(this string value)
+        => Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
 }
