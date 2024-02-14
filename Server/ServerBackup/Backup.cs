@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
-﻿namespace uwap.WebFramework;
+using uwap.WebFramework.Plugins;
+
+namespace uwap.WebFramework;
 
 public static partial class Server
 {
@@ -13,6 +15,9 @@ public static partial class Server
         if (BackupRunning)
             throw new Exception("A backup is already running!");
         BackupRunning = true;
+
+        //plugins
+        await PluginManager.Backup(id, basedOnIds);
 
         //finish
         File.WriteAllText($"{Config.Backup.Directory}{id}/BasedOn.txt", basedOnIds.LastOrDefault() ?? "-");
