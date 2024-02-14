@@ -109,6 +109,16 @@ public static partial class Server
             }
         }
 
+        //backup
+        try
+        {
+            await Backup();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error running a backup: " + ex.Message);
+        }
+
         //call plugins
         await PluginManager.Work();
 
