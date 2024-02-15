@@ -252,12 +252,10 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
     public List<T> ListValues() => Data.Values.Select(x => x.Value).ToList();
 
     /// <summary>
-    /// Backs up any other files for the given table entry. Make sure to read the documentation of all of the parameters as well as the guide for WF backups on uwap.org.
+    /// Enumerates other files that are associated with a given entry while it is locked (for backups).
     /// </summary>
-    /// <param name="id">The ID of the current backup being created, its folder (for all tables and plugins!) is [directory][id].</param>
-    /// <param name="basedOnIds">The IDs of the previous backups this backup should be based on, starting with the first one, each next one is based on the previous one and this backup should be based on the last one.</param>
-    /// <param name="entry">The table entry for which associated files are to be backed up.</param>
-    public delegate void OtherFilesBackupDelegate(string id, ReadOnlyCollection<string> basedOnIds, TableEntry<T> entry);
+    protected virtual IEnumerable<string> EnumerateOtherFiles(TableEntry<T> entry)
+        => [];
 
     /// <summary>
     /// Backs up the table to [directory][id]/[Name]. Make sure to read the documentation of all of the parameters as well as the guide for WF backups on uwap.org.
