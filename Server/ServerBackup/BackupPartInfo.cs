@@ -131,6 +131,11 @@ public class BackupPartInfo
         }
     }
 
+    public void BackupFile(string path)
+    {
+        throw new NotImplementedException();
+    }
+
     public void BackupDirectory(string path)
     {
         throw new NotImplementedException();
