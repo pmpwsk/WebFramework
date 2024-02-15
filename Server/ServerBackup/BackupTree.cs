@@ -16,4 +16,14 @@ public class BackupTree()
     /// The dictionary of files (keys = names) in this directory along with their timestamps (values) or null if they were deleted.
     /// </summary>
     public readonly Dictionary<string, string?> Files = [];
+
+    /// <summary>
+    /// Encodes the tree for a metadata file.
+    /// </summary>
+    public string Encode()
+        => string.Join(';',
+            [
+                .. Files.Select(x => $"{x.Key.ToBase64()},{x.Value??"-"}"),
+                .. Directories.Select(x => $"{x.Key.ToBase64()},{x.Value?.Encode()??"#"}")
+            ]);
 }
