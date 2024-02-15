@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace uwap.WebFramework;
+﻿namespace uwap.WebFramework;
 
 /// <summary>
 /// Node for a directory tree that contains data about modified and deleted files and directories.
