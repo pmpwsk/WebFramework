@@ -130,4 +130,12 @@ public class BackupPartInfo
                 stack.Pop();
         }
     }
+
+    /// <summary>
+    /// Writes the encoded tree of changes / states to a metadata file to finish this part of the backup.
+    /// </summary>
+    public void Finish()
+    {
+        File.WriteAllText($"{Server.Config.Backup.Directory}{BackupId}/{PartName}/Metadata.txt", Tree.Encode());
+    }
 }
