@@ -263,22 +263,47 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
     protected virtual IEnumerable<string> EnumerateOtherDirectories(TableEntry<T> entry)
         => [];
 
-    public Dictionary<string, Exception> Backup(string id, ReadOnlyCollection<string> basedOnIds, OtherFilesBackupDelegate? otherFilesFunction = null)
+    /// <summary>
+    /// Backs up the table to a new part of the backup with the given ID. This is being called automatically for every imported database.
+    /// </summary>
+    public void Backup(string id, ReadOnlyCollection<string> basedOnIds)
     {
+        BackupPartInfo backupPart = new(Name, id, basedOnIds);
         Dictionary<string, Exception> errors = [];
-        string dir = $"{Server.Config.Backup.Directory}{id}/{Name}";
-
-        if (Directory.Exists(dir))
-            Directory.Delete(dir, true);
-        Directory.CreateDirectory(dir);
 
         foreach (var kv in Data)
-        {
             try
             {
                 kv.Value.Lock();
-                File.Copy($"../Database/{Name}/{kv.Key}.json", $"{dir}/{kv.Key}.json");
-                otherFilesFunction?.Invoke(id, basedOnIds, kv.Value);
+
+                try
+                {
+                    backupPart.BackupFile($"../Database/{Name}/{kv.Key}.json");
+                }
+                catch (Exception ex)
+                {
+                    errors[kv.Key] = ex;
+                }
+
+                foreach (string file in EnumerateOtherFiles(kv.Value))
+                    try
+                    {
+                        backupPart.BackupFile(file);
+                    }
+                    catch (Exception ex)
+                    {
+                        errors[$"FILE {file} FOR {kv.Key}"] = ex;
+                    }
+
+                foreach (string dir in EnumerateOtherDirectories(kv.Value))
+                    try
+                    {
+                        backupPart.BackupFile(dir);
+                    }
+                    catch (Exception ex)
+                    {
+                        errors[$"DIR {dir} FOR {kv.Key}"] = ex;
+                    }
             }
             catch (Exception ex)
             {
@@ -288,9 +313,13 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
             {
                 kv.Value.UnlockIgnore();
             }
-        }
 
-        return errors;
+        if (errors.Count != 0)
+        {
+            Console.WriteLine($"Errors while trying to back up table \"{Name}\":");
+            foreach (var kv in errors)
+                Console.WriteLine($"\t{kv.Key} ::: {kv.Value.Message}");
+        }
     }
 
     /// <summary>
