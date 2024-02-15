@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+
 namespace uwap.Database;
 
 /// <summary>
@@ -14,4 +16,9 @@ public interface ITable
     /// Lists all keys that are present in the table.
     /// </summary>
     public List<string> ListKeys();
+
+    /// <summary>
+    /// Backs up the table to a new part of the backup with the given ID. This is being called automatically for every imported database.
+    /// </summary>
+    public void Backup(string id, ReadOnlyCollection<string> basedOnIds);
 }
