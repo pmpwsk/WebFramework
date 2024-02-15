@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+
 namespace uwap.Database;
 
 /// <summary>
@@ -23,5 +25,14 @@ public static class Tables
     {
         foreach (var t in Dictionary)
             t.Value.CheckAndFix();
+    }
+
+    /// <summary>
+    /// Backs up each table to a new part of the backup with the given ID. This is being called automatically.
+    /// </summary>
+    public static void BackupAll(string id, ReadOnlyCollection<string> basedOnIds)
+    {
+        foreach (var t in Dictionary)
+            t.Value.Backup(id, basedOnIds);
     }
 }
