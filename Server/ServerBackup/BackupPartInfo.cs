@@ -131,6 +131,11 @@ public class BackupPartInfo
         }
     }
 
+    public void BackupDirectory(string path)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <summary>
     /// Writes the encoded tree of changes / states to a metadata file to finish this part of the backup.
     /// </summary>
