@@ -40,7 +40,94 @@ public class BackupPartInfo
         BackupId = backupId;
 
         LastKnownState = new();
+        foreach (string backupBasedOnId in backupBasedOnIds)
+            Load(backupBasedOnId);
 
         Tree = new();
+    }
+
+    /// <summary>
+    /// Loads the metadata for the part of the same name from the backup with the given ID into the LastKnownState tree.
+    /// </summary>
+    private void Load(string id)
+    {
+        if (!File.Exists($"{Server.Config.Backup.Directory}{id}/{PartName}/Metadata.txt"))
+            return;
+
+        Stack<BackupTree> stack = new();
+        stack.Push(LastKnownState);
+        using StreamReader reader = new($"{Server.Config.Backup.Directory}{id}/{PartName}/Metadata.txt");
+
+        int read;
+        while (true)
+        {
+            //key
+            StringBuilder keyBuilder = new();
+            read = reader.Read();
+            while (read != -1 && (char)read != ',')
+            {
+                keyBuilder.Append((char)read);
+                read = reader.Read();
+            }
+            if (read == -1)
+                return;
+            string key = keyBuilder.ToString().FromBase64();
+
+            //value
+            var top = stack.Peek();
+            read = reader.Read();
+            switch (read)
+            {
+                case -1:
+                    return;
+                case '(':
+                    //directory (not null)
+                    if ((!top.Directories.TryGetValue(key, out var childDir)) || childDir == null)
+                    {
+                        childDir = new();
+                        top.Directories[key] = childDir;
+                    }
+                    stack.Push(childDir);
+                    continue;
+                case '#':
+                    //directory (null)
+                    top.Directories.Remove(key);
+                    read = reader.Read();
+                    switch (read)
+                    {
+                        case -1:
+                            return;
+                        case ')':
+                            stack.Pop();
+                            continue;
+                        default:
+                            continue;
+                    }
+                case '-':
+                    //file (null)
+                    top.Files.Remove(key);
+                    read = reader.Read();
+                    switch (read)
+                    {
+                        case -1:
+                            return;
+                        case ')':
+                            stack.Pop();
+                            continue;
+                        default:
+                            continue;
+                    }
+            }
+            //file (not null)
+            StringBuilder valueBuilder = new();
+            while (read != -1 && !";)".Contains((char)read))
+            {
+                valueBuilder.Append((char)read);
+                read = reader.Read();
+            }
+            top.Files[key] = valueBuilder.ToString();
+            if ((char)read == ')')
+                stack.Pop();
+        }
     }
 }
