@@ -187,7 +187,53 @@ public class BackupPartInfo
     }
     public void BackupDirectory(string path)
     {
-        throw new NotImplementedException();
+        var componentsB64 = path.Split('/', '\\').Select(x => x.ToBase64()).ToArray();
+
+        //known tree
+        BackupTree? knownTree = LastKnownState;
+        foreach (var componentB64 in componentsB64)
+            if (knownTree.Directories.TryGetValue(componentB64, out var d) && d != null)
+                knownTree = d;
+            else
+            {
+                knownTree = null;
+                goto knownTreeDone;
+            }
+        knownTreeDone:
+
+        //current tree
+        BackupTree? lastExistingTree = null;
+        BackupTree? firstMissingTree = null;
+        string? missingTreeB64 = null;
+        BackupTree currentTree = Tree;
+        foreach (var componentB64 in componentsB64)
+            if (lastExistingTree == null)
+            {
+                if (currentTree.Directories.TryGetValue(componentB64, out var d) && d != null)
+                    currentTree = d;
+                else
+                {
+                    lastExistingTree = currentTree;
+                    firstMissingTree = new();
+                    missingTreeB64 = componentB64;
+                    currentTree = firstMissingTree;
+                }
+            }
+            else
+            {
+                BackupTree d = new();
+                currentTree.Directories[componentB64] = d;
+                currentTree = d;
+            }
+
+        //run the backup
+        BackupDirectory(new DirectoryInfo(path), knownTree, currentTree, $"{Server.Config.Backup.Directory}{BackupId}/{PartName}/{string.Join('/', componentsB64)}");
+
+        //add tree if necessary
+        if (lastExistingTree != null && missingTreeB64 != null && firstMissingTree != null && (BackupFresh || currentTree.Files.Count != 0 || currentTree.Directories.Count != 0))
+            lastExistingTree.Directories[missingTreeB64] = firstMissingTree;
+    }
+
     private void BackupDirectory(DirectoryInfo dir, BackupTree? knownTree, BackupTree currentTree, string backupToDir)
     {
         //directories
