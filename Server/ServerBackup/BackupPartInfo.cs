@@ -185,6 +185,10 @@ public class BackupPartInfo
         //copy file
         File.Copy(path, $"{Server.Config.Backup.Directory}{BackupId}/{PartName}/{string.Join('/', componentsB64)}");
     }
+
+    /// <summary>
+    /// Backs up the entire directory at the given path if it has been modified since the last backup.
+    /// </summary>
     public void BackupDirectory(string path)
     {
         var componentsB64 = path.Split('/', '\\').Select(x => x.ToBase64()).ToArray();
