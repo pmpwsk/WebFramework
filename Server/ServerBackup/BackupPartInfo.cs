@@ -138,11 +138,53 @@ public class BackupPartInfo
         }
     }
 
+    /// <summary>
+    /// Backs up the file at the given path if it has been modified since the last backup.
+    /// </summary>
     public void BackupFile(string path)
     {
-        throw new NotImplementedException();
-    }
+        var componentsB64 = path.Split('/', '\\').Select(x => x.ToBase64()).ToArray();
 
+        //known timestamp
+        string? knownTimestamp;
+        var tree = LastKnownState;
+        foreach (var componentB64 in componentsB64.SkipLast(1))
+            if (tree.Directories.TryGetValue(componentB64, out var d) && d != null)
+                tree = d;
+            else
+            {
+                knownTimestamp = null;
+                goto knownTimestampDone;
+    }
+        if (tree.Files.TryGetValue(componentsB64.Last(), out var t))
+            knownTimestamp = t;
+        else knownTimestamp = null;
+    knownTimestampDone:
+
+        //current timestamp, stop if up to date already
+        string currentTimestamp = File.GetLastWriteTimeUtc(path).Ticks.ToString();
+        if (knownTimestamp == currentTimestamp)
+            return;
+
+        //add timestamp to the tree
+        tree = Tree;
+        foreach (var componentB64 in componentsB64.SkipLast(1))
+        {
+            if ((!tree.Directories.TryGetValue(componentB64, out var d)) || d == null)
+            {
+                d = new();
+                tree.Directories[componentB64] = d;
+            }
+            tree = d;
+        }
+        tree.Files[componentsB64.Last()] = currentTimestamp;
+
+        //create directory if it doesn't exist yet
+        Directory.CreateDirectory($"{Server.Config.Backup.Directory}{BackupId}/{PartName}/{string.Join('/', componentsB64.SkipLast(1))}");
+
+        //copy file
+        File.Copy(path, $"{Server.Config.Backup.Directory}{BackupId}/{PartName}/{string.Join('/', componentsB64)}");
+    }
     public void BackupDirectory(string path)
     {
         throw new NotImplementedException();
