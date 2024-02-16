@@ -295,10 +295,14 @@ public class BackupPartInfo
     }
 
     /// <summary>
-    /// Writes the encoded tree of changes / states to a metadata file to finish this part of the backup.
+    /// Finds deleted files/directories and writes the encoded tree of changes/states to a metadata file to finish this part of the backup.
     /// </summary>
     public void Finish()
     {
+        //add missing files from last known to tree as deleted
+        FindDeleted(LastKnownState, Tree, "");
+
+        //write metadata
         File.WriteAllText($"{Server.Config.Backup.Directory}{BackupId}/{PartName}/Metadata.txt", Tree.Encode());
     }
 
