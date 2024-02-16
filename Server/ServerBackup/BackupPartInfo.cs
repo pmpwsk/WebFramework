@@ -188,6 +188,60 @@ public class BackupPartInfo
     public void BackupDirectory(string path)
     {
         throw new NotImplementedException();
+    private void BackupDirectory(DirectoryInfo dir, BackupTree? knownTree, BackupTree currentTree, string backupToDir)
+    {
+        //directories
+        foreach (var d in dir.GetDirectories("*", SearchOption.TopDirectoryOnly))
+        {
+            string b64 = d.Name.ToBase64();
+
+            //known tree
+            BackupTree? k;
+            if (knownTree == null || !knownTree.Directories.TryGetValue(b64, out k))
+                k = null;
+
+            //current tree
+            bool potential;
+            BackupTree c;
+            if (currentTree.Directories.TryGetValue(b64, out c))
+                potential = false;
+            {
+                potential = true;
+                c = new();
+            }
+
+            //run the backup
+            BackupDirectory(d, k, c, $"{backupToDir}/{b64}");
+
+            //add tree if necessary
+            if (potential && (BackupFresh || c.Files.Count != 0 || c.Directories.Count != 0))
+                currentTree.Directories[b64] = c;
+    }
+
+        //files
+        foreach (var f in dir.GetFiles("*", SearchOption.TopDirectoryOnly))
+        {
+            string b64 = f.Name.ToBase64();
+            
+            //known timestamp
+            string? knownTimestamp;
+            if (knownTree == null || !knownTree.Files.TryGetValue(b64, out knownTimestamp))
+                knownTimestamp = null;
+
+            //current timestamp, skip if it's up to date already
+            string currentTimestamp = f.LastWriteTimeUtc.Ticks.ToString();
+            if (knownTimestamp == currentTimestamp)
+                continue;
+
+            //add timestamp to the tree
+            currentTree.Files[b64] = currentTimestamp;
+
+            //create directory if it doesn't exist yet
+            Directory.CreateDirectory(backupToDir);
+
+            //copy file
+            f.CopyTo($"{backupToDir}/{b64}");
+        }
     }
 
     /// <summary>
