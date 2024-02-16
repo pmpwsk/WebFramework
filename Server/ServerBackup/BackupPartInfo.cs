@@ -238,8 +238,10 @@ public class BackupPartInfo
             lastExistingTree.Directories[missingTreeB64] = firstMissingTree;
     }
 
-    private void BackupDirectory(DirectoryInfo dir, BackupTree? knownTree, BackupTree currentTree, string backupToDir)
+    private bool BackupDirectory(DirectoryInfo dir, BackupTree? knownTree, BackupTree currentTree, string backupToDir)
     {
+        bool directoryCreated = false;
+
         //directories
         foreach (var d in dir.GetDirectories("*", SearchOption.TopDirectoryOnly))
         {
@@ -261,7 +263,8 @@ public class BackupPartInfo
             }
 
             //run the backup
-            BackupDirectory(d, k, c, $"{backupToDir}/{b64}");
+            if (BackupDirectory(d, k, c, $"{backupToDir}/{b64}"))
+                directoryCreated = true;
 
             //add tree if necessary
             if (potential && (BackupFresh || c.Files.Count != 0 || c.Directories.Count != 0))
@@ -287,11 +290,17 @@ public class BackupPartInfo
             currentTree.Files[b64] = currentTimestamp;
 
             //create directory if it doesn't exist yet
-            Directory.CreateDirectory(backupToDir);
+            if (!directoryCreated)
+            {
+                Directory.CreateDirectory(backupToDir);
+                directoryCreated = true;
+            }
 
             //copy file
             f.CopyTo($"{backupToDir}/{b64}");
         }
+
+        return directoryCreated;
     }
 
     /// <summary>
