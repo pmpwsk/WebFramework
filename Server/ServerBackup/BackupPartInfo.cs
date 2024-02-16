@@ -301,4 +301,44 @@ public class BackupPartInfo
     {
         File.WriteAllText($"{Server.Config.Backup.Directory}{BackupId}/{PartName}/Metadata.txt", Tree.Encode());
     }
+
+    private void FindDeleted(BackupTree knownTree, BackupTree currentTree, string path)
+    {
+        //directories
+        foreach (var dKV in knownTree.Directories)
+        {
+            if (dKV.Value == null)
+                continue;
+
+            string name = dKV.Key.FromBase64();
+            if (Directory.Exists($"{path}{name}"))
+            {
+                //current
+                bool potential;
+                BackupTree c;
+                if (currentTree.Directories.TryGetValue(dKV.Key, out c))
+                    potential = false;
+                {
+                    potential = true;
+                    c = new();
+                }
+
+                //find more
+                FindDeleted(dKV.Value, c, $"{path}{name}/");
+
+                //add tree if necessary
+                if (potential && (c.Files.Count != 0 || c.Directories.Count != 0))
+                    currentTree.Directories[dKV.Key] = c;
+            }
+            else currentTree.Directories[dKV.Key] = null;
+        }
+
+        //files
+        foreach (var fKV in knownTree.Files)
+        {
+            string name = fKV.Key.FromBase64();
+            if (!File.Exists($"{path}{name}"))
+                currentTree.Files[fKV.Key] = null;
+        }
+    }
 }
