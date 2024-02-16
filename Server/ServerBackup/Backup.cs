@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using uwap.Database;
 using uwap.WebFramework.Plugins;
 
 namespace uwap.WebFramework;
@@ -15,6 +16,9 @@ public static partial class Server
         if (BackupRunning)
             throw new Exception("A backup is already running!");
         BackupRunning = true;
+
+        //tables
+        Tables.BackupAll(id, basedOnIds);
 
         //plugins
         await PluginManager.Backup(id, basedOnIds);
