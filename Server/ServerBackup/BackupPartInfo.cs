@@ -252,7 +252,7 @@ public class BackupPartInfo
 
             //current tree
             bool potential;
-            BackupTree c;
+            BackupTree? c;
             if (currentTree.Directories.TryGetValue(b64, out c))
                 potential = false;
             {
@@ -319,7 +319,7 @@ public class BackupPartInfo
             {
                 //current
                 bool potential;
-                BackupTree c;
+                BackupTree? c;
                 if (currentTree.Directories.TryGetValue(dKV.Key, out c))
                     potential = false;
                 {
