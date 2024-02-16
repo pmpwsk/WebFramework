@@ -19,6 +19,11 @@ public class BackupPartInfo
     public readonly string BackupId;
 
     /// <summary>
+    /// Whether the current backup is a fresh backup.
+    /// </summary>
+    public readonly bool BackupFresh;
+
+    /// <summary>
     /// The directory tree for the complete last known state (reconstructed from all previous backups in the chain).
     /// </summary>
     public readonly BackupTree LastKnownState;
@@ -38,6 +43,8 @@ public class BackupPartInfo
 
         PartName = partName;
         BackupId = backupId;
+
+        BackupFresh = backupBasedOnIds.Count == 0;
 
         LastKnownState = new();
         foreach (string backupBasedOnId in backupBasedOnIds)
