@@ -155,7 +155,7 @@ public class BackupPartInfo
             {
                 knownTimestamp = null;
                 goto knownTimestampDone;
-    }
+            }
         if (tree.Files.TryGetValue(componentsB64.Last(), out var t))
             knownTimestamp = t;
         else knownTimestamp = null;
@@ -266,7 +266,7 @@ public class BackupPartInfo
             //add tree if necessary
             if (potential && (BackupFresh || c.Files.Count != 0 || c.Directories.Count != 0))
                 currentTree.Directories[b64] = c;
-    }
+        }
 
         //files
         foreach (var f in dir.GetFiles("*", SearchOption.TopDirectoryOnly))
