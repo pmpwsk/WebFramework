@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+
 namespace uwap.WebFramework;
 
 /// <summary>
@@ -34,6 +36,11 @@ public delegate Task PostRequestHandler(PostRequest request);
 /// Delegate for asynchronous event request handlers.
 /// </summary>
 public delegate Task EventRequestHandler(EventRequest request);
+
+/// <summary>
+/// Delegate for backup handlers.
+/// </summary>
+public delegate Task BackupHandler(string id, ReadOnlyCollection<string> basedOnIds);
 
 public static partial class Server
 {
