@@ -178,6 +178,32 @@ public static class PluginManager
     }
 
     /// <summary>
+    /// Calls the restore method for every mapped plugin.<br/>
+    /// If a plugin is mapped to multiple URLs, it is only going to be called once (only if it is the exact same object).
+    /// </summary>
+    public static async Task Restore(ReadOnlyCollection<string> ids)
+    {
+        Dictionary<IPlugin, string> plugins = [];
+        foreach (var p in Plugins.Children)
+        {
+            AddPlugins(plugins, p.Key, p.Value);
+        }
+
+        foreach (var p in plugins)
+        {
+            try
+            {
+                await p.Key.Restore(ids);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error calling the restore method for plugin at '{p.Value}': {ex.Message}");
+            }
+        }
+
+    }
+
+    /// <summary>
     /// Recursively adds the plugins (key) and their URLs (value) from the given plugin map to the given dictionary.
     /// </summary>
     private static void AddPlugins(Dictionary<IPlugin,string> plugins, string name, PluginMap map)
