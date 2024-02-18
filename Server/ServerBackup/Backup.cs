@@ -23,6 +23,16 @@ public static partial class Server
         //plugins
         await PluginManager.Backup(id, basedOnIds);
 
+        //event
+        try
+        {
+            if (BackupAlmostDone != null) await BackupAlmostDone(id, basedOnIds);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error firing the backup event: " + ex.Message);
+        }
+
         //finish
         File.WriteAllText($"{Config.Backup.Directory}{id}/BasedOn.txt", basedOnIds.LastOrDefault() ?? "-");
         BackupRunning = false;
