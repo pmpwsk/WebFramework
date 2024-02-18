@@ -61,4 +61,9 @@ public interface IPlugin
     /// <param name="id">The ID of the current backup being created, its folder (for all tables and plugins!) is [directory][id].</param>
     /// <param name="basedOnIds">The IDs of the previous backups this backup should be based on, starting with the first one, each next one is based on the previous one and this backup should be based on the last one.</param>
     public Task Backup(string id, ReadOnlyCollection<string> basedOnIds);
+
+    /// <summary>
+    /// Restores using the backups with the given IDs (ordered from the fresh backup to the last backup in the chain).
+    /// </summary>
+    public Task Restore(ReadOnlyCollection<string> ids);
 }
