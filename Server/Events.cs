@@ -42,6 +42,11 @@ public delegate Task EventRequestHandler(EventRequest request);
 /// </summary>
 public delegate Task BackupHandler(string id, ReadOnlyCollection<string> basedOnIds);
 
+/// <summary>
+/// Delegate for restore handlers.
+/// </summary>
+public delegate Task RestoreHandler(ReadOnlyCollection<string> ids);
+
 public static partial class Server
 {
     /// <summary>
