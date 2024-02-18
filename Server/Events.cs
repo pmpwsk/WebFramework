@@ -88,4 +88,9 @@ public static partial class Server
     /// Called when the server is being backed up (after everything else has been backed up).
     /// </summary>
     public static event BackupHandler? BackupAlmostDone = null;
+
+    /// <summary>
+    /// Called when the server is being restored from a backup (after everything else has been restored).
+    /// </summary>
+    public static event RestoreHandler? RestoreAlmostDone = null;
 }
