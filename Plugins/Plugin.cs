@@ -73,4 +73,10 @@ public abstract class Plugin : IPlugin
     {
         return Task.CompletedTask;
     }
+
+    //documentation is inherited from IPlugin
+    public virtual Task Restore(ReadOnlyCollection<string> ids)
+    {
+        return Task.CompletedTask;
+    }
 }
