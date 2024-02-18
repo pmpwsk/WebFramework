@@ -78,4 +78,9 @@ public static partial class Server
     /// Called when an event request has been received.
     /// </summary>
     public static event EventRequestHandler? EventRequestReceived = null;
+
+    /// <summary>
+    /// Called when the server is being backed up (after everything else has been backed up).
+    /// </summary>
+    public static event BackupHandler? BackupAlmostDone = null;
 }
