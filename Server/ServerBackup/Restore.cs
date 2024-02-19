@@ -7,5 +7,7 @@ public static partial class Server
     {
         if (BackupRunning)
             throw new Exception("A backup is already running!");
+        if (RestoreRunning)
+            throw new Exception("A restore is already running!");
     }
 }
