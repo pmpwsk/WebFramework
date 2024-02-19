@@ -264,6 +264,12 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
         => [];
 
     /// <summary>
+    /// Enumerates directories that should be cleared before restoring from a backup.
+    /// </summary>
+    protected virtual IEnumerable<string> EnumerateDirectoriesToClear()
+        => [];
+
+    /// <summary>
     /// Backs up the table to a new part of the backup with the given ID. This is being called automatically for every imported database.
     /// </summary>
     public void Backup(string id, ReadOnlyCollection<string> basedOnIds)
