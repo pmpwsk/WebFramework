@@ -1,5 +1,5 @@
 ﻿using System.Collections.ObjectModel;
-﻿namespace uwap.WebFramework;
+using uwap.Database;
 
 namespace uwap.WebFramework;
 
@@ -31,6 +31,9 @@ public static partial class Server
         }
         if (ids == null)
             throw new Exception("The chain of backups is corrupt!");
+
+        //tables
+        Tables.RestoreAll(ids);
         RestoreRunning = false;
     }
 }
