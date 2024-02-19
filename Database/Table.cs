@@ -330,6 +330,25 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
         }
     }
 
+    //documentation inherited from ITable
+    public void Restore(ReadOnlyCollection<string> ids)
+    {
+        //clear directories
+        foreach (string d in (IEnumerable<string>)[$"../Database/{Name}", ..EnumerateDirectoriesToClear()])
+            if (Directory.Exists(d))
+            {
+                Directory.Delete(d, true);
+                Directory.CreateDirectory(d);
+            }
+
+        //restore
+        var restorePart = new RestorePartInfo(Name, ids);
+        restorePart.Restore();
+
+        //reload
+        Reload();
+    }
+
     /// <summary>
     /// Enumerates all values.
     /// </summary>
