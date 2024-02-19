@@ -21,7 +21,7 @@ public class BackupTree()
     public string Encode()
         => string.Join(';',
             [
-                .. Files.Select(x => $"{x.Key.ToBase64()},{x.Value??"-"}"),
-                .. Directories.Select(x => $"{x.Key.ToBase64()},{x.Value?.Encode()??"#"}")
+                .. Files.Select(x => $"{x.Key},{x.Value??"-"}"),
+                .. Directories.Select(x => $"{x.Key},{(x.Value == null ? "#" : $"({x.Value.Encode()})")}")
             ]);
 }

@@ -11,7 +11,7 @@ public static partial class Server
     {
         if (!Config.Backup.Enabled)
             return;
-        if (!BackupNecessary(out string id, out var basedOnIds))
+        Directory.CreateDirectory(Config.Backup.Directory);
             return;
         if (BackupRunning)
             throw new Exception("A backup is already running!");
@@ -57,10 +57,17 @@ public static partial class Server
                 }
                 lastTicks = dL;
             }
-        DateTime last = new(lastTicks);
 
-        //is a backup present or is the last backup more than a week old?
-        if (lastTicks != -1 || dt - last > TimeSpan.FromDays(7))
+        //is no backup present?
+        if (lastTicks == -1)
+        {
+            basedOnIds = new([]);
+            return true; //fresh
+        }
+
+        //is the last backup more than a week old?
+        DateTime last = new(lastTicks);
+        if (dt - last > TimeSpan.FromDays(7))
         {
             basedOnIds = new([]);
             return true; //fresh

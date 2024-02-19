@@ -49,7 +49,7 @@ public class BackupPartInfo
         LastKnownState = new();
         foreach (string backupBasedOnId in backupBasedOnIds)
             Load(backupBasedOnId);
-
+        
         Tree = new();
     }
 
@@ -78,7 +78,7 @@ public class BackupPartInfo
             }
             if (read == -1)
                 return;
-            string key = keyBuilder.ToString().FromBase64();
+            string key = keyBuilder.ToString();
 
             //value
             var top = stack.Peek();
@@ -133,8 +133,11 @@ public class BackupPartInfo
                 read = reader.Read();
             }
             top.Files[key] = valueBuilder.ToString();
-            if ((char)read == ')')
+            while ((char)read == ')')
+            {
                 stack.Pop();
+                read = reader.Read();
+            }
         }
     }
 

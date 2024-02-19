@@ -298,7 +298,7 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
                 foreach (string dir in EnumerateOtherDirectories(kv.Value))
                     try
                     {
-                        backupPart.BackupFile(dir);
+                        backupPart.BackupDirectory(dir);
                     }
                     catch (Exception ex)
                     {
@@ -313,6 +313,8 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
             {
                 kv.Value.UnlockIgnore();
             }
+
+        backupPart.Finish();
 
         if (errors.Count != 0)
         {
