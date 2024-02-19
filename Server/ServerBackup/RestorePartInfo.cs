@@ -120,4 +120,31 @@ public class RestorePartInfo
             }
         }
     }
+
+    private bool Restore(string originDirRel, string targetDir, BackupTree tree)
+    {
+        bool directoryCreated = false;
+
+        //directories
+        foreach (var d in tree.Directories)
+        {
+            if (d.Value == null)
+                continue;
+            if (Restore($"{originDirRel}{d.Key}/", $"{targetDir}{d.Key.FromBase64()}/", d.Value))
+                directoryCreated = true;
+        }
+
+        //files
+        foreach (var f in tree.Files)
+        {
+            if (!directoryCreated)
+            {
+                Directory.CreateDirectory(targetDir);
+                directoryCreated = true;
+            }
+            File.Copy($"{Server.Config.Backup.Directory}{f.Value}/{PartName}/{originDirRel}{f.Key}", $"{targetDir}{f.Key.FromBase64()}");
+        }
+
+        return directoryCreated;
+    }
 }
