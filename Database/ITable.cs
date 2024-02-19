@@ -21,4 +21,9 @@ public interface ITable
     /// Backs up the table to a new part of the backup with the given ID. This is being called automatically for every imported database.
     /// </summary>
     public void Backup(string id, ReadOnlyCollection<string> basedOnIds);
+
+    /// <summary>
+    /// Restores using the backups with the given IDs (ordered from the fresh backup to the last backup in the chain).
+    /// </summary>
+    public void Restore(ReadOnlyCollection<string> ids);
 }
