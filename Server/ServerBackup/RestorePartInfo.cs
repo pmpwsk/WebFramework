@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Text;
 
 namespace uwap.WebFramework;
 
@@ -32,5 +33,91 @@ public class RestorePartInfo
         BackupIds = ids;
 
         OriginIdTree = new();
+        foreach (string id in ids)
+            Load(id);
+    }
+
+    /// <summary>
+    /// Loads the metadata for the part of the same name from the backup with the given ID into the LastKnownState tree.
+    /// </summary>
+    private void Load(string id)
+    {
+        if (!File.Exists($"{Server.Config.Backup.Directory}{id}/{PartName}/Metadata.txt"))
+            return;
+
+        Stack<BackupTree> stack = new();
+        stack.Push(OriginIdTree);
+        using StreamReader reader = new($"{Server.Config.Backup.Directory}{id}/{PartName}/Metadata.txt");
+
+        int read;
+        while (true)
+        {
+            //key
+            StringBuilder keyBuilder = new();
+            read = reader.Read();
+            while (read != -1 && (char)read != ',')
+            {
+                keyBuilder.Append((char)read);
+                read = reader.Read();
+            }
+            if (read == -1)
+                return;
+            string key = keyBuilder.ToString();
+
+            //value
+            var top = stack.Peek();
+            read = reader.Read();
+            switch (read)
+            {
+                case -1:
+                    return;
+                case '(':
+                    //directory (not null)
+                    if ((!top.Directories.TryGetValue(key, out var childDir)) || childDir == null)
+                    {
+                        childDir = new();
+                        top.Directories[key] = childDir;
+                    }
+                    stack.Push(childDir);
+                    continue;
+                case '#':
+                    //directory (null)
+                    top.Directories.Remove(key);
+                    read = reader.Read();
+                    switch (read)
+                    {
+                        case -1:
+                            return;
+                        case ')':
+                            stack.Pop();
+                            continue;
+                        default:
+                            continue;
+                    }
+                case '-':
+                    //file (null)
+                    top.Files.Remove(key);
+                    read = reader.Read();
+                    switch (read)
+                    {
+                        case -1:
+                            return;
+                        case ')':
+                            stack.Pop();
+                            continue;
+                        default:
+                            continue;
+                    }
+            }
+            //file (not null)
+            while (read != -1 && !";)".Contains((char)read))
+                read = reader.Read();
+            top.Files[key] = id;
+            while ((char)read == ')')
+            {
+                stack.Pop();
+                read = reader.Read();
+            }
+        }
     }
 }
