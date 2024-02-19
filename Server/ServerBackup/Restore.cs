@@ -38,6 +38,17 @@ public static partial class Server
 
         //plugin
         await PluginManager.Restore(ids);
+
+        //event
+        try
+        {
+            if (RestoreAlmostDone != null) await RestoreAlmostDone(ids);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error firing the restore event: " + ex.Message);
+        }
+
         RestoreRunning = false;
     }
 }
