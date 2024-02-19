@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using uwap.Database;
+using uwap.WebFramework.Plugins;
 
 namespace uwap.WebFramework;
 
@@ -34,6 +35,9 @@ public static partial class Server
 
         //tables
         Tables.RestoreAll(ids);
+
+        //plugin
+        await PluginManager.Restore(ids);
         RestoreRunning = false;
     }
 }
