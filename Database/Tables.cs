@@ -35,4 +35,13 @@ public static class Tables
         foreach (var t in Dictionary)
             t.Value.Backup(id, basedOnIds);
     }
+
+    /// <summary>
+    /// Restores each table using the backups with the given IDs (ordered from the fresh backup to the last backup in the chain).
+    /// </summary>
+    public static void RestoreAll(ReadOnlyCollection<string> ids)
+    {
+        foreach (var t in Dictionary)
+            t.Value.Restore(ids);
+    }
 }
