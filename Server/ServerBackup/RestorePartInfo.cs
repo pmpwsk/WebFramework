@@ -121,6 +121,12 @@ public class RestorePartInfo
         }
     }
 
+    /// <summary>
+    /// Restores the loaded backup part.
+    /// </summary>
+    public void Restore()
+        => Restore("", "", OriginIdTree);
+
     private bool Restore(string originDirRel, string targetDir, BackupTree tree)
     {
         bool directoryCreated = false;
