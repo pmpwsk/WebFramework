@@ -7,7 +7,10 @@ namespace uwap.WebFramework;
 public static partial class Server
 {
     public static bool BackupRunning { get; private set; } = false;
-    private static async Task Backup()
+
+    public static async Task BackupNow()
+        => await Backup(true);
+
     private static async Task Backup(bool allowOutOfSchedule)
     {
         if (!Config.Backup.Enabled)
