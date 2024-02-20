@@ -8,15 +8,15 @@ public static partial class Server
 {
     public static bool BackupRunning { get; private set; } = false;
 
-    public static async Task BackupNow()
-        => await Backup(true);
+    public static async Task BackupNow(bool forceFresh = false)
+        => await Backup(true, forceFresh);
 
-    private static async Task Backup(bool allowOutOfSchedule)
+    private static async Task Backup(bool allowOutOfSchedule, bool forceFresh)
     {
         if (!Config.Backup.Enabled)
             return;
         Directory.CreateDirectory(Config.Backup.Directory);
-        if (!BackupNecessary(out string id, out var basedOnIds, allowOutOfSchedule))
+        if (!BackupNecessary(out string id, out var basedOnIds, allowOutOfSchedule, forceFresh))
             return;
         if (BackupRunning)
             throw new Exception("A backup is already running!");
@@ -45,7 +45,7 @@ public static partial class Server
         BackupRunning = false;
     }
 
-    private static bool BackupNecessary(out string id, out ReadOnlyCollection<string> basedOnIds, bool allowOutOfSchedule)
+    private static bool BackupNecessary(out string id, out ReadOnlyCollection<string> basedOnIds, bool allowOutOfSchedule, bool forceFresh)
     {
         DateTime dt = DateTime.UtcNow;
         id = dt.Ticks.ToString();
@@ -88,6 +88,13 @@ public static partial class Server
         {
             basedOnIds = new([]);
             return false; //no
+        }
+
+        //force a fresh backup?
+        if (forceFresh)
+        {
+            basedOnIds = new([]);
+            return true;
         }
 
         //calculate the last scheduled fresh backup
