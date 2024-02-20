@@ -8,10 +8,12 @@ public static partial class Server
 {
     public static bool BackupRunning { get; private set; } = false;
     private static async Task Backup()
+    private static async Task Backup(bool allowOutOfSchedule)
     {
         if (!Config.Backup.Enabled)
             return;
         Directory.CreateDirectory(Config.Backup.Directory);
+        if (!BackupNecessary(out string id, out var basedOnIds, allowOutOfSchedule))
             return;
         if (BackupRunning)
             throw new Exception("A backup is already running!");
@@ -40,7 +42,7 @@ public static partial class Server
         BackupRunning = false;
     }
 
-    private static bool BackupNecessary(out string id, out ReadOnlyCollection<string> basedOnIds)
+    private static bool BackupNecessary(out string id, out ReadOnlyCollection<string> basedOnIds, bool allowOutOfSchedule)
     {
         DateTime dt = DateTime.UtcNow;
         id = dt.Ticks.ToString();
@@ -79,7 +81,7 @@ public static partial class Server
             scheduled = scheduled.AddDays(-1);
 
         //has the scheduled backup already been created?
-        if (last >= scheduled)
+        if (last >= scheduled && !allowOutOfSchedule)
         {
             basedOnIds = new([]);
             return false; //no

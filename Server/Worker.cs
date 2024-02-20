@@ -112,7 +112,7 @@ public static partial class Server
         //backup
         try
         {
-            await Backup();
+            await Backup(false);
         }
         catch (Exception ex)
         {
