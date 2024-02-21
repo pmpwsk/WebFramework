@@ -334,7 +334,7 @@ public class BackupPartInfo
                 BackupTree? c;
                 if (currentTree.Directories.TryGetValue(dKV.Key, out c))
                     potential = false;
-                {
+                else {
                     potential = true;
                     c = new();
                 }
