@@ -274,53 +274,60 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
     /// </summary>
     public void Backup(string id, ReadOnlyCollection<string> basedOnIds)
     {
-        BackupPartInfo backupPart = new(Name, id, basedOnIds);
         Dictionary<string, Exception> errors = [];
+        try
+        {
+            BackupPartInfo backupPart = new(Name, id, basedOnIds);
 
-        foreach (var kv in Data)
-            try
-            {
-                kv.Value.Lock();
-
+            foreach (var kv in Data)
                 try
                 {
-                    backupPart.BackupFile($"../Database/{Name}/{kv.Key}.json");
+                    kv.Value.Lock();
+
+                    try
+                    {
+                        backupPart.BackupFile($"../Database/{Name}/{kv.Key}.json");
+                    }
+                    catch (Exception ex)
+                    {
+                        errors[kv.Key] = ex;
+                    }
+
+                    foreach (string file in EnumerateOtherFiles(kv.Value))
+                        try
+                        {
+                            backupPart.BackupFile(file);
+                        }
+                        catch (Exception ex)
+                        {
+                            errors[$"FILE {file} FOR {kv.Key}"] = ex;
+                        }
+
+                    foreach (string dir in EnumerateOtherDirectories(kv.Value))
+                        try
+                        {
+                            backupPart.BackupDirectory(dir);
+                        }
+                        catch (Exception ex)
+                        {
+                            errors[$"DIR {dir} FOR {kv.Key}"] = ex;
+                        }
                 }
                 catch (Exception ex)
                 {
                     errors[kv.Key] = ex;
                 }
+                finally
+                {
+                    kv.Value.UnlockIgnore();
+                }
 
-                foreach (string file in EnumerateOtherFiles(kv.Value))
-                    try
-                    {
-                        backupPart.BackupFile(file);
-                    }
-                    catch (Exception ex)
-                    {
-                        errors[$"FILE {file} FOR {kv.Key}"] = ex;
-                    }
-
-                foreach (string dir in EnumerateOtherDirectories(kv.Value))
-                    try
-                    {
-                        backupPart.BackupDirectory(dir);
-                    }
-                    catch (Exception ex)
-                    {
-                        errors[$"DIR {dir} FOR {kv.Key}"] = ex;
-                    }
-            }
-            catch (Exception ex)
-            {
-                errors[kv.Key] = ex;
-            }
-            finally
-            {
-                kv.Value.UnlockIgnore();
-            }
-
-        backupPart.Finish();
+            backupPart.Finish();
+        }
+        catch (Exception ex)
+        {
+            errors["GENERAL"] = ex;
+        }
 
         if (errors.Count != 0)
         {
