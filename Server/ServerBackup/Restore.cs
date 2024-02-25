@@ -15,40 +15,45 @@ public static partial class Server
             throw new Exception("A restore is already running!");
         RestoreRunning = true;
 
-        //find ids
-        ReadOnlyCollection<string>? ids = null;
-        string lastInChain = id;
-        List<string> idsWritable = [];
-        while (File.Exists($"{Config.Backup.Directory}{lastInChain}/BasedOn.txt"))
-        {
-            idsWritable.Insert(0, lastInChain);
-            lastInChain = File.ReadAllText($"{Config.Backup.Directory}{lastInChain}/BasedOn.txt");
-            if (lastInChain == "-")
-            {
-                //start of the chain has been reached
-                ids = idsWritable.AsReadOnly();
-                break;
-            }
-        }
-        if (ids == null)
-            throw new Exception("The chain of backups is corrupt!");
-
-        //tables
-        Tables.RestoreAll(ids);
-
-        //plugin
-        await PluginManager.Restore(ids);
-
-        //event
         try
         {
-            if (RestoreAlmostDone != null) await RestoreAlmostDone(ids);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error firing the restore event: " + ex.Message);
-        }
+            //find ids
+            ReadOnlyCollection<string>? ids = null;
+            string lastInChain = id;
+            List<string> idsWritable = [];
+            while (File.Exists($"{Config.Backup.Directory}{lastInChain}/BasedOn.txt"))
+            {
+                idsWritable.Insert(0, lastInChain);
+                lastInChain = File.ReadAllText($"{Config.Backup.Directory}{lastInChain}/BasedOn.txt");
+                if (lastInChain == "-")
+                {
+                    //start of the chain has been reached
+                    ids = idsWritable.AsReadOnly();
+                    break;
+                }
+            }
+            if (ids == null)
+                throw new Exception("The chain of backups is corrupt!");
 
-        RestoreRunning = false;
+            //tables
+            Tables.RestoreAll(ids);
+
+            //plugin
+            await PluginManager.Restore(ids);
+
+            //event
+            try
+            {
+                if (RestoreAlmostDone != null) await RestoreAlmostDone(ids);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error firing the restore event: " + ex.Message);
+            }
+        }
+        finally
+        {
+            RestoreRunning = false;
+        }
     }
 }
