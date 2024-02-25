@@ -24,6 +24,8 @@ public static partial class Server
             throw new Exception("A restore is already running!");
         BackupRunning = true;
 
+        try
+        {
         //tables
         Tables.BackupAll(id, basedOnIds);
 
@@ -42,7 +44,11 @@ public static partial class Server
 
         //finish
         File.WriteAllText($"{Config.Backup.Directory}{id}/BasedOn.txt", basedOnIds.LastOrDefault() ?? "-");
+        }
+        finally
+        {
         BackupRunning = false;
+    }
     }
 
     private static bool BackupNecessary(out string id, out ReadOnlyCollection<string> basedOnIds, bool allowOutOfSchedule, bool forceFresh)
