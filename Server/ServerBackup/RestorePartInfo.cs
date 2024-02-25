@@ -37,24 +37,17 @@ public class RestorePartInfo
             Load(id);
     }
 
-    /// <summary>
-    /// Loads the metadata for the part of the same name from the backup with the given ID into the LastKnownState tree.
-    /// </summary>
-    private void Load(string id)
+    private void LoadRecursive(StreamReader reader, BackupTree tree, string id)
     {
-        if (!File.Exists($"{Server.Config.Backup.Directory}{id}/{PartName}/Metadata.txt"))
-            return;
-
-        Stack<BackupTree> stack = new();
-        stack.Push(OriginIdTree);
-        using StreamReader reader = new($"{Server.Config.Backup.Directory}{id}/{PartName}/Metadata.txt");
-
         int read;
+
         while (true)
         {
             //key
             StringBuilder keyBuilder = new();
             read = reader.Read();
+            if ((char)read == ')')
+                return;
             while (read != -1 && (char)read != ',')
             {
                 keyBuilder.Append((char)read);
@@ -65,60 +58,53 @@ public class RestorePartInfo
             string key = keyBuilder.ToString();
 
             //value
-            var top = stack.Peek();
             read = reader.Read();
+            switch ((char)read)
+            {
+                case '(': //directory (not null)
+                    if ((!tree.Directories.TryGetValue(key, out var subTree)) || subTree == null)
+                    {
+                        subTree = new();
+                        tree.Directories[key] = subTree;
+                    }
+                    LoadRecursive(reader, subTree, id);
+                    read = reader.Read();
+                    break;
+                case '#': //directory (null)
+                    tree.Directories.Remove(key);
+                    read = reader.Read();
+                    break;
+                case '-': //file (null)
+                    tree.Files.Remove(key);
+                    read = reader.Read();
+                    break;
+                default: //file (not null)
+                    while (read != -1 && !";)".Contains((char)read))
+                        read = reader.Read();
+                    tree.Files[key] = id;
+                    break;
+            }
             switch (read)
             {
                 case -1:
+                case ')':
                     return;
-                case '(':
-                    //directory (not null)
-                    if ((!top.Directories.TryGetValue(key, out var childDir)) || childDir == null)
-                    {
-                        childDir = new();
-                        top.Directories[key] = childDir;
-                    }
-                    stack.Push(childDir);
-                    continue;
-                case '#':
-                    //directory (null)
-                    top.Directories.Remove(key);
-                    read = reader.Read();
-                    switch (read)
-                    {
-                        case -1:
-                            return;
-                        case ')':
-                            stack.Pop();
-                            continue;
-                        default:
-                            continue;
-                    }
-                case '-':
-                    //file (null)
-                    top.Files.Remove(key);
-                    read = reader.Read();
-                    switch (read)
-                    {
-                        case -1:
-                            return;
-                        case ')':
-                            stack.Pop();
-                            continue;
-                        default:
-                            continue;
-                    }
-            }
-            //file (not null)
-            while (read != -1 && !";)".Contains((char)read))
-                read = reader.Read();
-            top.Files[key] = id;
-            while ((char)read == ')')
-            {
-                stack.Pop();
-                read = reader.Read();
+                    //the only possible alternative is a ; but nothing needs to be done in that case
             }
         }
+    }
+
+    /// <summary>
+    /// Loads the metadata for the part of the same name from the backup with the given ID into the LastKnownState tree.
+    /// </summary>
+    private void Load(string id)
+    {
+        if (!File.Exists($"{Server.Config.Backup.Directory}{id}/{PartName}/Metadata.txt"))
+            return;
+
+        using StreamReader reader = new($"{Server.Config.Backup.Directory}{id}/{PartName}/Metadata.txt");
+
+        LoadRecursive(reader, OriginIdTree, id);
     }
 
     /// <summary>
