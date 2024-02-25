@@ -26,29 +26,29 @@ public static partial class Server
 
         try
         {
-        //tables
-        Tables.BackupAll(id, basedOnIds);
+            //tables
+            Tables.BackupAll(id, basedOnIds);
 
-        //plugins
-        await PluginManager.Backup(id, basedOnIds);
+            //plugins
+            await PluginManager.Backup(id, basedOnIds);
 
-        //event
-        try
-        {
-            if (BackupAlmostDone != null) await BackupAlmostDone(id, basedOnIds);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error firing the backup event: " + ex.Message);
-        }
+            //event
+            try
+            {
+                if (BackupAlmostDone != null) await BackupAlmostDone(id, basedOnIds);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error firing the backup event: " + ex.Message);
+            }
 
-        //finish
-        File.WriteAllText($"{Config.Backup.Directory}{id}/BasedOn.txt", basedOnIds.LastOrDefault() ?? "-");
+            //finish
+            File.WriteAllText($"{Config.Backup.Directory}{id}/BasedOn.txt", basedOnIds.LastOrDefault() ?? "-");
         }
         finally
         {
-        BackupRunning = false;
-    }
+            BackupRunning = false;
+        }
     }
 
     private static bool BackupNecessary(out string id, out ReadOnlyCollection<string> basedOnIds, bool allowOutOfSchedule, bool forceFresh)
@@ -57,27 +57,49 @@ public static partial class Server
         id = dt.Ticks.ToString();
 
         //find the last actual backup, delete backups that haven't been finished for some reason
-        long lastTicks = -1;
+        SortedSet<DateTime> ids = [];
         foreach (var d in new DirectoryInfo(Config.Backup.Directory).GetDirectories("*", SearchOption.TopDirectoryOnly))
-            if (long.TryParse(d.Name, out long dL) && dL > lastTicks)
+            if (long.TryParse(d.Name, out long dL))
             {
                 if (!File.Exists($"{Config.Backup.Directory}{d.Name}/BasedOn.txt"))
                 {
                     Directory.Delete($"{Config.Backup.Directory}{d.Name}", true);
                     continue;
                 }
-                lastTicks = dL;
+                ids.Add(new DateTime(dL));
             }
 
         //is no backup present?
-        if (lastTicks == -1)
+        if (ids.Count == 0)
         {
             basedOnIds = new([]);
             return true; //fresh
         }
+        DateTime last = ids.Max;
+
+        //delete old backups
+        /**ignore ones that are:
+         * up to two weeks old
+         * fresh AND up to two months old
+         * the first of a month AND up to two years old
+         * the first of a year*/
+        int currentYear = 0;
+        int currentMonth = 0;
+        foreach (DateTime d in ids) //keep in mind that they are sorted, that's why currentYear/Month works
+        {
+            TimeSpan age = dt - d;
+            
+            if (!((age <= TimeSpan.FromDays(14))
+                || (age <= TimeSpan.FromDays(60) && File.ReadAllText($"{Config.Backup.Directory}{d.Ticks}/BasedOn.txt") == "-")
+                || (age <= TimeSpan.FromDays(730) && currentMonth != d.Month)
+                || currentYear != d.Year))
+                Directory.Delete($"{Config.Backup.Directory}{d.Ticks}", true);
+            
+            currentYear = d.Year;
+            currentMonth = d.Month;
+        }
 
         //is the last backup more than a week old?
-        DateTime last = new(lastTicks);
         if (dt - last > TimeSpan.FromDays(7))
         {
             basedOnIds = new([]);
@@ -116,7 +138,7 @@ public static partial class Server
             return true; //fresh
         }
 
-        string lastInChain = lastTicks.ToString();
+        string lastInChain = last.Ticks.ToString();
         List<string> basedOnIdsWritable = [];
         while (File.Exists($"{Config.Backup.Directory}{lastInChain}/BasedOn.txt"))
         {
