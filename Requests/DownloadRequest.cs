@@ -1,12 +1,11 @@
 using Microsoft.AspNetCore.Http;
-using uwap.WebFramework.Accounts;
 
 namespace uwap.WebFramework;
 
 /// <summary>
 /// Intended for download requests, either to path /dl/... or routed over an app request.
 /// </summary>
-public class DownloadRequest : IRequest
+public class DownloadRequest(LayerRequestData data) : IRequest(data)
 {
     /// <summary>
     /// Whether something was already sent.
@@ -22,13 +21,6 @@ public class DownloadRequest : IRequest
         {
             if (value != null) Context.Response.Headers.Append("Access-Control-Allow-Origin", value);
         }
-    }
-
-    /// <summary>
-    /// Creates a new download request object with the given context, user, user table and login state.
-    /// </summary>
-    public DownloadRequest(HttpContext context, User? user, UserTable? userTable, LoginState loginState) : base(context, user, userTable, loginState)
-    {
     }
 
     /// <summary>
