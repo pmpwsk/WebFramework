@@ -8,6 +8,22 @@ public static partial class Server
     public static partial class Config
     {
         /// <summary>
+        /// The layers of the middleware in order.<br/>
+        /// Default: Init, LetsEncrypt, HttpsRedirect, Redirect, File, Auth, Handler<br/>
+        /// All of the default layers can be found under Server.Layers.[NAME]Layer.
+        /// </summary>
+        public static List<LayerDelegate> Layers { get; set; } =
+        [
+            Server.Layers.InitLayer,
+            Server.Layers.LetsEncryptLayer,
+            Server.Layers.HttpsRedirectLayer,
+            Server.Layers.RedirectLayer,
+            Server.Layers.FileLayer,
+            Server.Layers.AuthLayer,
+            Server.Layers.HandlerLayer
+        ];
+
+        /// <summary>
         /// Throws an exception "The server does not allow changing this setting during runtime." if the server is running, otherwise nothing happens.
         /// </summary>
         private static void Complain()
