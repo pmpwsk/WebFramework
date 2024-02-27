@@ -50,6 +50,11 @@ public class QueryManager
     public string? TryGet(string key) => Query.TryGetValue(key, out var value) ? ((string?)value)??"" : null;
 
     /// <summary>
+    /// Returns the value of the query entry with the given key and type, or null/default if no such entry exists.
+    /// </summary>
+    public T? TryGet<T>(string key) => TryGetValue<T>(key, out var value) ? value : default;
+
+    /// <summary>
     /// Returns whether the query contains an entry with the given key and the associated value as an out-argument if true.
     /// </summary>
     public bool TryGetValue(string key, [MaybeNullWhen(false)] out string value)
