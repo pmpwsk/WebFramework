@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Http;
 using System.Web;
-using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Elements;
 
 namespace uwap.WebFramework;
@@ -8,7 +7,7 @@ namespace uwap.WebFramework;
 /// <summary>
 /// Intended for frontend requests (pages).
 /// </summary>
-public class AppRequest : IRequest
+public class AppRequest(LayerRequestData data) : IRequest(data)
 {
     /// <summary>
     /// Whether the page has been written yet.
@@ -19,13 +18,6 @@ public class AppRequest : IRequest
     /// The page object to be written.
     /// </summary>
     public IPage? Page = null;
-
-    /// <summary>
-    /// Creates a new app request object with the given context, user, user table and login state.
-    /// </summary>
-    public AppRequest(HttpContext context, User? user, UserTable? userTable, LoginState loginState) : base(context, user, userTable, loginState)
-    {
-    }
 
     /// <summary>
     /// Writes the page and marks the request as finished. If no page was set, a status message for code 501 (not implemented) is written.
@@ -59,7 +51,7 @@ public class AppRequest : IRequest
         if (Finished) throw new Exception("The page has already been written.");
         Finished = true;
         Context.Response.ContentType = "text/plain;charset=utf-8";
-        ApiRequest request = new(Context, _User, UserTable, LoginState);
+        ApiRequest request = new(new(Context) { User = _User, UserTable = UserTable, LoginState = LoginState, Domains = Domains });
         try
         {
             await Server.CallApi(request);
@@ -80,7 +72,7 @@ public class AppRequest : IRequest
         if (Finished) throw new Exception("The page has already been written.");
         Finished = true;
         Context.Response.ContentType = null;
-        DownloadRequest request = new(Context, _User, UserTable, LoginState);
+        DownloadRequest request = new(new(Context) { User = _User, UserTable = UserTable, LoginState = LoginState, Domains = Domains });
         try
         {
             await Server.CallDownload(request);
