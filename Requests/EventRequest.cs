@@ -1,25 +1,16 @@
 ﻿using Microsoft.AspNetCore.Http;
-using uwap.WebFramework.Accounts;
 
 namespace uwap.WebFramework;
 
 /// <summary>
 /// Intended for server-sent event requests to /event/...
 /// </summary>
-public class EventRequest : IRequest
+public class EventRequest(LayerRequestData data) : IRequest(data)
 {
     /// <summary>
     /// Lock that assures that only one thread at a time can send a message.
     /// </summary>
-    private ReaderWriterLockSlim Lock;
-
-    /// <summary>
-    /// Creates a new event request object with the given context, user, user table and login state.
-    /// </summary>
-    public EventRequest(HttpContext context, User? user, UserTable? userTable, LoginState loginState) : base(context, user, userTable, loginState)
-    {
-        Lock = new ReaderWriterLockSlim();
-    }
+    private ReaderWriterLockSlim Lock = new();
 
     /// <summary>
     /// Sends the given message to the client as an event.
