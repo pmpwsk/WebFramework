@@ -65,4 +65,137 @@ public class QueryManager
             return false;
         }
     }
+
+    /// <summary>
+    /// Returns whether the query contains an entry with the given key and type, and the associated value as an out-argument if true.
+    /// </summary>
+    public bool TryGetValue<T>(string key, [MaybeNullWhen(false)] out T value)
+    {
+        if (Query.TryGetValue(key, out var sv))
+        {
+            string v = ((string?)sv) ?? "";
+            switch (Type.GetTypeCode(typeof(T)))
+            {
+                case TypeCode.String:
+                    value = (T)Convert.ChangeType(v, typeof(T));
+                    return true;
+                case TypeCode.Boolean:
+                    {
+                        if (bool.TryParse(v, out var result))
+                        {
+                            value = (T)Convert.ChangeType(result, typeof(T));
+                            return true;
+                        }
+                    } break;
+                case TypeCode.Byte:
+                    {
+                        if (byte.TryParse(v, out var result))
+                        {
+                            value = (T)Convert.ChangeType(result, typeof(T));
+                            return true;
+                        }
+                    } break;
+                case TypeCode.Char:
+                    if (v.Length == 1)
+                    {
+                        value = (T)Convert.ChangeType(v[0], typeof(T));
+                        return true;
+                    }
+                    break;
+                case TypeCode.DateTime:
+                    {
+                        if (DateTime.TryParse(v, out var result))
+                        {
+                            value = (T)Convert.ChangeType(result, typeof(T));
+                            return true;
+                        }
+                    } break;
+                case TypeCode.Decimal:
+                    {
+                        if (decimal.TryParse(v, out var result))
+                        {
+                            value = (T)Convert.ChangeType(result, typeof(T));
+                            return true;
+                        }
+                    } break;
+                case TypeCode.Double:
+                    {
+                        if (double.TryParse(v, out var result))
+                        {
+                            value = (T)Convert.ChangeType(result, typeof(T));
+                            return true;
+                        }
+                    } break;
+                case TypeCode.Int16:
+                    {
+                        if (short.TryParse(v, out var result))
+                        {
+                            value = (T)Convert.ChangeType(result, typeof(T));
+                            return true;
+                        }
+                    } break;
+                case TypeCode.Int32:
+                    {
+                        if (int.TryParse(v, out var result))
+                        {
+                            value = (T)Convert.ChangeType(result, typeof(T));
+                            return true;
+                        }
+                    } break;
+                case TypeCode.Int64:
+                    {
+                        if (long.TryParse(v, out var result))
+                        {
+                            value = (T)Convert.ChangeType(result, typeof(T));
+                            return true;
+                        }
+                    } break;
+                case TypeCode.SByte:
+                    {
+                        if (sbyte.TryParse(v, out var result))
+                        {
+                            value = (T)Convert.ChangeType(result, typeof(T));
+                            return true;
+                        }
+                    } break;
+                case TypeCode.Single:
+                    {
+                        if (float.TryParse(v, out var result))
+                        {
+                            value = (T)Convert.ChangeType(result, typeof(T));
+                            return true;
+                        }
+                    } break;
+                case TypeCode.UInt16:
+                    {
+                        if (ushort.TryParse(v, out var result))
+                        {
+                            value = (T)Convert.ChangeType(result, typeof(T));
+                            return true;
+                        }
+                    } break;
+                case TypeCode.UInt32:
+                    {
+                        if (uint.TryParse(v, out var result))
+                        {
+                            value = (T)Convert.ChangeType(result, typeof(T));
+                            return true;
+                        }
+                    } break;
+                case TypeCode.UInt64:
+                    {
+                        if (ulong.TryParse(v, out var result))
+                        {
+                            value = (T)Convert.ChangeType(result, typeof(T));
+                            return true;
+                        }
+                    } break;
+                default:
+                    throw new Exception("Unrecognized type.");
+            }
+            }
+
+        value = default;
+        return false;
+    }
 }
