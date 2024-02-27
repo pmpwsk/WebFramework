@@ -6,55 +6,42 @@ namespace uwap.WebFramework;
 /// <summary>
 /// Abstract class for all possible requests.
 /// </summary>
-public abstract class IRequest
+public abstract class IRequest(LayerRequestData data)
 {
     /// <summary>
     /// The associated HttpContext object.
     /// </summary>
-    public readonly HttpContext Context;
+    public readonly HttpContext Context = data.Context;
 
     /// <summary>
     /// The associated cookie manager.
     /// </summary>
-    public readonly CookieManager Cookies;
+    public readonly CookieManager Cookies = data.Cookies;
 
     /// <summary>
     /// The associated query manager.
     /// </summary>
-    public readonly QueryManager Query;
+    public readonly QueryManager Query = data.Query;
 
     /// <summary>
     /// The current user or null if no user is logged in.
     /// </summary>
-    public readonly User? _User;
+    public readonly User? _User = data.User;
 
     /// <summary>
     /// The associated user table.
     /// </summary>
-    private readonly UserTable? _UserTable = null;
+    private readonly UserTable? _UserTable = data.UserTable;
 
     /// <summary>
     /// The current login state.
     /// </summary>
-    public readonly LoginState LoginState;
+    public readonly LoginState LoginState = data.LoginState;
 
     /// <summary>
     /// The exception that occurred or null if no exception interrupted the request handling.
     /// </summary>
     internal Exception? Exception = null;
-
-    /// <summary>
-    /// Creates a new base object for a request object with the given context, user, user table and login state.
-    /// </summary>
-    public IRequest(HttpContext context, User? user, UserTable? userTable, LoginState loginState)
-    {
-        Context = context;
-        _User = user;
-        _UserTable = userTable;
-        LoginState = loginState;
-        Cookies = new CookieManager(context);
-        Query = new QueryManager(context.Request.Query);
-    }
 
     /// <summary>
     /// The associated user. If no user is associated with the request, an exception is thrown.<br/>
