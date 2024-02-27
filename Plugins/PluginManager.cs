@@ -56,9 +56,9 @@ public static class PluginManager
     /// Handles the given API request with the plugin that most closely matches the given path for any of the given domains, or does nothing and returns false if no matching plugin was found.<br/>
     /// Domains should be sorted by their priority among plugins with the same depth (the most relevant domain should be first).
     /// </summary>
-    public static async Task<bool> Handle(IEnumerable<string> domains, string path, ApiRequest req)
+    public static async Task<bool> Handle(string path, ApiRequest req)
     {
-        var plugin = GetPlugin(domains, path, out string relPath, out string pathPrefix);
+        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix);
         if (plugin == null) return false;
         await plugin.Handle(req, relPath, pathPrefix);
         return true;
@@ -68,9 +68,9 @@ public static class PluginManager
     /// Handles the given download request with the plugin that most closely matches the given path for any of the given domains, or does nothing and returns false if no matching plugin was found.<br/>
     /// Domains should be sorted by their priority among plugins with the same depth (the most relevant domain should be first).
     /// </summary>
-    public static async Task<bool> Handle(IEnumerable<string> domains, string path, DownloadRequest req)
+    public static async Task<bool> Handle(string path, DownloadRequest req)
     {
-        var plugin = GetPlugin(domains, path, out string relPath, out string pathPrefix);
+        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix);
         if (plugin == null) return false;
         await plugin.Handle(req, relPath, pathPrefix);
         return true;
@@ -80,9 +80,9 @@ public static class PluginManager
     /// Handles the given POST request (without any files) with the plugin that most closely matches the given path for any of the given domains, or does nothing and returns false if no matching plugin was found.<br/>
     /// Domains should be sorted by their priority among plugins with the same depth (the most relevant domain should be first).
     /// </summary>
-    public static async Task<bool> Handle(IEnumerable<string> domains, string path, PostRequest req)
+    public static async Task<bool> Handle(string path, PostRequest req)
     {
-        var plugin = GetPlugin(domains, path, out string relPath, out string pathPrefix);
+        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix);
         if (plugin == null) return false;
         await plugin.Handle(req, relPath, pathPrefix);
         return true;
@@ -92,9 +92,9 @@ public static class PluginManager
     /// Handles the given upload request with the plugin that most closely matches the given path for any of the given domains, or does nothing and returns false if no matching plugin was found.<br/>
     /// Domains should be sorted by their priority among plugins with the same depth (the most relevant domain should be first).
     /// </summary>
-    public static async Task<bool> Handle(IEnumerable<string> domains, string path, UploadRequest req)
+    public static async Task<bool> Handle(string path, UploadRequest req)
     {
-        var plugin = GetPlugin(domains, path, out string relPath, out string pathPrefix);
+        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix);
         if (plugin == null) return false;
         await plugin.Handle(req, relPath, pathPrefix);
         return true;
@@ -104,9 +104,9 @@ public static class PluginManager
     /// Handles the given event request with the plugin that most closely matches the given path for any of the given domains, or does nothing and returns false if no matching plugin was found.<br/>
     /// Domains should be sorted by their priority among plugins with the same depth (the most relevant domain should be first).
     /// </summary>
-    public static async Task<bool> Handle(IEnumerable<string> domains, string path, EventRequest req)
+    public static async Task<bool> Handle(string path, EventRequest req)
     {
-        var plugin = GetPlugin(domains, path, out string relPath, out string pathPrefix);
+        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix);
         if (plugin == null) return false;
         await plugin.Handle(req, relPath, pathPrefix);
         return true;

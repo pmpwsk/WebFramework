@@ -44,6 +44,11 @@ public abstract class IRequest(LayerRequestData data)
     internal Exception? Exception = null;
 
     /// <summary>
+    /// The list of domains associated with this request.
+    /// </summary>
+    public List<string> Domains = data.Domains;
+
+    /// <summary>
     /// The associated user. If no user is associated with the request, an exception is thrown.<br/>
     /// A user is only associated if LoginState is not None or Banned. This can also be checked by getting bool IRequest.HasUser.
     /// </summary>

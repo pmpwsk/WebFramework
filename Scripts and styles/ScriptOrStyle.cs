@@ -52,11 +52,10 @@ public abstract class ScriptOrStyle
         int queryIndex = Url.IndexOf('?');
         string urlWithoutQuery = queryIndex > -1 ? Url.Remove(queryIndex) : Url;
 
-        var domains = Parsers.Domains(request.Domain);
-        var entry = FindEntry(domains, urlWithoutQuery);
+        var entry = FindEntry(request.Domains, urlWithoutQuery);
         if (entry == null)
         {
-            IPlugin? plugin = PluginManager.GetPlugin(domains, urlWithoutQuery, out string relPath, out _);
+            IPlugin? plugin = PluginManager.GetPlugin(request.Domains, urlWithoutQuery, out string relPath, out _);
             if (plugin != null)
             {
                 string? timestamp = plugin.GetFileVersion(relPath);

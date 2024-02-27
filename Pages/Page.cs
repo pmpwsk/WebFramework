@@ -107,8 +107,6 @@ public class Page : IPage
     //documentation inherited from IPage
     public IEnumerable<string> Export(AppRequest request)
     {
-        var domains = Parsers.Domains(request.Domain);
-
         bool error = request.Status != 200;
 
         yield return "<!DOCTYPE html>";
@@ -125,7 +123,7 @@ public class Page : IPage
         else
         {
             string title = Title.HtmlSafe();
-            if (Server.Config.Domains.TitleExtensions.TryGetValueAny(out var titleExtension, domains) && titleExtension != null)
+            if (Server.Config.Domains.TitleExtensions.TryGetValueAny(out var titleExtension, request.Domains) && titleExtension != null)
                 title += " | " + titleExtension;
             yield return $"\t<title>{title}</title>";
         }
@@ -135,7 +133,7 @@ public class Page : IPage
             yield return $"\t<meta name=\"description\" content=\"{Description.HtmlValueSafe()}\" />";
 
         //canonical
-        if (Server.Config.Domains.CanonicalDomains.TryGetValueAny(out var canonical, domains))
+        if (Server.Config.Domains.CanonicalDomains.TryGetValueAny(out var canonical, request.Domains))
         {
             canonical ??= request.Domain;
             yield return $"\t<link rel=\"canonical\" href=\"https://{canonical}{request.Path}{request.Context.Request.QueryString}\" />";
@@ -163,13 +161,13 @@ public class Page : IPage
                 else mime = "";
             }
 
-            if (Server.Cache.TryGetValueAny(out var faviconA, domains.Select(d => d + Favicon).ToArray()))
+            if (Server.Cache.TryGetValueAny(out var faviconA, request.Domains.Select(d => d + Favicon).ToArray()))
             {
                 yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}?t={faviconA.GetModifiedUtc().Ticks}\">";
             }
             else
             {
-                IPlugin? plugin = PluginManager.GetPlugin(domains, Favicon, out string relPath, out _);
+                IPlugin? plugin = PluginManager.GetPlugin(request.Domains, Favicon, out string relPath, out _);
                 if (plugin != null)
                 {
                     string? timestamp = plugin.GetFileVersion(relPath);
@@ -262,7 +260,7 @@ public class Page : IPage
         //footer
         if (!HideFooter)
         {
-            if (!Server.Config.Domains.CopyrightNames.TryGetValueAny(out var copyright, domains))
+            if (!Server.Config.Domains.CopyrightNames.TryGetValueAny(out var copyright, request.Domains))
                 copyright = request.Domain;
             List<IContent> footerContent = new();
             if (copyright != null)
