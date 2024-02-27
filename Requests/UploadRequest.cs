@@ -1,20 +1,12 @@
 using Microsoft.AspNetCore.Http;
-using uwap.WebFramework.Accounts;
 
 namespace uwap.WebFramework;
 
 /// <summary>
 /// Intended for upload requests (POST requests with files).
 /// </summary>
-public class UploadRequest : SimpleResponseRequest
+public class UploadRequest(LayerRequestData data) : SimpleResponseRequest(data)
 {
-    /// <summary>
-    /// Creates a new upload request object with the given context, user, user table and login state.
-    /// </summary>
-    public UploadRequest(HttpContext context, User? user, UserTable? userTable, LoginState loginState) : base(context, user, userTable, loginState)
-    {
-    }
-
     /// <summary>
     /// The uploaded files.
     /// </summary>
