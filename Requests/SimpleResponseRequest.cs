@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
-using uwap.WebFramework.Accounts;
 
 namespace uwap.WebFramework;
 
 /// <summary>
 /// Abstract class that adds CORS and text responses to IRequest.
 /// </summary>
-public abstract class SimpleResponseRequest : IRequest
+public abstract class SimpleResponseRequest(LayerRequestData data) : IRequest(data)
 {
     /// <summary>
     /// The only origin domain the data gotten from the response should be used for (or null to disable).
@@ -67,12 +66,6 @@ public abstract class SimpleResponseRequest : IRequest
             else throw new Exception("Something has already been written/sent.");
         }
     }
-
-    /// <summary>
-    /// Creates a new TextRequest.
-    /// </summary>
-    public SimpleResponseRequest(HttpContext context, User? user, UserTable? userTable, LoginState loginState)
-        : base(context, user, userTable, loginState) { }
 
     /// <summary>
     /// Writes the given text either directly or to the buffer.
