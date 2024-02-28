@@ -39,6 +39,11 @@ public class LayerRequestData(HttpContext context)
     public LoginState LoginState = LoginState.None;
 
     /// <summary>
+    /// A dictionary of custom objects that layers can use to communicate with each other.
+    /// </summary>
+    public Dictionary<string, object> CustomObjects = [];
+
+    /// <summary>
     /// The requested path.
     /// </summary>
     public string Path
