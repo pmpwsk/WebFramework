@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using System.Collections.ObjectModel;
 using uwap.Database;
 
 namespace uwap.WebFramework.Accounts;
@@ -165,17 +166,19 @@ public class UserTable : Table<User>
     /// Checks and returns the login state of the given context and returns the user using the out-parameter if one has been found.
     /// If the user is fully logged in without additional requirements (2FA, verification), the token will be renewed if it's old enough.
     /// </summary>
-    public LoginState Authenticate(HttpContext context, out User? user)
+    public LoginState Authenticate(HttpContext context, out User? user, out ReadOnlyCollection<string>? limitedToPaths)
     {
         if (AccountManager.IsBanned(context))
         {
             user = null;
+            limitedToPaths = null;
             return LoginState.Banned;
         }
 
         if (!context.Request.Cookies.ContainsKey("AuthToken"))
         { //no token present
             user = null;
+            limitedToPaths = null;
             return LoginState.None;
         }
 
@@ -187,6 +190,7 @@ public class UserTable : Table<User>
             AccountManager.ReportFailedAuth(context);
             context.Response.Cookies.Delete("AuthToken");
             user = null;
+            limitedToPaths = null;
             return LoginState.None;
         }
         if (tokenData.Expires < DateTime.UtcNow)
@@ -195,16 +199,18 @@ public class UserTable : Table<User>
             user = null;
             if (Server.Config.Log.AuthTokenExpired)
                 Console.WriteLine($"User {id} used an expired auth token.");
+            limitedToPaths = null;
             return LoginState.None;
         }
 
+        limitedToPaths = tokenData.LimitedToPaths;
         if (tokenData.Needs2FA) return LoginState.Needs2FA;
         else if (user.MailToken != null) return LoginState.NeedsMailVerification;
         else
         {
             if (tokenData.Expires < DateTime.UtcNow + Server.Config.Accounts.TokenExpiration - Server.Config.Accounts.TokenRenewalAfter)
             { //renew token if the renewal is due
-                AccountManager.AddAuthTokenCookie(user.Id + user.Auth.Renew(authToken), context, false);
+                AccountManager.AddAuthTokenCookie(user.Id + user.Auth.Renew(authToken, tokenData), context, false);
                 if (Server.Config.Log.AuthTokenRenewed)
                     Console.WriteLine($"Renewed a token for user {id}.");
             }
@@ -226,13 +232,8 @@ public class UserTable : Table<User>
         if (!ContainsKey(id)) return;
         User user = this[id];
         if (logoutOthers)
-        {
             user.Auth.DeleteAllExcept(authToken);
-        }
-        else if (user.Auth.Exists(authToken))
-        {
-            user.Auth.Delete(authToken);
-        }
+        else user.Auth.Delete(authToken);
     }
 
     /// <summary>
