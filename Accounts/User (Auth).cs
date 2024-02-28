@@ -123,6 +123,19 @@ public partial class User : ITableValue
         }
 
         /// <summary>
+        /// Generates a new limited authentication token and returns it.<br/>
+        /// The token will not require 2FA and will not be temporary.
+        /// </summary>
+        public string AddNewLimited(string? friendlyName, ReadOnlyCollection<string>? limitedToPaths)
+        {
+            string token;
+            do token = Parsers.RandomString(64);
+                while (Exists(token));
+            this[token] = new AuthTokenData(false, false, friendlyName, limitedToPaths);
+            return token;
+        }
+
+        /// <summary>
         /// Deletes the given authentication token if it exists.
         /// </summary>
         public void Delete(string authToken)
