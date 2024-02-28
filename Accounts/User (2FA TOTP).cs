@@ -96,12 +96,12 @@ public class TwoFactorTotp
                 string combinedToken = request.Cookies["AuthToken"];
                 string id = combinedToken.Remove(12);
                 string authToken = combinedToken.Remove(0, 12);
-                if (User.Id == id && User.Auth.Exists(authToken))
+                if (User.Id == id && User.Auth.TryGetValue(authToken, out var data))
                 {
                     //renew
                     if (Server.Config.Log.AuthTokenRenewed)
                         Console.WriteLine($"Renewed a token after 2FA for user {User.Id}.");
-                    AccountManager.AddAuthTokenCookie(User.Id + User.Auth.Renew(authToken), request.Context, false);
+                    AccountManager.AddAuthTokenCookie(User.Id + User.Auth.Renew(authToken, data), request.Context, false);
                 }
             }
             User.UnlockSave();
