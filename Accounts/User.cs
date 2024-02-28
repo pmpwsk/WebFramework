@@ -193,12 +193,12 @@ public partial class User : ITableValue
                 string combinedToken = request.Cookies["AuthToken"];
                 string id = combinedToken.Remove(12);
                 string authToken = combinedToken.Remove(0, 12);
-                if (Id == id && Auth.Exists(authToken))
+                if (Id == id && Auth.TryGetValue(authToken, out var data))
                 {
                     //renew
                     if (Server.Config.Log.AuthTokenRenewed)
                         Console.WriteLine($"Renewed a token after mail verification for user {Id}.");
-                    AccountManager.AddAuthTokenCookie(Id + Auth.Renew(authToken), request.Context, false);
+                    AccountManager.AddAuthTokenCookie(Id + Auth.Renew(authToken, data), request.Context, false);
                 }
             }
             return true;
