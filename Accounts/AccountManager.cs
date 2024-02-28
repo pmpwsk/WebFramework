@@ -105,6 +105,16 @@ public static partial class AccountManager
         });
 
     /// <summary>
+    /// Generates the appropriate cookie options.
+    /// </summary>
+    public static void GenerateAuthTokenCookieOptions(out DateTime expires, out SameSiteMode sameSite, out string? domain, HttpContext context, bool temporary = false)
+    {
+        expires = DateTime.UtcNow + (temporary ? TimeSpan.FromMinutes(10) : Settings.TokenExpiration);
+        sameSite = Settings.SameSiteStrict ? SameSiteMode.Strict : SameSiteMode.Lax;
+        domain = GetWildcardDomain(context.Domain());
+    }
+
+    /// <summary>
     /// Returns the auth cookie wildcard domain to be used for the given domain or null if no matching domain was set.
     /// </summary>
     public static string? GetWildcardDomain(string domain)
