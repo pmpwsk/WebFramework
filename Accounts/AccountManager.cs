@@ -95,14 +95,17 @@ public static partial class AccountManager
     /// Adds a cookie for the given authentication token to the given context.
     /// </summary>
     internal static void AddAuthTokenCookie(string combinedToken, HttpContext context, bool temporary)
-        => context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions()
+    {
+        GenerateAuthTokenCookieOptions(out var expires, out var sameSite, out var domain, context, temporary);
+        context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions()
         {
-            Expires = DateTime.UtcNow + (temporary ? TimeSpan.FromMinutes(10) : Settings.TokenExpiration),
-            SameSite = Settings.SameSiteStrict ? SameSiteMode.Strict : SameSiteMode.Lax,
+            Expires = expires,
+            SameSite = sameSite,
             HttpOnly = Settings.HttpOnly,
             Path = "/",
-            Domain = GetWildcardDomain(context.Domain())
+            Domain = domain
         });
+    }
 
     /// <summary>
     /// Generates the appropriate cookie options.
