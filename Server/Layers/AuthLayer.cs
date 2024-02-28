@@ -1,4 +1,5 @@
-﻿using System.Web;
+﻿using System.Collections.ObjectModel;
+using System.Web;
 using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Plugins;
 
@@ -15,12 +16,21 @@ public static partial class Server
         {
             data.UserTable = Config.Accounts.Enabled ? AccountManager.GetUserTable(data.Context) : null;
 
+            ReadOnlyCollection<string>? limitedToPaths = null;
             if (data.UserTable != null)
-                data.LoginState = data.UserTable.Authenticate(data.Context, out data.User);
+                data.LoginState = data.UserTable.Authenticate(data.Context, out data.User, out limitedToPaths);
             else
             {
                 data.User = null;
                 data.LoginState = LoginState.None;
+            }
+
+
+            string fullPath = data.Domain + data.Path;
+            if (limitedToPaths != null && !limitedToPaths.Any(x => x == fullPath || (x.EndsWith('*') && fullPath.StartsWith(x[..^1]))))
+            {
+                data.Status = 403;
+                return Task.FromResult(true);
             }
 
 
