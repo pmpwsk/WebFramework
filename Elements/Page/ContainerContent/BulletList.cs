@@ -35,6 +35,17 @@ public class BulletList : IContent
         Id = null;
     }
 
+    /// <summary>
+    /// Creates a new unordered list for a container with the given items.
+    /// </summary>
+    public BulletList(IEnumerable<string> items)
+    {
+        List = [.. items];
+        Class = null;
+        Style = null;
+        Id = null;
+    }
+
     //documentation inherited from IContent
     public override IEnumerable<string> Export()
     {
