@@ -90,7 +90,7 @@ public partial class User : ITableValue
         /// Removes the given token from the token dictionary, then adds and returns a new token.<br/>
         /// The newly created token will not require 2FA and will not be temporary, so this shouldn't be used for temporary tokens for sessions that aren't fully logged in!
         /// </summary>
-        public string Renew(string oldToken)
+        public string Renew(string oldToken, AuthTokenData data)
         {
             User.Lock();
             if (!User._AuthTokens.Remove(oldToken))
@@ -101,8 +101,8 @@ public partial class User : ITableValue
 
             string token;
             do token = Parsers.RandomString(64);
-            while (Exists(token));
-            User._AuthTokens[token] = new AuthTokenData(false, false);
+                while (Exists(token));
+            User._AuthTokens[token] = new AuthTokenData(false, false, data.FriendlyName, data.LimitedToPaths);
             User.UnlockSave();
             return token;
         }
@@ -118,7 +118,7 @@ public partial class User : ITableValue
                 while (Exists(token));
             bool twoFactor = User.TwoFactor.TOTPEnabled();
             temporary = twoFactor || User.MailToken != null;
-            this[token] = new AuthTokenData(twoFactor, temporary);
+            this[token] = new AuthTokenData(twoFactor, temporary, null, null);
             return token;
         }
 
