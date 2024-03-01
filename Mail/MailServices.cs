@@ -62,28 +62,11 @@ public static partial class MailManager
                 return Task.FromResult(true);
                     }
 
-                }
-
             /// <summary>
-            /// Applies the fate decided by the accepting method.
+            /// Calls the MailboxExists method and forwards the result.
             /// </summary>
-            public override async Task<MailboxFilterResult> CanDeliverToAsync(ISessionContext context, IMailbox to, IMailbox from, CancellationToken ct)
-            {
-                try
-                {
-                    if (AcceptMail != null)
-                    {
-                        return AcceptMail.Invoke(context, from, to);
-                    }
-                    else return MailboxFilterResult.NoTemporarily;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error accepting email using event: " + ex.Message);
-                    return MailboxFilterResult.NoTemporarily;
-                }
-            }
-            #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+            public override Task<bool> CanDeliverToAsync(ISessionContext context, IMailbox to, IMailbox from, CancellationToken ct)
+                => Task.FromResult(MailboxExists?.Invoke(context, from, to) ?? false);
         }
     }
 }
