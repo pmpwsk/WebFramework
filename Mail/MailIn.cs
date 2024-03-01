@@ -12,9 +12,10 @@ public static partial class MailManager
     public static partial class In
     {
         /// <summary>
-        /// The method that decides whether a mail message with the given information should be accepted or not.
+        /// The method that decides whether the target of a mail message with the given information is acceptable.<br/>
+        /// If there's another reason to not decline the message, the method should throw a SmtpServer.Protocol.SmtpResponseException with one of the static SmtpResponse properties or a custom SmtpResponse.
         /// </summary>
-        public static event AcceptDelegate? AcceptMail = null;
+        public static event MailboxExistsDelegate? MailboxExists = null;
 
         /// <summary>
         /// The method that handles given mail messages (along with the given mail context and authentication result) after they have been accepted by the accepting method.
@@ -60,7 +61,7 @@ public static partial class MailManager
         {
             if (ServerRunning) throw new Exception("The server is already running.");
             if (ServerDomain == null) throw new Exception("ServerDomain must be set.");
-            if (AcceptMail == null) throw new Exception("AcceptMail must be set.");
+            if (MailboxExists == null) throw new Exception("MailboxExists must be set.");
             if (HandleMail == null) throw new Exception("HandleMail must be set.");
 
             var builder = new SmtpServerOptionsBuilder()
