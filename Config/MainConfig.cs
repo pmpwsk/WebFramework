@@ -179,6 +179,8 @@ public static partial class Server
         {
             {200, "Success."},
             {201, "Created." },
+            {301, "Permanent redirect."},
+            {302, "Temporary redirect."},
             {304, "Not changed."},
             {400, "Bad request."},
             {401, "Not authenticated."},
