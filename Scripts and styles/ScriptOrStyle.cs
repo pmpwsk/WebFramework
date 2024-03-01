@@ -1,3 +1,4 @@
+using System.Text;
 using uwap.WebFramework.Plugins;
 
 namespace uwap.WebFramework.Elements;
@@ -28,9 +29,14 @@ public abstract class ScriptOrStyle
     public string Url;
 
     /// <summary>
+    /// Whether to write the script or style's code directing to the page instead of referencing it.
+    /// </summary>
+    public bool Flatten;
+
+    /// <summary>
     /// Creates a new object for a script or style with the given URL.
     /// </summary>
-    public ScriptOrStyle(string url)
+    public ScriptOrStyle(string url, bool flatten)
     {
         int queryIndex = url.IndexOf('?');
         if (queryIndex == -1)
@@ -42,6 +48,7 @@ public abstract class ScriptOrStyle
             throw new ArgumentException("The URL must end with " + Extension);
 
         Url = url;
+        Flatten = flatten;
     }
 
     /// <summary>
@@ -55,17 +62,26 @@ public abstract class ScriptOrStyle
         var entry = FindEntry(request.Domains, urlWithoutQuery);
         if (entry == null)
         {
-            IPlugin? plugin = PluginManager.GetPlugin(request.Domains, urlWithoutQuery, out string relPath, out _);
+            IPlugin? plugin = PluginManager.GetPlugin(request.Domains, urlWithoutQuery, out string relPath, out string pathPrefix, out string domain);
             if (plugin != null)
             {
                 string? timestamp = plugin.GetFileVersion(relPath);
                 if (timestamp != null)
-                    yield return BuildReference(Url + (queryIndex > -1 ? "&" : "?") + "t=" + timestamp);
+                {
+                    if (Flatten)
+                    {
+                        yield return $"<{Tag}>";
+                        foreach (string line in Encoding.UTF8.GetString(plugin.GetFile(relPath, pathPrefix, domain) ?? []).Split('\n').Select(x => x.TrimEnd('\r')))
+                            yield return '\t' + line;
+                        yield return $"</{Tag}>";
+                    }
+                    else yield return BuildReference(Url + (queryIndex > -1 ? "&" : "?") + "t=" + timestamp);
+                }
                 else yield return BuildReference(Url);
             }
             else yield return BuildReference(Url);
         }
-        else if (entry.IsPublic)
+        else if (entry.IsPublic && !Flatten)
             yield return BuildReference(Url + (queryIndex > -1 ? "&" : "?") + "t=" + entry.GetModifiedUtc().Ticks);
         else
         {
