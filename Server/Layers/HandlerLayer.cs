@@ -92,7 +92,7 @@ public static partial class Server
                                 break;
                             default: //app request
                                 {
-                                    IPlugin? plugin = PluginManager.GetPlugin(data.Domains, data.Path, out string relPath, out string pathPrefix);
+                                    IPlugin? plugin = PluginManager.GetPlugin(data.Domains, data.Path, out string relPath, out string pathPrefix, out _);
                                     if (plugin != null)
                                     {
                                         byte[]? file = plugin.GetFile(relPath, pathPrefix, data.Domain);

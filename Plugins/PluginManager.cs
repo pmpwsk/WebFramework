@@ -16,27 +16,30 @@ public static class PluginManager
     /// Finds the plugin that most closely matches the given path for any of the given domains and returns it and the relative path that is left over (rest), or returns null if no matching plugin was found.<br/>
     /// Domains should be sorted by their priority among plugins with the same depth (the most relevant domain should be first).
     /// </summary>
-    public static IPlugin? GetPlugin(IEnumerable<string> domains, string path, out string relPath, out string pathPrefix)
+    public static IPlugin? GetPlugin(IEnumerable<string> domains, string path, out string relPath, out string pathPrefix, out string domain)
     {
-        Dictionary<int, IPlugin> results = new();
-        foreach (var domain in domains)
-        {
-            Plugins.GetPlugins(results, 0, (domain + path).Split('/'));
-        }
-        if (!results.Any())
+        Dictionary<int, Tuple<IPlugin,string>> results = [];
+        foreach (var d in domains)
+            Plugins.GetPlugins(results, 0, (d + path).Split('/'), d);
+
+        if (results.Count == 0)
         {
             relPath = "";
             pathPrefix = "";
+            domain = "";
             return null;
         }
+
         int max = results.Keys.Max();
         relPath = "/" + string.Join('/', path.Split('/').Skip(max));
         pathPrefix = path.Remove(path.Length - relPath.Length + 1);
-        if (pathPrefix.EndsWith("/"))
-            pathPrefix = pathPrefix.Substring(0, pathPrefix.Length - 1);
-        if (path == "/" || (relPath == "/" && !path.EndsWith("/")))
+        if (pathPrefix.EndsWith('/'))
+            pathPrefix = pathPrefix[..^1];
+        if (path == "/" || (relPath == "/" && !path.EndsWith('/')))
             relPath = "";
-        return results[max];
+        var result = results[max];
+        domain = result.Item2;
+        return result.Item1;
     }
 
     /*This is no longer used as it has been moved to the middleware in order to allow file serving!
@@ -58,7 +61,7 @@ public static class PluginManager
     /// </summary>
     public static async Task<bool> Handle(string path, ApiRequest req)
     {
-        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix);
+        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix, out _);
         if (plugin == null) return false;
         await plugin.Handle(req, relPath, pathPrefix);
         return true;
@@ -70,7 +73,7 @@ public static class PluginManager
     /// </summary>
     public static async Task<bool> Handle(string path, DownloadRequest req)
     {
-        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix);
+        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix, out _);
         if (plugin == null) return false;
         await plugin.Handle(req, relPath, pathPrefix);
         return true;
@@ -82,7 +85,7 @@ public static class PluginManager
     /// </summary>
     public static async Task<bool> Handle(string path, PostRequest req)
     {
-        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix);
+        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix, out _);
         if (plugin == null) return false;
         await plugin.Handle(req, relPath, pathPrefix);
         return true;
@@ -94,7 +97,7 @@ public static class PluginManager
     /// </summary>
     public static async Task<bool> Handle(string path, UploadRequest req)
     {
-        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix);
+        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix, out _);
         if (plugin == null) return false;
         await plugin.Handle(req, relPath, pathPrefix);
         return true;
@@ -106,7 +109,7 @@ public static class PluginManager
     /// </summary>
     public static async Task<bool> Handle(string path, EventRequest req)
     {
-        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix);
+        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix, out _);
         if (plugin == null) return false;
         await plugin.Handle(req, relPath, pathPrefix);
         return true;

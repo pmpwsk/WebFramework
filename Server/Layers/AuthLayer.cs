@@ -41,7 +41,7 @@ public static partial class Server
             {
                 if (data.Path != Config.Accounts.MailVerifyPath)
                 {
-                    IPlugin? plugin = PluginManager.GetPlugin(data.Domains, data.Path, out string relPath, out _);
+                    IPlugin? plugin = PluginManager.GetPlugin(data.Domains, data.Path, out string relPath, out _, out _);
                     if (plugin == null || plugin.GetFileVersion(relPath) == null)
                     {
                         data.Redirect($"{Config.Accounts.MailVerifyPath}?redirect={HttpUtility.UrlEncode(data.Context.PathQuery())}");
@@ -53,7 +53,7 @@ public static partial class Server
             {
                 if (data.Path != Config.Accounts.TwoFactorPath)
                 {
-                    IPlugin? plugin = PluginManager.GetPlugin(data.Domains, data.Path, out string relPath, out _);
+                    IPlugin? plugin = PluginManager.GetPlugin(data.Domains, data.Path, out string relPath, out _, out _);
                     if (plugin == null || plugin.GetFileVersion(relPath) == null)
                     {
                         data.Redirect($"{Config.Accounts.TwoFactorPath}?redirect={HttpUtility.UrlEncode(data.Context.PathQuery())}");

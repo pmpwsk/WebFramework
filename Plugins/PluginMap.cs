@@ -58,19 +58,19 @@ internal class PluginMap
     /// Recursively adds the plugins (value) that match the given segments from this node onwards to the given dictionary along with their depth (key).
     /// </summary>
     /// <param name="depth">The depth of this node.</param>
-    public void GetPlugins(Dictionary<int,IPlugin> results, int depth, IEnumerable<string> segments)
+    public void GetPlugins(Dictionary<int,Tuple<IPlugin,string>> results, int depth, IEnumerable<string> segments, string domain)
     {
         if (Plugin != null)
         {
             if (!results.ContainsKey(depth))
             {
-                results.Add(depth, Plugin);
+                results.Add(depth, new(Plugin,domain));
             }
         }
         
         if (segments.Any() && Children.TryGetValue(segments.First(), out var child))
         {
-            child.GetPlugins(results, depth+1, segments.Skip(1));
+            child.GetPlugins(results, depth+1, segments.Skip(1), domain);
         }
     }
 }
