@@ -155,5 +155,16 @@ public static partial class MailManager
             Stop();
             Start();
         }
+
+        /// <summary>
+        /// Stops the server, then attempts to start it again and returns whether that action was successful.<br/>
+        /// If an exception was thrown while starting, an appropriate line will be written to the console.
+        /// </summary>
+        public static bool TryRestart()
+        {
+            Console.WriteLine("Restarting the mail server...");
+            Stop();
+            return TryStart();
+        }
     }
 }
