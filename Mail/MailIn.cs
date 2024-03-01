@@ -55,6 +55,11 @@ public static partial class MailManager
         public static bool ServerRunning => ServerTask != null;
 
         /// <summary>
+        /// Whether the server has a certificate or not.
+        /// </summary>
+        public static bool HasCertificate { get; private set; } = false;
+
+        /// <summary>
         /// Starts the server.
         /// </summary>
         public static void Start()
