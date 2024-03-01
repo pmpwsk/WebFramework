@@ -73,29 +73,18 @@ public static partial class MailManager
                 .ServerName(ServerDomain)
                 .MaxMessageSize(SizeLimit);
 
-            X509Certificate2? cert = null;
-            try
+            HasCertificate = WebFramework.Server.GetCertificate(ServerDomain) != null || File.Exists($"../Certificates/Auto/{ServerDomain}.pfx");
+            if (HasCertificate)
             {
-                if (File.Exists($"../Certificates/Auto/{ServerDomain}.pfx"))
-                    cert = new($"../Certificates/Auto/{ServerDomain}.pfx");
+                builder = builder.Endpoint(b => b.Endpoint(new IPEndPoint(IPAddress.Any, 25)).Certificate(new CertificateFactory()));
+                if (AllowIPv6)
+                    builder = builder.Endpoint(b => b.Endpoint(new IPEndPoint(IPAddress.IPv6Any, 25)).Certificate(new CertificateFactory()));
+            }
                 else
-                    Console.WriteLine("No certificate found for the mail server domain!");
-            }
-            catch
-            {
-                cert = null;
-            }
-            if (cert == null)
             {
                 builder = builder.Endpoint(b => b.Endpoint(new IPEndPoint(IPAddress.Any, 25)));
                 if (AllowIPv6)
                     builder = builder.Endpoint(b => b.Endpoint(new IPEndPoint(IPAddress.IPv6Any, 25)));
-            }
-            else
-            {
-                builder = builder.Endpoint(b => b.Endpoint(new IPEndPoint(IPAddress.Any, 25)).Certificate(cert));
-                if (AllowIPv6)
-                    builder = builder.Endpoint(b => b.Endpoint(new IPEndPoint(IPAddress.IPv6Any, 25)).Certificate(cert));
             }
 
             var options = builder.Build();
@@ -105,9 +94,9 @@ public static partial class MailManager
             Server = new SmtpServer.SmtpServer(options, serviceProvider);
             ServerTask = Server.StartAsync(CTS.Token);
 
-            if (cert != null)
+            if (HasCertificate)
                 Console.WriteLine("Mail server started.");
-            else Console.WriteLine("Mail server started without a certificate! Secure connections will not be possible!");
+            else Console.WriteLine("Mail server started without a certificate, secure connections will not be possible!");
         }
 
         /// <summary>
