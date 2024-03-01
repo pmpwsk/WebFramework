@@ -1,6 +1,5 @@
 ﻿using SmtpServer;
 using System.Net;
-using System.Security.Cryptography.X509Certificates;
 
 namespace uwap.WebFramework.Mail;
 
@@ -80,7 +79,7 @@ public static partial class MailManager
                 if (AllowIPv6)
                     builder = builder.Endpoint(b => b.Endpoint(new IPEndPoint(IPAddress.IPv6Any, 25)).Certificate(new CertificateFactory()));
             }
-                else
+            else
             {
                 builder = builder.Endpoint(b => b.Endpoint(new IPEndPoint(IPAddress.Any, 25)));
                 if (AllowIPv6)
