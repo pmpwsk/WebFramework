@@ -3,6 +3,7 @@ using SmtpServer.Storage;
 using SmtpServer;
 using System.Buffers;
 using SmtpServer.Protocol;
+using System.Security.Cryptography.X509Certificates;
 
 namespace uwap.WebFramework.Mail;
 
@@ -55,18 +56,30 @@ public static partial class MailManager
             /// </summary>
             public override Task<bool> CanAcceptFromAsync(ISessionContext context, IMailbox from, int size, CancellationToken ct)
             {
-                    if (from == Mailbox.Empty)
+                if (from == Mailbox.Empty)
                     throw new SmtpResponseException(SmtpResponse.MailboxNameNotAllowed);
-                    else if (size > SizeLimit)
+                else if (size > SizeLimit)
                     throw new SmtpResponseException(SmtpResponse.SizeLimitExceeded);
                 return Task.FromResult(true);
-                    }
+            }
 
             /// <summary>
             /// Calls the MailboxExists method and forwards the result.
             /// </summary>
             public override Task<bool> CanDeliverToAsync(ISessionContext context, IMailbox to, IMailbox from, CancellationToken ct)
                 => Task.FromResult(MailboxExists?.Invoke(context, from, to) ?? false);
+        }
+
+        /// <summary>
+        /// Returns the current certificate for the mail server.
+        /// </summary>
+        private class CertificateFactory : ICertificateFactory
+        {
+            /// <summary>
+            /// Returns the current certificate for the mail server.
+            /// </summary>
+            public X509Certificate GetServerCertificate(ISessionContext sessionContext)
+                => WebFramework.Server.GetCertificate(ServerDomain ?? throw new Exception("ServerDomain is null!")) ?? throw new Exception("No certificate was mapped to the server domain!");
         }
     }
 }
