@@ -138,11 +138,6 @@ public static partial class Server
                 {
                     await NewAutoCertificate(domain);
                     Console.WriteLine($"Renewed the certificate for {domain}.");
-                    if (domain == MailManager.ServerDomain && MailManager.In.ServerRunning)
-                        try
-                        {
-                            MailManager.In.Restart();
-                        } catch { }
                 }
                 catch (Exception ex)
                 {
@@ -159,6 +154,12 @@ public static partial class Server
             {
                 await NewAutoCertificate(domain);
                 Console.WriteLine($"Received a certificate for {domain}.");
+                if (domain == MailManager.ServerDomain && MailManager.In.ServerRunning && !MailManager.In.HasCertificate)
+                    try
+                    {
+                        MailManager.In.TryRestart();
+                    }
+                    catch { }
             }
             catch (Exception ex)
             {

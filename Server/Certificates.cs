@@ -1,4 +1,5 @@
 using System.Security.Cryptography.X509Certificates;
+using uwap.WebFramework.Mail;
 namespace uwap.WebFramework;
 
 public static partial class Server
@@ -16,6 +17,13 @@ public static partial class Server
     {
         if (password == null) CertificateStore[domain] = new CertificateEntry(new X509Certificate2(path), path, null);
         else CertificateStore[domain] = new CertificateEntry(new X509Certificate2(path, password), path, password);
+
+        if (domain == MailManager.ServerDomain && MailManager.In.ServerRunning && !MailManager.In.HasCertificate)
+            try
+            {
+                MailManager.In.TryRestart();
+            }
+            catch { }
     }
 
     /// <summary>
@@ -32,7 +40,15 @@ public static partial class Server
         //remove certificates with missing files
         foreach (var pair in CertificateStore)
             if (!File.Exists(pair.Value.Path))
+            {
                 CertificateStore.Remove(pair.Key);
+                if (pair.Key == MailManager.ServerDomain && MailManager.In.ServerRunning)
+                    try
+                    {
+                        MailManager.In.TryRestart();
+                    }
+                    catch { }
+            }
 
         //update existing certificates
         foreach (var pair in CertificateStore)
