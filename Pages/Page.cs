@@ -114,19 +114,10 @@ public class Page : IPage
         yield return "<head>";
 
         //title
-        if (error)
-        {
-            if (request.Status == 301 || request.Status == 302)
-                yield return "\t<title>Redirecting</title>";
-            else yield return "\t<title>Error</title>";
-        }
-        else
-        {
-            string title = Title.HtmlSafe();
+        string title = (error && checkForErrors) ? ((request.Status == 301 || request.Status == 302) ? "Redirecting" : "Error") : Title.HtmlSafe();
             if (Server.Config.Domains.TitleExtensions.TryGetValueAny(out var titleExtension, request.Domains) && titleExtension != null)
                 title += " | " + titleExtension;
             yield return $"\t<title>{title}</title>";
-        }
 
         //description
         if (Description != null)
