@@ -50,30 +50,19 @@ public static partial class MailManager
         /// </summary>
         private class Filter : MailboxFilter
         {
-            #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
             /// <summary>
             /// Declines a message if it is too large.
             /// </summary>
-            public override async Task<MailboxFilterResult> CanAcceptFromAsync(ISessionContext context, IMailbox from, int size, CancellationToken ct)
+            public override Task<bool> CanAcceptFromAsync(ISessionContext context, IMailbox from, int size, CancellationToken ct)
             {
-                try
-                {
                     if (from == Mailbox.Empty)
-                    {
-                        return MailboxFilterResult.NoPermanently;
-                    }
+                    throw new SmtpResponseException(SmtpResponse.MailboxNameNotAllowed);
                     else if (size > SizeLimit)
-                    {
-                        return MailboxFilterResult.SizeLimitExceeded;
+                    throw new SmtpResponseException(SmtpResponse.SizeLimitExceeded);
+                return Task.FromResult(true);
                     }
-                    return MailboxFilterResult.Yes;
+
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error accepting email: " + ex.Message);
-                    return MailboxFilterResult.NoTemporarily;
-                }
-            }
 
             /// <summary>
             /// Applies the fate decided by the accepting method.
