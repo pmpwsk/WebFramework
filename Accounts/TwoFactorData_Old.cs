@@ -17,10 +17,10 @@ public class TwoFactorData_Old
     /// <summary>
     /// The private/secret key using which two-factor codes are generated (as a byte array).
     /// </summary>
-    [DataMember] internal byte[] _SecretKey;
+    [DataMember] internal byte[] _SecretKey = [];
 
     /// <summary>
     /// The list of recovery codes that are still available to use.
     /// </summary>
-    [DataMember] internal List<string> RecoveryCodes;
+    [DataMember] internal List<string> RecoveryCodes = [];
 }
