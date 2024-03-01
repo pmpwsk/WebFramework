@@ -19,6 +19,12 @@ public static partial class Server
     }
 
     /// <summary>
+    /// Returns the certificate for the given domain or null if no certificate was mapped to it.
+    /// </summary>
+    public static X509Certificate2? GetCertificate(string domain)
+        => CertificateStore.TryGetValue(domain, out var c) ? c.Certificate : null;
+
+    /// <summary>
     /// Removes deleted certificates, reloads existing ones and attempts to load new certificates from ../Certificates or ../Certificates/Auto (depending on whether AutoCertificate is enabled) without a password.
     /// </summary>
     private static void UpdateCertificates()
