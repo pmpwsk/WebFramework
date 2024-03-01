@@ -106,8 +106,41 @@ public class Page : IPage
 
     //documentation inherited from IPage
     public IEnumerable<string> Export(AppRequest request)
+        => Export(request, true);
+
+    public IEnumerable<string> ExportWithoutCheckingForError(AppRequest request)
+        => Export(request, false);
+
+    private IEnumerable<string> Export(AppRequest request, bool checkForErrors)
     {
         bool error = request.Status != 200;
+
+        if (error && checkForErrors)
+        {
+            if (!Server.Config.StatusMessages.TryGetValue(request.Status, out var message))
+                message = $"{((request.Status < 400) ? "Status" : "Error")} {request.Status}";
+            if (request.Status == 500 && request.Exception != null && request.IsAdmin())
+                message += $"<br/>Type: {(request.Exception.GetType().FullName ?? "Unknown").HtmlSafe()}" +
+                    $"<br/>Message: {request.Exception.Message.HtmlSafe()}" +
+                    $"<br/>StackTrace: {(request.Exception.StackTrace??"Unknown").HtmlSafe()}";
+
+            foreach (string domain in request.Domains)
+            {
+                if (Server.Cache.TryGetValue($"{domain}/status/{request.Status}.wfpg", out var entry))
+                {
+                    foreach (string line in Server.ParseStatusPageAndReturnExport(request, entry, message))
+                        yield return line;
+                    goto end;
+                }
+
+                if (Server.Cache.TryGetValue($"{domain}/status/any.wfpg", out entry))
+                {
+                    foreach (string line in Server.ParseStatusPageAndReturnExport(request, entry, message))
+                        yield return line;
+                    goto end;
+                }
+            }
+        }
 
         yield return "<!DOCTYPE html>";
         yield return "<html>";
@@ -115,9 +148,9 @@ public class Page : IPage
 
         //title
         string title = (error && checkForErrors) ? ((request.Status == 301 || request.Status == 302) ? "Redirecting" : "Error") : Title.HtmlSafe();
-            if (Server.Config.Domains.TitleExtensions.TryGetValueAny(out var titleExtension, request.Domains) && titleExtension != null)
-                title += " | " + titleExtension;
-            yield return $"\t<title>{title}</title>";
+        if (Server.Config.Domains.TitleExtensions.TryGetValueAny(out var titleExtension, request.Domains) && titleExtension != null)
+            title += " | " + titleExtension;
+        yield return $"\t<title>{title}</title>";
 
         //description
         if (Description != null)
@@ -158,7 +191,7 @@ public class Page : IPage
             }
             else
             {
-                IPlugin? plugin = PluginManager.GetPlugin(request.Domains, Favicon, out string relPath, out _);
+                IPlugin? plugin = PluginManager.GetPlugin(request.Domains, Favicon, out string relPath, out _, out _);
                 if (plugin != null)
                 {
                     string? timestamp = plugin.GetFileVersion(relPath);
@@ -184,7 +217,7 @@ public class Page : IPage
             yield return $"\t{line}";
 
         yield return "</head>";
-        yield return $"<body{(error||Onload==null?"":$" onload=\"{Onload}\"")}>";
+        yield return $"<body{((error&&checkForErrors)||Onload==null?"":$" onload=\"{Onload}\"")}>";
 
         //navbar
         var nav = (Navigation.Count != 0) ? Navigation : new List<IButton> { new Button(request.Domain, "/") };
@@ -211,7 +244,7 @@ public class Page : IPage
             foreach (string line in Server.Config.Accounts.FailedAttempts.BanMessage.Export())
                 yield return "\t\t\t\t" + line;
         }
-        if (error)
+        if (error && checkForErrors)
         {
             if (request.Status == 301 || request.Status == 302)
             {
@@ -269,13 +302,15 @@ public class Page : IPage
         yield return "\t</div>";
 
         //scripts
-        if (!error)
+        if (!(error&&checkForErrors))
             foreach (IScript script in Scripts)
                 foreach (string line in script.Export(request))
                     yield return "\t" + line;
 
         yield return "</body>";
         yield return "</html>";
+
+    end:;
     }
 
     /// <summary>
