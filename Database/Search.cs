@@ -35,15 +35,14 @@ public class Search<T> where T : notnull
     /// <param name="relevanceStart">The initial value for the relevance of filters. It is lowered by 1 every round and gets stuck on 1. Default: 1000</param>
     public Search(IEnumerable<T> items, string? query, uint relevanceStart = 1000)
     {
-        if (relevanceStart <= 0)
-            throw new ArgumentOutOfRangeException("'relevanceStart' should be positive.");
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(relevanceStart);
         Relevance = relevanceStart;
 
         if (query == null)
         {
             Items = items.ToDictionary(x => x, x => 1u);
             Query = null;
-            QuerySplit = Array.Empty<string>();
+            QuerySplit = [];
         }
         else
         {
@@ -59,7 +58,8 @@ public class Search<T> where T : notnull
     /// <param name="func">The function to get a string (not case sensitive) out of each element to compare that to the query.</param>
     public void Find(Func<T,string> func)
     {
-        if (Query == null) return;
+        if (Query == null)
+            return;
 
         Dictionary<T, string> values = Items.Keys.ToDictionary(x => x, x => func(x).ToLower());
 
@@ -75,7 +75,8 @@ public class Search<T> where T : notnull
                 Items[r.Key] += Relevance;
         }
 
-        if (Relevance > 1) Relevance--;
+        if (Relevance > 1)
+            Relevance--;
     }
 
     /// <summary>
@@ -84,7 +85,8 @@ public class Search<T> where T : notnull
     /// <param name="func">The function to get multiple strings out of an element to compare those to the query.</param>
     public void Find(Func<T,IEnumerable<string>> func)
     {
-        if (Query == null) return;
+        if (Query == null)
+            return;
 
         Dictionary<T, IEnumerable<string>> values = Items.Keys.ToDictionary(x => x, x => func(x).Select(y => y.ToLower()));
 
@@ -100,20 +102,23 @@ public class Search<T> where T : notnull
                 Items[r.Key] += Relevance;
         }
         
-        if (Relevance > 1) Relevance--;
+        if (Relevance > 1)
+            Relevance--;
     }
 
     /// <summary>
     /// Sorts (ascending order) the elements that match the query (if one has been provided) by how much they match it and then by each additional function that has been provided in order and returns the sorted set of elements..
     /// </summary>
     /// <param name="funcs">The additional functions to sort the matching elements by.</param>
-    public IEnumerable<T> Sort(params Func<T, IComparable>[] funcs) => Sort(false, funcs);
+    public IEnumerable<T> Sort(params Func<T, IComparable>[] funcs)
+        => Sort(false, funcs);
 
     /// <summary>
     /// Sorts (descending order) the elements that match the query (if one has been provided) by how much they match it and then by each additional function that has been provided in order and returns the sorted set of elements.
     /// </summary>
     /// <param name="funcs">The additional functions to sort the matching elements by.</param>
-    public IEnumerable<T> SortDesc(params Func<T, IComparable>[] funcs) => Sort(true, funcs);
+    public IEnumerable<T> SortDesc(params Func<T, IComparable>[] funcs)
+        => Sort(true, funcs);
 
     /// <summary>
     /// Sorts the elements that match the query (if one has been provided) by how much they match it and then by each additional function that has been provided in order and returns the sorted set of elements.
@@ -124,10 +129,8 @@ public class Search<T> where T : notnull
     {
         IOrderedEnumerable<T> result = Items.Where(x => x.Value != 0).Select(x => x.Key).OrderByDescending(x => Items[x]);
         foreach (var func in funcs)
-        {
             if (descending) result = result.ThenByDescending(func);
             else result = result.ThenBy(func);
-        }
         return result;
     }
 }

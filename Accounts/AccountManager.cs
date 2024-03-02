@@ -38,7 +38,7 @@ public static partial class AccountManager
     /// <summary>
     /// The dictionary for failed auth entries for each IP hash that currently has failed attempts.
     /// </summary>
-    private static Dictionary<string,FailedAuthEntry> FailedAuth = [];
+    private static readonly Dictionary<string,FailedAuthEntry> FailedAuth = [];
 
     /// <summary>
     /// Returns the user table for the domain of the given context (or "any") or returns null if no matches were found.

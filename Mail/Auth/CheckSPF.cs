@@ -24,7 +24,7 @@ public static partial class MailAuth
             if (depth >= 10)
                 return MailAuthVerdictSPF.Unset;
 
-            var fields = ResolveTXT(domain, "spf1", new[] { new[] { "+all", "-all", "~all", "?all", "a", "mx", "ip4", "ip6", "redirect", "include" } });
+            var fields = ResolveTXT(domain, "spf1", [["+all", "-all", "~all", "?all", "a", "mx", "ip4", "ip6", "redirect", "include"]]);
             if (fields == null)
                 return MailAuthVerdictSPF.Unset;
             foreach (var field in fields)
@@ -50,12 +50,10 @@ public static partial class MailAuth
                     case "a":
                     case "+a":
                     case "?a":
+                        if (MatchAorAAAA(domain, ip))
                         {
-                            if (MatchAorAAAA(domain, ip))
-                            {
-                                passedDomain = domain;
-                                return MailAuthVerdictSPF.Pass;
-                            }
+                            passedDomain = domain;
+                            return MailAuthVerdictSPF.Pass;
                         }
                         break;
                     case "mx":
@@ -86,12 +84,10 @@ public static partial class MailAuth
                     case "ip6":
                     case "+ip6":
                     case "?ip6":
+                        if (field.Value != null && EqualsOrContainsIP(field.Value, ip))
                         {
-                            if (field.Value != null && EqualsOrContainsIP(field.Value, ip))
-                            {
-                                passedDomain = domain;
-                                return MailAuthVerdictSPF.Pass;
-                            }
+                            passedDomain = domain;
+                            return MailAuthVerdictSPF.Pass;
                         }
                         break;
                     case "include":

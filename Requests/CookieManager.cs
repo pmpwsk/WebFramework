@@ -6,26 +6,17 @@ namespace uwap.WebFramework;
 /// <summary>
 /// Manages cookies for an IRequest.
 /// </summary>
-public class CookieManager
+public class CookieManager(HttpContext context)
 {
     /// <summary>
     /// Request cookies.
     /// </summary>
-    private readonly IRequestCookieCollection Request;
+    private readonly IRequestCookieCollection Request = context.Request.Cookies;
 
     /// <summary>
     /// Response cookies.
     /// </summary>
-    private readonly IResponseCookies Response;
-
-    /// <summary>
-    /// Creates a new object to manage cookies for an IRequest.
-    /// </summary>
-    public CookieManager(HttpContext context)
-    {
-        Request = context.Request.Cookies;
-        Response = context.Response.Cookies;
-    }
+    private readonly IResponseCookies Response = context.Response.Cookies;
 
     /// <summary>
     /// Asks the client to add a simple session cookie (temporary!) with the given key and value.
@@ -50,24 +41,19 @@ public class CookieManager
     /// Gets the value of the cookie with the given key from the client.
     /// </summary>
     public string this[string key]
-    {
-        get
-        {
-            if (Request.ContainsKey(key)) return Request[key] ?? "";
-            else return "";
-        }
-    }
+        => Request.TryGetValue(key, out var v) ? v : "";
 
     /// <summary>
     /// Returns whether the client has a cookie with the given key.
     /// </summary>
     public bool Contains(string key)
-        => Request.ContainsKey(key) && Request[key] != null;
+        => Request.ContainsKey(key);
 
     /// <summary>
     /// Returns the value of the cookie with the given key or null if no such cookie was sent.
     /// </summary>
-    public string? TryGet(string key) => Request.TryGetValue(key, out var value) ? ((string?)value) ?? "" : null;
+    public string? TryGet(string key)
+        => Request.TryGetValue(key, out var v) ? v : null;
 
     /// <summary>
     /// Returns whether the request contains a cookie with the given key and the associated value as an out-argument if true.

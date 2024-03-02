@@ -7,7 +7,7 @@ public static partial class Server
     /// <summary>
     /// The dictionary for the loaded certificates (key = domain, value = certificate data).
     /// </summary>
-    private static readonly Dictionary<string, CertificateEntry> CertificateStore = new();
+    private static readonly Dictionary<string, CertificateEntry> CertificateStore = [];
 
     /// <summary>
     /// Loads the certificate file at the given path (using the password, if provided) and assigns it to the given domain.<br/>
@@ -15,15 +15,10 @@ public static partial class Server
     /// </summary>
     public static void LoadCertificate(string domain, string path, string? password = null)
     {
-        if (password == null) CertificateStore[domain] = new CertificateEntry(new X509Certificate2(path), path, null);
-        else CertificateStore[domain] = new CertificateEntry(new X509Certificate2(path, password), path, password);
+        CertificateStore[domain] = new CertificateEntry(password == null ? new X509Certificate2(path) : new(path, password), path, password);
 
         if (domain == MailManager.ServerDomain && MailManager.In.ServerRunning && !MailManager.In.HasCertificate)
-            try
-            {
-                MailManager.In.TryRestart();
-            }
-            catch { }
+            MailManager.In.TryRestart();
     }
 
     /// <summary>
@@ -43,11 +38,7 @@ public static partial class Server
             {
                 CertificateStore.Remove(pair.Key);
                 if (pair.Key == MailManager.ServerDomain && MailManager.In.ServerRunning)
-                    try
-                    {
-                        MailManager.In.TryRestart();
-                    }
-                    catch { }
+                    MailManager.In.TryRestart();
             }
 
         //update existing certificates
@@ -59,7 +50,7 @@ public static partial class Server
         if (Directory.Exists(directory))
             foreach (string path in Directory.GetFiles(directory, "*.pfx", SearchOption.TopDirectoryOnly))
             {
-                string domain = path.Remove(0, path.LastIndexOfAny(new[]{'/', '\\'}) + 1);
+                string domain = path.Remove(0, path.LastIndexOfAny(['/', '\\']) + 1);
                 domain = domain.Remove(domain.LastIndexOf('.'));
                 if (!CertificateStore.ContainsKey(domain))
                     try

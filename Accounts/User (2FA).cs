@@ -12,13 +12,7 @@ public partial class User : ITableValue
     private TwoFactor? _TwoFactorWrapper = null;
 
     public TwoFactor TwoFactor
-    {
-        get
-        {
-            _TwoFactorWrapper ??= new(this);
-            return _TwoFactorWrapper;
-        }
-    }
+        => _TwoFactorWrapper ??= new(this);
 }
 
 public class TwoFactor

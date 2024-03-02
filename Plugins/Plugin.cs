@@ -52,31 +52,21 @@ public abstract class Plugin : IPlugin
 
     //documentation is inherited from IPlugin
     public virtual Task Work()
-    {
-        return Task.CompletedTask;
-    }
+        => Task.CompletedTask;
 
     //documentation is inherited from IPlugin
     public virtual byte[]? GetFile(string relPath, string pathPrefix, string domain)
-    {
-        return null;
-    }
+        => null;
 
     //documentation is inherited from IPlugin
     public virtual string? GetFileVersion(string relPath)
-    {
-        return null;
-    }
+        => null;
 
     //documentation is inherited from IPlugin
     public virtual Task Backup(string id, ReadOnlyCollection<string> basedOnIds)
-    {
-        return Task.CompletedTask;
-    }
+        => Task.CompletedTask;
 
     //documentation is inherited from IPlugin
     public virtual Task Restore(ReadOnlyCollection<string> ids)
-    {
-        return Task.CompletedTask;
-    }
+        => Task.CompletedTask;
 }

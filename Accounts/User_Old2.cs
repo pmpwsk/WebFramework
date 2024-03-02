@@ -34,8 +34,8 @@ public class User_Old2 : ITableValue
     public TwoFactorData_Old? _TwoFactor = null;
 
     [DataMember]
-    public Dictionary<string, AuthTokenData> _AuthTokens = new();
+    public Dictionary<string, AuthTokenData> _AuthTokens = [];
 
     [DataMember]
-    public Dictionary<string, string> _Settings = new();
+    public Dictionary<string, string> _Settings = [];
 }

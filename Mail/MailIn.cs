@@ -25,13 +25,13 @@ public static partial class MailManager
         /// The size limit for incoming mail messages in bytes.<br/>
         /// Default: 64MB
         /// </summary>
-        public static int SizeLimit = 67108864;
+        public static int SizeLimit { get; set; } = 67108864;
 
         /// <summary>
         /// Whether to open a listening endpoint for IPv6.<br/>
         /// Default: true
         /// </summary>
-        public static bool AllowIPv6 = true;
+        public static bool AllowIPv6 { get; set; } = true;
 
         /// <summary>
         /// The server object or null if the mail server isn't running.
@@ -63,10 +63,14 @@ public static partial class MailManager
         /// </summary>
         public static void Start()
         {
-            if (ServerRunning) throw new Exception("The server is already running.");
-            if (ServerDomain == null) throw new Exception("ServerDomain must be set.");
-            if (MailboxExists == null) throw new Exception("MailboxExists must be set.");
-            if (HandleMail == null) throw new Exception("HandleMail must be set.");
+            if (ServerRunning)
+                throw new Exception("The server is already running.");
+            if (ServerDomain == null)
+                throw new Exception("ServerDomain must be set.");
+            if (MailboxExists == null)
+                throw new Exception("MailboxExists must be set.");
+            if (HandleMail == null)
+                throw new Exception("HandleMail must be set.");
 
             var builder = new SmtpServerOptionsBuilder()
                 .ServerName(ServerDomain)
@@ -121,7 +125,8 @@ public static partial class MailManager
         /// </summary>
         public static void Stop()
         {
-            if (Server == null) throw new Exception("The server isn't running.");
+            if (Server == null)
+                throw new Exception("The server isn't running.");
 
             try
             {

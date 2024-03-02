@@ -68,12 +68,14 @@ public abstract class IElement
     /// <summary>
     /// The opener of the element along with all of its properties.
     /// </summary>
-    protected string Opener => OpenerWithoutEnd+">";
+    protected string Opener
+        => OpenerWithoutEnd+">";
     
     /// <summary>
     /// The closer of the element.
     /// </summary>
-    protected string Closer => $"</{ElementType}>";
+    protected string Closer
+        => $"</{ElementType}>";
 
     /// <summary>
     /// The element along with all of its properties but no content and no closer, it ends with a slash before the last angle bracket.

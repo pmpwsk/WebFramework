@@ -4,7 +4,7 @@ using uwap.Database;
 namespace uwap.WebFramework.Accounts;
 
 /// <summary>
-/// Contains the data about a user (everything necessary for basic login funcionality, email notifications and settings).
+/// Contains the data about a user (everything necessary for basic login functionality, email notifications and settings).
 /// </summary>
 [DataContract]
 public partial class User : ITableValue
@@ -17,11 +17,11 @@ public partial class User : ITableValue
         string id;
         do id = Parsers.RandomString(12);
             while (users.ContainsKey(id));
-        Id = id; SetUsername(username, users, false); SetMailAddress(mailAddress, users, false);
+        Id = id;
+        SetUsername(username, users, false);
+        SetMailAddress(mailAddress, users, false);
         if (password != null)
-        {
             Password = new(password);
-        }
         MailToken = Parsers.RandomString(10);
     }
 
@@ -61,9 +61,13 @@ public partial class User : ITableValue
     /// <param name="announce">Whether to add the username to the cache dictionary that is used to quickly find users by their username.</param>
     private void SetUsername(string value, UserTable users, bool announce)
     {
-        if (!AccountManager.CheckUsernameFormat(value)) throw new Exception("Invalid username format.");
-        if (Username == value) throw new Exception("The provided username is the same as the old one.");
-        if (users.FindByUsername(value) != null) throw new Exception("Another user with the provided username already exists.");
+        if (!AccountManager.CheckUsernameFormat(value))
+            throw new Exception("Invalid username format.");
+        if (Username == value)
+            throw new Exception("The provided username is the same as the old one.");
+        if (users.FindByUsername(value) != null)
+            throw new Exception("Another user with the provided username already exists.");
+
         if (announce) Lock();
         if (announce) try { users.Usernames.Remove(Username); } catch { }
         Username = value;
@@ -86,8 +90,11 @@ public partial class User : ITableValue
         }
         else
         {
-            if ((!ignoreRules) && !AccountManager.CheckPasswordFormat(value)) throw new Exception("Invalid password format.");
-            if ((!allowSame) && ValidatePassword(value, null)) throw new Exception("The provided password is the same as the old one.");
+            if ((!ignoreRules) && !AccountManager.CheckPasswordFormat(value))
+                throw new Exception("Invalid password format.");
+            if ((!allowSame) && ValidatePassword(value, null))
+                throw new Exception("The provided password is the same as the old one.");
+
             Lock();
             Password = new(value);
             UnlockSave();
@@ -99,22 +106,24 @@ public partial class User : ITableValue
     /// </summary>
     [DataMember] private string _MailAddress = "";
     public string MailAddress
-    {
-        get => _MailAddress;
-    }
+        => _MailAddress;
     /// <summary>
     /// Sets the mail address or throws an exception if its format is invalid or another user is using it or if it equals the current one.
     /// </summary>
     public void SetMailAddress(string value, UserTable users) => SetMailAddress(value, users, true);
     /// <summary>
-    /// 
+    /// Sets the mail address or throws an exception if its format is invalid or another user is using it or if it equals the current one.
     /// </summary>
     /// <param name="announce">Whether to add the mail address to the cache dictionary that is used to quickly find users by their mail address.</param>
     private void SetMailAddress(string value, UserTable users, bool announce)
     {
-        if (!AccountManager.CheckMailAddressFormat(value)) throw new Exception("Invalid mail address format.");
-        if (_MailAddress == value) throw new Exception("The provided mail address is the same as the old one.");
-        if (users.FindByMailAddress(value) != null) throw new Exception("Another user with the provided mail address already exists.");
+        if (!AccountManager.CheckMailAddressFormat(value))
+            throw new Exception("Invalid mail address format.");
+        if (_MailAddress == value)
+            throw new Exception("The provided mail address is the same as the old one.");
+        if (users.FindByMailAddress(value) != null)
+            throw new Exception("Another user with the provided mail address already exists.");
+
         if (announce) Lock();
         if (announce) try { users.MailAddresses.Remove(_MailAddress); } catch { }
         _MailAddress = value;
@@ -160,7 +169,7 @@ public partial class User : ITableValue
     {
         string token;
         do token = Parsers.RandomString(10);
-        while (token == MailToken);
+            while (token == MailToken);
         Lock();
         MailToken = token;
         UnlockSave();
@@ -170,7 +179,7 @@ public partial class User : ITableValue
     /// <summary>
     /// The date and time of this user's registration (when the user's object was first created).
     /// </summary>
-    [DataMember] public DateTime Signup {get;private set;} = DateTime.UtcNow;
+    [DataMember] public DateTime Signup { get; private set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Checks whether the given token is the token for mail verification and sets it to null (=verified) if it's the correct one.
@@ -178,8 +187,11 @@ public partial class User : ITableValue
     /// <param name="request">The request to handle failed attempts to verify the mail address as login attempts.</param>
     public bool VerifyMail(string token, IRequest request)
     {
-        if (AccountManager.IsBanned(request.Context)) return false;
-        if (MailToken == null) throw new Exception("This user's mail address is already verified.");
+        if (AccountManager.IsBanned(request.Context))
+            return false;
+        if (MailToken == null)
+            throw new Exception("This user's mail address is already verified.");
+
         if (MailToken == token)
         {
             Lock();
@@ -187,10 +199,9 @@ public partial class User : ITableValue
             UnlockSave();
 
             //does an auth token even exist? (this should be the case, but you never know)
-            if (request != null && request.Cookies.Contains("AuthToken"))
+            if (request != null && request.Cookies.TryGetValue("AuthToken", out var combinedToken))
             {
                 //get and decode the auth token
-                string combinedToken = request.Cookies["AuthToken"];
                 string id = combinedToken.Remove(12);
                 string authToken = combinedToken.Remove(0, 12);
                 if (Id == id && Auth.TryGetValue(authToken, out var data))
@@ -216,8 +227,11 @@ public partial class User : ITableValue
     /// <param name="request">The request to handle failed login attempts.</param>
     public bool ValidatePassword(string password, IRequest? request)
     {
-        if (Password == null) return false;
-        if (request != null && AccountManager.IsBanned(request.Context)) return false;
+        if (Password == null)
+            return false;
+        if (request != null && AccountManager.IsBanned(request.Context))
+            return false;
+
         if (Password.Check(password))
         {
             if (Server.Config.Accounts.AutoUpgradePasswordHashes && !Password.MatchesDefault())
@@ -228,7 +242,10 @@ public partial class User : ITableValue
             }
             return true;
         }
-        if (request != null) AccountManager.ReportFailedAuth(request.Context);
+
+        if (request != null)
+            AccountManager.ReportFailedAuth(request.Context);
+
         return false;
     }
 }

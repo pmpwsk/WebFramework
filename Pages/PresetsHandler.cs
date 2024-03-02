@@ -22,11 +22,7 @@ public class PresetsHandler
     /// If only SupportEmail is null and MailManager.ServerDomain isn't null, support@[MailManager.ServerDomain] is returned.<br/>
     /// </summary>
     protected virtual string? GetSupportEmail()
-    {
-        if (SupportEmail == null && MailManager.ServerDomain == null)
-            return null;
-        return SupportEmail ?? ("support@" + MailManager.ServerDomain);
-    }
+        => (SupportEmail == null && MailManager.ServerDomain == null) ? null : (SupportEmail ?? ("support@" + MailManager.ServerDomain));
 
     /// <summary>
     /// Sends an important email to the given user using the given subject and text. A different address may be specified.
@@ -35,7 +31,7 @@ public class PresetsHandler
     {
         string? address = GetSupportEmail();
         if (address == null)
-            return new(new(), null, null);
+            return new([], null, null);
         return MailManager.Out.Send(
             new MailboxAddress(address, address),
             new MailboxAddress(user.Username, useThisAddress ?? user.MailAddress),
@@ -58,44 +54,27 @@ public class PresetsHandler
     /// Returns an account navbar button (to log in or access the logged in account).
     /// </summary>
     public virtual IButton AccountButton(AppRequest request)
-    {
-        switch (request.LoginState)
+    => request.LoginState switch
         {
-            case LoginState.None:
-                if (new string[] { "/", "/account/login", "/account/register" }.Contains(request.Path) || request.Path.StartsWith("/account/recovery"))
-                    return new Button("Login", "/account/login" + request.CurrentRedirectQuery(), "right");
-                else return new Button("Login", "/account/login?redirect=" + HttpUtility.UrlEncode(request.Path + request.Context.Request.QueryString), "right");
-            case LoginState.LoggedIn:
-                return new Button("Account", "/account", "right");
-            case LoginState.Banned:
-                return new Button("Banned", "#", "right");
-            default:
-                return new Button("Logout", "/account/logout" + request.CurrentRedirectQuery(), "right");
-        }
-    }
+            LoginState.None
+                => new Button("Login", ((IEnumerable<string>)["/", "/account/login", "/account/register"]).Contains(request.Path) || request.Path.StartsWith("/account/recovery")
+                    ? ("/account/login" + request.CurrentRedirectQuery())
+                    : "/account/login?redirect=" + HttpUtility.UrlEncode(request.Path + request.Context.Request.QueryString), "right"),
+            LoginState.LoggedIn
+                => new Button("Account", "/account", "right"),
+            LoginState.Banned
+                => new Button("Banned", "#", "right"),
+            _ => new Button("Logout", "/account/logout" + request.CurrentRedirectQuery(), "right"),
+        };
 
     /// <summary>
     /// Populates the navigation bar of the given page using information from the given AppRequest.
     /// </summary>
     public virtual void Navigation(AppRequest request, Page page)
     {
+        page.Navigation = [ new Button(request.Domain, "/") ];
         if (Server.Config.Accounts.Enabled)
-            page.Navigation = new List<IButton>
-            {
-                new Button(request.Domain, "/")
-            };
-        else if (request.LoggedIn)
-            page.Navigation = new List<IButton>
-            {
-                new Button(request.Domain, "/"),
-                Presets.AccountButton(request)
-            };
-        else
-            page.Navigation = new List<IButton>
-            {
-                new Button(request.Domain, "/"),
-                Presets.AccountButton(request)
-            };
+            page.Navigation.Add(Presets.AccountButton(request));
     }
 
     /// <summary>
@@ -103,18 +82,14 @@ public class PresetsHandler
     /// Default implementation throws an exception because there are no default themes.
     /// </summary>
     public virtual List<IStyle> Styles(IRequest request, out string fontUrl)
-    {
-        throw new Exception("No themes were set.");
-    }
+        => throw new Exception("No style were set.");
 
     /// <summary>
     /// Adds a button to contact customer support to the page.
     /// </summary>
     public virtual void AddSupportButton(Page page)
     {
-        string? address = GetSupportEmail();
-        if (address == null)
-            throw new Exception("No support email was found.");
+        string address = GetSupportEmail() ?? throw new Exception("No support email was found.");
         page.Elements.Add(new ButtonElement("Contact support", address, "mailto:" + address, newTab: true));
     }
 
@@ -123,7 +98,7 @@ public class PresetsHandler
     /// </summary>
     public virtual void AddAuthElements(AppRequest request)
     {
-        request.Init(out Page page, out var e);
+        request.Init(out Page _, out var e);
         if (!request.LoggedIn) throw new Exception("Not logged in.");
         User user = request.User;
         string? twoFactorText = user.TwoFactor.TOTPEnabled() ? null : "disabled";

@@ -14,13 +14,13 @@ public class CustomStyle : IStyle
     /// Creates a new custom style with the given (first) line of code.
     /// </summary>
     public CustomStyle(string code)
-        => Lines = code.Split('\n').ToList();
+        => Lines = [.. code.Split('\n')];
 
     /// <summary>
     /// Creates a new custom style with the given lines of code.
     /// </summary>
     public CustomStyle(params string[] lines)
-        => Lines = lines.ToList();
+        => Lines = [.. lines];
 
     /// <summary>
     /// Creates a new custom style with the given lines of code.

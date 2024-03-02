@@ -37,7 +37,7 @@ public class RestorePartInfo
             Load(id);
     }
 
-    private void LoadRecursive(StreamReader reader, BackupTree tree, string id)
+    private static void LoadRecursive(StreamReader reader, BackupTree tree, string id)
     {
         int read;
 

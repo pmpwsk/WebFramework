@@ -35,7 +35,8 @@ public static partial class Server
             //event
             try
             {
-                if (BackupAlmostDone != null) await BackupAlmostDone(id, basedOnIds);
+                if (BackupAlmostDone != null)
+                    await BackupAlmostDone(id, basedOnIds);
             }
             catch (Exception ex)
             {

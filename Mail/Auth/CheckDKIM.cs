@@ -13,7 +13,7 @@ public static partial class MailAuth
     {
         try
         {
-            individualResults = new();
+            individualResults = [];
             var result = MailAuthVerdictDKIM.Unset;
 
             var verifier = new DkimVerifier(new DkimPublicKeyLocator());
@@ -64,7 +64,7 @@ public static partial class MailAuth
         }
         catch
         {
-            individualResults = new();
+            individualResults = [];
             return MailAuthVerdictDKIM.Unset;
         }
     }

@@ -7,32 +7,22 @@ namespace uwap.WebFramework.Mail;
 /// <summary>
 /// A mail sending mechanism that attempts to send mail messages over an SMTP relay that can be used as a backup in case an email couldn't be sent directly.
 /// </summary>
-public class MailBackupRelay : IMailBackup
+public class MailBackupRelay(string address, int port, NetworkCredential? credentials) : IMailBackup
 {
     /// <summary>
     /// The address of the SMTP relay.
     /// </summary>
-    public string Address;
+    public string Address = address;
 
     /// <summary>
     /// The port of the SMTP relay.
     /// </summary>
-    public int Port;
+    public int Port = port;
 
     /// <summary>
     /// The credentials for the SMTP relay or null if no credentials should be used.
     /// </summary>
-    public NetworkCredential? Credentials;
-
-    /// <summary>
-    /// Creates a new object to send mail to the SMTP relay with the given information.
-    /// </summary>
-    public MailBackupRelay(string address, int port, NetworkCredential? credentials)
-    {
-        Address = address;
-        Port = port;
-        Credentials = credentials;
-    }
+    public NetworkCredential? Credentials = credentials;
 
     //documentation is inherited from the interface
     public MailSendResult.Attempt Send(MimeMessage message)
@@ -44,14 +34,15 @@ public class MailBackupRelay : IMailBackup
             if (Port == 465)
                 client.Connect(Address, 465, true, cts.Token);
             else client.Connect(Address, Port, MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable, cts.Token);
-            if (Credentials != null) client.Authenticate(Credentials);
+            if (Credentials != null)
+                client.Authenticate(Credentials);
             string response = client.Send(message);
             client.Disconnect(true);
-            return new(MailSendResult.ResultType.Success, new() { $"Response: {response}" });
+            return new(MailSendResult.ResultType.Success, [$"Response: {response}"]);
         }
         catch (Exception ex)
         {
-            return new(MailSendResult.ResultType.Failed, new() { $"Error: {ex.Message}" });
+            return new(MailSendResult.ResultType.Failed, [$"Error: {ex.Message}"]);
         }
     }
 }

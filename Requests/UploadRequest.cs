@@ -10,7 +10,8 @@ public class UploadRequest(LayerRequestData data) : SimpleResponseRequest(data)
     /// <summary>
     /// The uploaded files.
     /// </summary>
-    public IFormFileCollection Files => Context.Request.Form.Files;
+    public IFormFileCollection Files
+        => Context.Request.Form.Files;
 }
 
 /// <summary>
@@ -23,11 +24,13 @@ public static class IFormFileExtensions
     /// </summary>
     public static bool Download(this IFormFile file, string path, long limitBytes)
     {
-        if (file.Length > limitBytes) return false;
+        if (file.Length > limitBytes)
+            return false;
         using Stream input = file.OpenReadStream();
         try
         {
-            if (input.Length > limitBytes) return false;
+            if (input.Length > limitBytes)
+                return false;
         }
         catch (NotSupportedException) { }
         catch { throw; }
@@ -40,9 +43,11 @@ public static class IFormFileExtensions
         while (totalBytes <= limitBytes)
         {
             lastBytes = input.Read(buffer, 0, (int)Math.Min(buffer.Length, limitBytes - totalBytes));
-            if (lastBytes <= 0) break;
+            if (lastBytes <= 0)
+                break;
             totalBytes += lastBytes;
-            if (totalBytes <= limitBytes) output.Write(buffer, 0, lastBytes);
+            if (totalBytes <= limitBytes)
+                output.Write(buffer, 0, lastBytes);
         }
 
         input.Close();

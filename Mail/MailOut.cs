@@ -30,44 +30,44 @@ public static partial class MailManager
         /// Whether to attempt to send emails directly.<br/>
         /// Default: true
         /// </summary>
-        public static bool EnableFromSelf = true;
+        public static bool EnableFromSelf { get; set; } = true;
 
         /// <summary>
         /// Whether to allow sending emails using IPv6.<br/>
         /// Default: true<br/>
         /// This is mostly used to make sure that the receiving server sees the IPv4 address (for SPF) in the case of a static IPv4 address and dynamic IPv6 address.
         /// </summary>
-        public static bool AllowIPv6 = true;
+        public static bool AllowIPv6 { get; set; } = true;
 
         /// <summary>
         /// The object that should attempt to send emails that couldn't be sent directly or null if no alternative sending method should be used.<br/>
         /// Default: null
         /// </summary>
-        public static IMailBackup? BackupSender = null;
+        public static IMailBackup? BackupSender { get; set; } = null;
 
         /// <summary>
         /// The selector of the DKIM key to use or null if messages shouldn't be signed.<br/>
         /// Default: default
         /// </summary>
-        public static string? DkimSelector = "default";
+        public static string? DkimSelector { get; set; } = "default";
 
         /// <summary>
         /// The maximum amount of time to wait before giving up on a mail sending attempt (in milliseconds).<br/>
         /// Default: 5000
         /// </summary>
-        public static int Timeout = 5000;
+        public static int Timeout { get; set; } = 5000;
 
         /// <summary>
         /// Generates a mail message using the given information, signs it (if possible) and sends it to the appropriate server.
         /// </summary>
         public static MailSendResult Send(MailboxAddress from, MailboxAddress to, string subject, string text, bool isHtml, bool allowBackup = true)
-            => Send(from, new[] { to }, subject, text, isHtml, out _, allowBackup);
+            => Send(from, [to], subject, text, isHtml, out _, allowBackup);
 
         /// <summary>
         /// Generates a mail message using the given information, signs it (if possible) and sends it to the appropriate server, and returns the resulting message IDs as a list.
         /// </summary>
         public static MailSendResult Send(MailboxAddress from, MailboxAddress to, string subject, string text, bool isHtml, out List<string> messageIds, bool allowBackup = true)
-            => Send(from, new[] { to }, subject, text, isHtml, out messageIds, allowBackup);
+            => Send(from, [to], subject, text, isHtml, out messageIds, allowBackup);
 
         /// <summary>
         /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers.
@@ -79,11 +79,7 @@ public static partial class MailManager
         /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers, and returns the resulting message IDs as a list.
         /// </summary>
         public static MailSendResult Send(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string text, bool isHtml, out List<string> messageIds, bool allowBackup = true)
-        {
-            if (isHtml)
-                return Send(new MailGen(from, to, subject, null, text), out messageIds, allowBackup);
-            else return Send(new MailGen(from, to, subject, text, null), out messageIds, allowBackup);
-        }
+            => Send(isHtml ? new MailGen(from, to, subject, null, text) : new MailGen(from, to, subject, text, null), out messageIds, allowBackup);
 
         /// <summary>
         /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers, and returns the resulting message IDs as a list.
@@ -102,9 +98,9 @@ public static partial class MailManager
         /// </summary>
         public static MailSendResult Send(MailGen mailGen, out List<string> messageIds, bool allowBackup = true)
         {
-            messageIds = new();
-            List<MailboxAddress> leftAddresses = new();
-            Dictionary<MailboxAddress, string> internalLog = new();
+            messageIds = [];
+            List<MailboxAddress> leftAddresses = [];
+            Dictionary<MailboxAddress, string> internalLog = [];
             foreach (var a in mailGen.To)
             {
                 string id = ServerDomain == null ? MimeUtils.GenerateMessageId() : MimeUtils.GenerateMessageId(ServerDomain);
@@ -117,12 +113,10 @@ public static partial class MailManager
                 }
             }
             MailSendResult.Attempt? fromSelf = null;
-            if (EnableFromSelf && leftAddresses.Any())
-            {
+            if (EnableFromSelf && leftAddresses.Count != 0)
                 fromSelf = SendFromSelf(mailGen, leftAddresses, messageIds);
-            }
             MailSendResult.Attempt? fromBackup = null;
-            if (allowBackup && BackupSender != null && leftAddresses.Any())
+            if (allowBackup && BackupSender != null && leftAddresses.Count != 0)
             {
                 try
                 {
@@ -131,7 +125,7 @@ public static partial class MailManager
                 }
                 catch (Exception ex)
                 {
-                    fromBackup = new(MailSendResult.ResultType.Failed, new() { $"Error: {ex.Message}" });
+                    fromBackup = new(MailSendResult.ResultType.Failed, [$"Error: {ex.Message}"]);
                 }
             }
 
@@ -217,34 +211,29 @@ public static partial class MailManager
         /// Calls the method that should be called after a message was attempted to be sent.
         /// </summary>
         public static void InvokeMailSent(MimeMessage message, MailSendResult result)
-        {
-            MailSent?.Invoke(message, result);
-        }
+            => MailSent?.Invoke(message, result);
 
         /// <summary>
         /// Turns the given IP (key) and associated server domain (value, if known) into a string to be used in connection logs.
         /// </summary>
         private static string ServerString(KeyValuePair<string, string?> domain)
-        {
-            if (domain.Value == null) return domain.Key;
-            else return $"{domain.Value} ({domain.Key})";
-        }
+            => domain.Value == null ? domain.Key : $"{domain.Value} ({domain.Key})";
 
         /// <summary>
         /// Attempts to send the given email directly.
         /// </summary>
         private static MailSendResult.Attempt SendFromSelf(MailGen mailGen, List<MailboxAddress> leftAddresses, List<string> messageIds)
         {
-            List<string> log = new();
+            List<string> log = [];
             try
             {
                 MailSendResult.ResultType? resultType = null;
-                HashSet<string> failedServers = new();
-                Dictionary<MailboxAddress, Dictionary<string, string?>> serversForAddresses = new();
+                HashSet<string> failedServers = [];
+                Dictionary<MailboxAddress, Dictionary<string, string?>> serversForAddresses = [];
                 foreach (string mailDomain in leftAddresses.Select(x => x.Domain).Distinct())
                 {
                     var servers = GetServers(mailDomain);
-                    if (servers.Any())
+                    if (servers.Count != 0)
                     {
                         foreach (var a in leftAddresses)
                             if (a.Domain == mailDomain)
@@ -252,14 +241,14 @@ public static partial class MailManager
                     }
                     else log.Add($"No mail servers found for '{mailDomain}'.");
                 }
-                if (!serversForAddresses.Any())
+                if (serversForAddresses.Count == 0)
                     throw new Exception("No mail servers were found.");
 
                 using var client = new SmtpClient();
                 string? connectedServer = null;
                 if (ServerDomain != null)
                     client.LocalDomain = ServerDomain;
-                while (serversForAddresses.Any())
+                while (serversForAddresses.Count != 0)
                 {
                     KeyValuePair<MailboxAddress, Dictionary<string, string?>> due;
                     if (connectedServer != null && client.IsConnected)
@@ -281,7 +270,7 @@ public static partial class MailManager
                     {
                         if (!client.IsConnected)
                         {
-                            if (!due.Value.Any())
+                            if (due.Value.Count == 0)
                             {
                                 log.Add($"No mail servers left.");
                                 continue;
@@ -322,7 +311,7 @@ public static partial class MailManager
 
                         try
                         {
-                            string response = client.Send(GenerateMessage(mailGen, true, out string messageId, new[] { due.Key }));
+                            string response = client.Send(GenerateMessage(mailGen, true, out string messageId, [due.Key]));
                             messageIds.Add(messageId);
                             success = true;
                             leftAddresses.Remove(due.Key);
@@ -373,7 +362,7 @@ public static partial class MailManager
         {
             try
             {
-                Dictionary<string, string?> results = new(); //key is ip, value is domain or null if raw ip
+                Dictionary<string, string?> results = []; //key is ip, value is domain or null if raw ip
 
                 foreach (string dns in SortedMxList(mailDomain))
                 {
@@ -408,7 +397,7 @@ public static partial class MailManager
             }
             catch
             {
-                return new();
+                return [];
             }
         }
 
@@ -424,13 +413,17 @@ public static partial class MailManager
         {
             var result = DnsLookup.Query(domain, QueryType.MX);
             var records = result.Answers.MxRecords();
-            Dictionary<ushort, List<string>> dict = new();
+            Dictionary<ushort, List<string>> dict = [];
             foreach (var mx in records)
             {
-                if (!dict.ContainsKey(mx.Preference)) dict[mx.Preference] = new();
-                dict[mx.Preference].Add(mx.Exchange.Value.TrimEnd('.'));
+                if (!dict.TryGetValue(mx.Preference, out var l))
+                {
+                    l = [];
+                    dict[mx.Preference] = l;
+                }
+                l.Add(mx.Exchange.Value.TrimEnd('.'));
             }
-            List<string> list = new();
+            List<string> list = [];
             foreach (var pair in dict.OrderBy(pair => pair.Key))
             {
                 var l = pair.Value;

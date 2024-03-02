@@ -16,17 +16,17 @@ public enum TextBoxRole
     NoSpellcheck,
 
     /// <summary>
-    /// Suggests autofilling a saved username.
+    /// Suggests auto-filling a saved username.
     /// </summary>
     Username,
 
     /// <summary>
-    /// Suggests autofilling a saved email address.
+    /// Suggests auto-filling a saved email address.
     /// </summary>
     Email,
 
     /// <summary>
-    /// Suggests autofilling a saved password.
+    /// Suggests auto-filling a saved password.
     /// </summary>
     Password,
 
@@ -36,7 +36,7 @@ public enum TextBoxRole
     NewPassword,
 
     /// <summary>
-    /// Suggests autofilling of a saved phone number.
+    /// Suggests auto-filling of a saved phone number.
     /// </summary>
     Phone
 }
@@ -54,8 +54,10 @@ public class TextBox : IContent
     {
         get
         {
-            List<string> properties = new List<string>();
-            if (Placeholder != null) properties.Add($"placeholder=\"{Placeholder.HtmlValueSafe()}\"");
+            List<string> properties = [];
+
+            if (Placeholder != null)
+                properties.Add($"placeholder=\"{Placeholder.HtmlValueSafe()}\"");
             properties.Add(Role switch
             {
                 TextBoxRole.Username => "type=\"text\" spellcheck=\"false\" autocomplete=\"username\"",
@@ -68,9 +70,11 @@ public class TextBox : IContent
             });
             if (Text != null)
                 properties.Add($"value=\"{Text.HtmlValueSafe()}\"");
-            //if (OnEnter != null) properties.Add($"onkeydown=\"if (event.key == 'Enter') {OnEnter}\"");
-            if (Autofocus) properties.Add("autofocus");
-            if (OnInput != null) properties.Add($"oninput=\"{OnInput.HtmlValueSafe()}\"");
+            if (Autofocus)
+                properties.Add("autofocus");
+            if (OnInput != null)
+                properties.Add($"oninput=\"{OnInput.HtmlValueSafe()}\"");
+
             return string.Join(' ', properties);
         }
     }

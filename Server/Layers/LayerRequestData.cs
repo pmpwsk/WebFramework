@@ -52,7 +52,8 @@ public class LayerRequestData(HttpContext context)
     /// <summary>
     /// The requested domain.
     /// </summary>
-    public string Domain => Context.Domain();
+    public string Domain
+        => Context.Domain();
 
     /// <summary>
     /// The list of domains associated with this request.
@@ -71,7 +72,8 @@ public class LayerRequestData(HttpContext context)
     /// <summary>
     /// Redirects the client to the given URL. 'permanent' (default: false) indicates whether the page has been moved permanently or just temporarily.
     /// </summary>
-    public void Redirect(string url, bool permanent = false) => Context.Response.Redirect(url, permanent);
+    public void Redirect(string url, bool permanent = false)
+        => Context.Response.Redirect(url, permanent);
 
     /// <summary>
     /// Whether the user is fully logged in.

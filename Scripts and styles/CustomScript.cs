@@ -14,13 +14,13 @@ public class CustomScript : IScript
     /// Creates a new custom script with the given (first) line of code.
     /// </summary>
     public CustomScript(string code)
-        => Lines = code.Split('\n').ToList();
+        => Lines = [.. code.Split('\n')];
 
     /// <summary>
     /// Creates a new custom script with the given lines of code.
     /// </summary>
     public CustomScript(params string[] lines)
-        => Lines = lines.ToList();
+        => Lines = [.. lines];
 
     /// <summary>
     /// Creates a new custom script with the given lines of code.

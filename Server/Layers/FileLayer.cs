@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-
-namespace uwap.WebFramework;
+﻿namespace uwap.WebFramework;
 
 public static partial class Server
 {

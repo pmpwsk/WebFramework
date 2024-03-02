@@ -1,6 +1,4 @@
-﻿using uwap.WebFramework.Accounts;
-
-namespace uwap.WebFramework;
+﻿namespace uwap.WebFramework;
 
 public static partial class Server
 {

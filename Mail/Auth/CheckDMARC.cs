@@ -52,7 +52,7 @@ public static partial class MailAuth
     /// </summary>
     private static bool GetDmarcSettings(string domain, bool preferSubdomain, out DmarcPolicy policy, out DmarcAlignment alignmentSPF, out DmarcAlignment alignmentDKIM)
     {
-        var fields = ResolveTXT($"_dmarc.{domain}", null, new[] { new[] { "p" } });
+        var fields = ResolveTXT($"_dmarc.{domain}", null, [["p"]]);
         if (fields != null)
         {
             DmarcPolicy p = DmarcPolicy.Quarantine;
@@ -60,7 +60,6 @@ public static partial class MailAuth
             alignmentSPF = DmarcAlignment.Relaxed;
             alignmentDKIM = DmarcAlignment.Relaxed;
             foreach (var field in fields)
-            {
                 switch (field.Key)
                 {
                     case "p":
@@ -108,7 +107,6 @@ public static partial class MailAuth
                         else alignmentDKIM = newAlignment;
                         break;
                 }
-            }
             policy = (preferSubdomain && sp != null) ? sp.Value : p;
             return true;
         }

@@ -24,7 +24,9 @@ public class AppRequest(LayerRequestData data) : IRequest(data)
     /// </summary>
     public async Task Finish()
     {
-        if (Finished) throw new Exception("The page has already been written.");
+        if (Finished)
+            throw new Exception("The page has already been written.");
+
         Finished = true;
         if (Page == null && Status != 200)
         {
@@ -32,10 +34,8 @@ public class AppRequest(LayerRequestData data) : IRequest(data)
             Presets.Navigation(this, page);
         }
         if (Page != null)
-        {
             foreach (string line in Page.Export(this))
                 await Context.Response.WriteAsync(line + "\n");
-        }
         else
         {
             Status = 501;
@@ -48,7 +48,9 @@ public class AppRequest(LayerRequestData data) : IRequest(data)
     /// </summary>
     public async Task CallApi()
     {
-        if (Finished) throw new Exception("The page has already been written.");
+        if (Finished)
+            throw new Exception("The page has already been written.");
+
         Finished = true;
         Context.Response.ContentType = "text/plain;charset=utf-8";
         ApiRequest request = new(new(Context) { User = _User, UserTable = UserTable, LoginState = LoginState, Domains = Domains });
@@ -69,7 +71,9 @@ public class AppRequest(LayerRequestData data) : IRequest(data)
     /// </summary>
     public async Task CallDownload()
     {
-        if (Finished) throw new Exception("The page has already been written.");
+        if (Finished)
+            throw new Exception("The page has already been written.");
+
         Finished = true;
         Context.Response.ContentType = null;
         DownloadRequest request = new(new(Context) { User = _User, UserTable = UserTable, LoginState = LoginState, Domains = Domains });
@@ -98,7 +102,5 @@ public class AppRequest(LayerRequestData data) : IRequest(data)
     /// Returns a query string (including '?') with the current 'redirect' parameter or an empty string if no such parameter was provided.
     /// </summary>
     public string CurrentRedirectQuery()
-    {
-        return Query.ContainsKey("redirect") ? ("?redirect=" + HttpUtility.UrlEncode(Query["redirect"])) : "";
-    }
+        => Query.ContainsKey("redirect") ? ("?redirect=" + HttpUtility.UrlEncode(Query["redirect"])) : "";
 }

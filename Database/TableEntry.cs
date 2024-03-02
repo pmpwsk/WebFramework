@@ -7,27 +7,31 @@ namespace uwap.Database;
 /// Contains one value for a table along with additional data about it (table, key, serialization, locking information).
 /// </summary>
 /// <typeparam name="T">The type of values that will be saved here.</typeparam>
-public class TableEntry<T> : ITableEntry where T : ITableValue
+/// <param name="table">The containing table's name.</param>
+/// <param name="key">The associated key.</param>
+/// <param name="value">The stored value.</param>
+/// <param name="json">The value's JSON serialization.</param>
+public class TableEntry<T>(string table, string key, T value, byte[] json) : ITableEntry where T : ITableValue
 {
     /// <summary>
     /// The name of the containing table.
     /// </summary>
-    public string Table;
+    public string Table { get; set; } = table;
 
     /// <summary>
     /// The associated key to this entry.
     /// </summary>
-    public string Key;
+    public string Key { get; set; } = key;
 
     /// <summary>
     /// The stored value.
     /// </summary>
-    public T Value { get; private set; }
+    public T Value { get; private set; } = value;
 
     /// <summary>
     /// The JSON serialization as a byte array that's saved in memory.
     /// </summary>
-    public byte[] Json { get; private set; }
+    public byte[] Json { get; private set; } = json;
 
     /// <summary>
     /// The HttpContext that is currently locking this entry or null if it is not locked or no context was found while locking.
@@ -38,21 +42,6 @@ public class TableEntry<T> : ITableEntry where T : ITableValue
     /// The amount of times this entry is locked by its current locker or 0 if it's not locked.
     /// </summary>
     private int LockCount = 0;
-
-    /// <summary>
-    /// Creates a new object to store one value for a table along with additional data about it (table, key, serialization, locking information).
-    /// </summary>
-    /// <param name="table">The containing table's name.</param>
-    /// <param name="key">The associated key.</param>
-    /// <param name="value">The stored value.</param>
-    /// <param name="json">The value's JSON serialization.</param>
-    public TableEntry(string table, string key, T value, byte[] json)
-    {
-        Table = table;
-        Key = key;
-        Value = value;
-        Json = json;
-    }
 
     /// <summary>
     /// Unlocks the object after the locking HttpContext is done (as long as it is still locking it and the same context).
@@ -94,9 +83,7 @@ public class TableEntry<T> : ITableEntry where T : ITableValue
             return;
         }
         while (LockCount > 0 || LockingContext != null)
-        {
             Thread.Sleep(50);
-        }
         LockCount = 1;
         if (context != null)
         {
@@ -138,11 +125,8 @@ public class TableEntry<T> : ITableEntry where T : ITableValue
             else if (Server.CurrentHttpContext != null)
                 throw new Exception("This object is locked by a request.");
         }
-        else
-        {
-            if (LockingContext != Server.CurrentHttpContext)
-                throw new Exception("This object is locked by another request.");
-        }
+        else if (LockingContext != Server.CurrentHttpContext)
+            throw new Exception("This object is locked by another request.");
 
         if (save != null)
         {
@@ -219,7 +203,8 @@ public class TableEntry<T> : ITableEntry where T : ITableValue
         {
             try
             {
-                if (lockFirst) UnlockIgnore();
+                if (lockFirst)
+                    UnlockIgnore();
             }
             catch { }
         }
@@ -241,7 +226,8 @@ public class TableEntry<T> : ITableEntry where T : ITableValue
     {
         Json = Serialization.Serialize<T>(Value);
 
-        if (!Directory.Exists("../Database/Buffer/" + Table)) Directory.CreateDirectory("../Database/Buffer/" + Table);
+        if (!Directory.Exists("../Database/Buffer/" + Table))
+            Directory.CreateDirectory("../Database/Buffer/" + Table);
 
         File.WriteAllBytes($"../Database/Buffer/{Table}/{Key}.json", Json);
 

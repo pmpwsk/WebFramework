@@ -7,7 +7,7 @@ public static partial class Server
     /// <summary>
     /// The cache dictionary (key = relative path, value = entry data).
     /// </summary>
-    internal static Dictionary<string, CacheEntry> Cache = new Dictionary<string, CacheEntry>();
+    internal static Dictionary<string, CacheEntry> Cache = [];
 
     /// <summary>
     /// Updates the cached metadata for ../Public and ../Private (and file contents for file types that are set to be cached).
@@ -24,16 +24,14 @@ public static partial class Server
                 {
                     DateTime modifiedUtc = new FileInfo(location).LastWriteTimeUtc;
                     if (entry.Value.File.ModifiedUtc != modifiedUtc || !entry.Value.File.Check())
-                    {
                         Cache[entry.Key].File = new CacheFile(File.ReadAllBytes(location), modifiedUtc);
-                    }
                 }
             }
             else Cache.Remove(entry.Key);
         }
 
         //this is necessary to convert the file paths into cache keys
-        int parentLength = Directory.GetCurrentDirectory().LastIndexOfAny(new[] {'/', '\\'});
+        int parentLength = Directory.GetCurrentDirectory().LastIndexOfAny(['/', '\\']);
         //add new files from private folder
         if (Directory.Exists("../Private"))
             foreach (string path in Directory.GetFiles("../Private", "*", SearchOption.AllDirectories))
@@ -43,11 +41,7 @@ public static partial class Server
                 if (key.StartsWith('.'))
                     continue;
                 if (!Cache.ContainsKey(key))
-                {
-                    if (Config.CacheExtensions.Contains(file.Extension))
-                        Cache[key] = new CacheEntry(key, new CacheFile(File.ReadAllBytes(path), file.LastWriteTimeUtc), file.Extension, false);
-                    else Cache[key] = new CacheEntry(key, null, file.Extension, false);
-                }
+                    Cache[key] = new CacheEntry(key, (Config.CacheExtensions.Contains(file.Extension)) ? new CacheFile(File.ReadAllBytes(path), file.LastWriteTimeUtc) : null, file.Extension, false);
             }
         //add new files from public folder
         if (Directory.Exists("../Public"))
@@ -59,54 +53,40 @@ public static partial class Server
                     if (key.StartsWith('.'))
                         continue;
                     if ((!Cache.TryGetValue(key, out var entry)) || !entry.IsPublic) //overwrite if private exists
-                    {
-                        if (Config.CacheExtensions.Contains(file.Extension))
-                            Cache[key] = new CacheEntry(key, new CacheFile(File.ReadAllBytes(path), new FileInfo(path).LastWriteTimeUtc), file.Extension, true);
-                        else Cache[key] = new CacheEntry(key, null, file.Extension, true);
-                    }
+                        Cache[key] = new CacheEntry(key, (Config.CacheExtensions.Contains(file.Extension)) ? new CacheFile(File.ReadAllBytes(path), new FileInfo(path).LastWriteTimeUtc) : null, file.Extension, true);
                 }
     }
 
     /// <summary>
     /// Contains data about an entry of the cache.
     /// </summary>
-    internal class CacheEntry
+    internal class CacheEntry(string key, CacheFile? file, string extension, bool isPublic)
     {
         /// <summary>
         /// The key in the cache dictionary (relative path).
         /// </summary>
-        public string Key;
+        public string Key = key;
 
         /// <summary>
         /// The file content along with metadata about the content or null if the file type isn't being cached.
         /// </summary>
-        public CacheFile? File;
+        public CacheFile? File = file;
 
         /// <summary>
         /// The file type.
         /// </summary>
-        public string Extension;
+        public string Extension = extension;
 
         /// <summary>
         /// true if the file is in ../Public, false if it is in ../Private.
         /// </summary>
-        public bool IsPublic;
-
-        /// <summary>
-        /// Creates a new object for data about an entry of the cache.
-        /// </summary>
-        internal CacheEntry(string key, CacheFile? file, string extension, bool isPublic)
-        {
-            Key = key;
-            File = file;
-            Extension = extension;
-            IsPublic = isPublic;
-        }
+        public bool IsPublic = isPublic;
 
         /// <summary>
         /// The usable file path.
         /// </summary>
-        public string Path => $"../{(IsPublic?"Public":"Private")}/{Key}";
+        public string Path
+            => $"../{(IsPublic?"Public":"Private")}/{Key}";
 
         /// <summary>
         /// Enumerates the file's lines, assuming that it is a text file.
@@ -133,32 +113,22 @@ public static partial class Server
     /// <summary>
     /// Contains a file's content and cached metadata about the content.
     /// </summary>
-    internal class CacheFile
+    internal class CacheFile(byte[] content, DateTime modifiedUtc)
     {
         /// <summary>
         /// The file's raw content.
         /// </summary>
-        public byte[] Content;
+        public byte[] Content = content;
 
         /// <summary>
         /// The MD5 checksum of the file's raw content.
         /// </summary>
-        public byte[] Checksum;
+        public byte[] Checksum = MD5.HashData(content);
 
         /// <summary>
         /// The UTC date and time when the file was last modified according to the cache.
         /// </summary>
-        public DateTime ModifiedUtc;
-
-        /// <summary>
-        /// Creates a new object to store a file's content and metadata about the content.
-        /// </summary>
-        internal CacheFile(byte[] content, DateTime modifiedUtc)
-        {
-            Content = content;
-            Checksum = MD5.HashData(Content);
-            ModifiedUtc = modifiedUtc;
-        }
+        public DateTime ModifiedUtc = modifiedUtc;
 
         /// <summary>
         /// Returns whether the content matches the checksum.<br/>

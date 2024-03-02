@@ -28,7 +28,8 @@ public static partial class Server
         /// </summary>
         private static void Complain()
         {
-            if (Running) throw new Exception("The server does not allow changing this setting during runtime.");
+            if (Running)
+                throw new Exception("The server does not allow changing this setting during runtime.");
         }
 
         /// <summary>
@@ -89,7 +90,7 @@ public static partial class Server
         /// Contains a few types by default, check out the source code to see them.<br/>
         /// Example: {".html", "text/html"}
         /// </summary>
-        public static Dictionary<string, string> MimeTypes { get; set; } = new Dictionary<string, string>()
+        public static Dictionary<string, string> MimeTypes { get; set; } = new()
         {
             //web stuff
             {".html", "text/html"},
@@ -126,8 +127,8 @@ public static partial class Server
         /// <summary>
         /// List of file types (extensions with a dot in front of them) of which the content should be cached (only those in ../Public and ../Private).
         /// </summary>
-        public static List<string> CacheExtensions { get; set; } = new List<string>
-        {
+        public static List<string> CacheExtensions { get; set; } =
+        [
             ".wfpg",
             //web stuff
             ".html", ".css", ".js", ".json",
@@ -135,7 +136,7 @@ public static partial class Server
             ".woff2", ".woff", ".svg", ".eot", ".ttf",
             //other web stuff
             ".ico", ".txt", ".xml"
-        };
+        ];
 
         /// <summary>
         /// Dictionary of the cache duration in client browsers (value, in seconds) for each file type (key, with a dot in front of it).<br/>
@@ -143,7 +144,7 @@ public static partial class Server
         /// Contains a few types by default, check out the source code to see them.<br/>
         /// Example: {".html", 0} disables caching HTML files, {".css", 604800} caches CSS files for one week.
         /// </summary>
-        public static Dictionary<string, int> BrowserCacheMaxAge { get; set; } = new Dictionary<string, int>
+        public static Dictionary<string, int> BrowserCacheMaxAge { get; set; } = new()
         {
             {".html", 0},
             {".css", 604800}, //1 week
@@ -175,7 +176,7 @@ public static partial class Server
         /// Contains the most common codes by default, check out the source code to see them.<br/>
         /// Example: {404, "Not found."}
         /// </summary>
-        public static Dictionary<int, string> StatusMessages { get; set; } = new Dictionary<int, string>()
+        public static Dictionary<int, string> StatusMessages { get; set; } = new()
         {
             {200, "Success."},
             {201, "Created." },

@@ -9,7 +9,7 @@ public static partial class Server
     /// <summary>
     /// The timer that triggers the worker.
     /// </summary>
-    private static Timer Worker = new Timer(Work, null, Timeout.Infinite, Timeout.Infinite);
+    private static readonly Timer Worker = new(Work, null, Timeout.Infinite, Timeout.Infinite);
 
     /// <summary>
     /// Whether the worker is working right now.

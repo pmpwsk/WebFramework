@@ -14,7 +14,7 @@ public class HeadingElement : IContainerElement
         Class = null;
         Style = null;
         Id = null;
-        Contents = contents.ToList();
+        Contents = [.. contents];
     }
 
     /// <summary>
@@ -26,7 +26,8 @@ public class HeadingElement : IContainerElement
         Class = classes;
         Style = styles;
         Id = id;
-        if (text != "") Contents.Add(new Paragraph(text));
+        if (text != "")
+            Contents.Add(new Paragraph(text));
     }
 
     /// <summary>
@@ -38,7 +39,8 @@ public class HeadingElement : IContainerElement
         Class = classes;
         Style = styles;
         Id = id;
-        if (content != null) Contents.Add(content);
+        if (content != null)
+            Contents.Add(content);
     }
 
     /// <summary>
@@ -63,7 +65,8 @@ public class HeadingElement : IContainerElement
         Class = classes;
         Style = styles;
         Id = id;
-        if (contents != null) Contents = contents;
+        if (contents != null)
+            Contents = contents;
     }
 
     //documentation inherited from IPageElement

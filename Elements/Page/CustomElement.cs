@@ -17,13 +17,13 @@ public class CustomElement : IPageElement
     /// <summary>
     /// The lines of HTML code of the element.
     /// </summary>
-    private List<string> HtmlCode;
+    public List<string> HtmlCode { get; set; }
 
     /// <summary>
     /// Creates a new custom page element with the given (first) line of code.
     /// </summary>
     public CustomElement(string htmlCode)
-        => HtmlCode = new List<string> { htmlCode };
+        => HtmlCode = [htmlCode];
 
     /// <summary>
     /// Creates a new custom page element with the given lines of code.
@@ -35,7 +35,7 @@ public class CustomElement : IPageElement
     /// Creates a new custom page element with the given lines of code.
     /// </summary>
     public CustomElement(params string[] htmlCode)
-        => HtmlCode = htmlCode.ToList();
+        => HtmlCode = [.. htmlCode];
 
     //documentation inherited from IPageElement
     public override IEnumerable<string> Export()

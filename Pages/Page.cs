@@ -16,41 +16,41 @@ public class Page : IPage
     /// The list of styles that will be sent.<br/>
     /// Default: empty list
     /// </summary>
-    public List<IStyle> Styles = new();
+    public List<IStyle> Styles = [];
 
     /// <summary>
     /// The list of scripts that will be sent.<br/>
     /// Default: empty list
     /// </summary>
-    public List<IScript> Scripts = new();
+    public List<IScript> Scripts = [];
 
     /// <summary>
     /// The list of buttons in the navigation bar.<br/>
     /// Default: empty list, a home button with the current domain will be added if it remains empty when exporting.
     /// </summary>
-    public List<IButton> Navigation = new();
+    public List<IButton> Navigation = [];
 
     /// <summary>
     /// The list of main elements (content).<br/>
     /// Default: empty list
     /// </summary>
-    public List<IPageElement> Elements = new();
+    public List<IPageElement> Elements = [];
 
     /// <summary>
     /// The list of sidebar elements.<br/>
     /// Default: empty list
     /// </summary>
-    public List<IPageElement> Sidebar = new();
+    public List<IPageElement> Sidebar = [];
 
     /// <summary>
     /// The list of things to preload.<br/>
     /// Default: empty list
     /// </summary>
-    public List<Preload> Preloads = new();
+    public List<Preload> Preloads = [];
 
     /// <summary>
     /// Whether to send a footer (=false) or not (=true).<br/>
-    /// Default: false (sends a default footer with a copyring notice)
+    /// Default: false (sends a default footer with a copyright notice)
     /// </summary>
     public bool HideFooter = false;
 
@@ -76,7 +76,7 @@ public class Page : IPage
     /// Custom lines to be added to the HTML head.<br/>
     /// Default: empty list
     /// </summary>
-    public List<string> Head = new();
+    public List<string> Head = [];
 
     /// <summary>
     /// Creates a new empty page with the given title.
@@ -101,7 +101,8 @@ public class Page : IPage
     public Page(string title, List<IStyle> styles)
     {
         Title = title;
-        if (styles != null) Styles = styles;
+        if (styles != null)
+            Styles = styles;
     }
 
     //documentation inherited from IPage
@@ -173,9 +174,7 @@ public class Page : IPage
             string? mime = Favicon;
             int slash = Favicon.LastIndexOf('/');
             if (slash != -1)
-            {
                 mime = mime.Remove(0, slash + 1);
-            }
             int dot = mime.LastIndexOf('.');
             if (dot != -1)
             {
@@ -186,9 +185,7 @@ public class Page : IPage
             }
 
             if (Server.Cache.TryGetValueAny(out var faviconA, request.Domains.Select(d => d + Favicon).ToArray()))
-            {
                 yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}?t={faviconA.GetModifiedUtc().Ticks}\">";
-            }
             else
             {
                 IPlugin? plugin = PluginManager.GetPlugin(request.Domains, Favicon, out string relPath, out _, out _);
@@ -220,7 +217,7 @@ public class Page : IPage
         yield return $"<body{((error&&checkForErrors)||Onload==null?"":$" onload=\"{Onload}\"")}>";
 
         //navbar
-        var nav = (Navigation.Count != 0) ? Navigation : new List<IButton> { new Button(request.Domain, "/") };
+        var nav = (Navigation.Count != 0) ? Navigation : [new Button(request.Domain, "/")];
         yield return "\t<div class=\"nav\">";
         foreach (IButton n in nav)
             yield return "\t\t" + n.Export();
@@ -240,10 +237,8 @@ public class Page : IPage
         yield return "\t\t<div class=\"content\">";
         yield return "\t\t\t<div class=\"content-items\">";
         if (request.LoginState == Accounts.LoginState.Banned && Server.Config.Accounts.FailedAttempts.BanMessage != null)
-        {
             foreach (string line in Server.Config.Accounts.FailedAttempts.BanMessage.Export())
                 yield return "\t\t\t\t" + line;
-        }
         if (error && checkForErrors)
         {
             if (request.Status == 301 || request.Status == 302)
@@ -257,28 +252,23 @@ public class Page : IPage
             {
                 List<IContent> content;
                 if (request.Status == 500 && request.Exception != null && request.IsAdmin())
-                {
-                    content = new List<IContent>
-                {
-                    new Paragraph((request.Exception.GetType().FullName??"Unknown").HtmlSafe()),
-                    new Heading("Message"), new Paragraph(request.Exception.Message.HtmlSafe()),
-                    new Heading("StackTrace"), new Paragraph((request.Exception.StackTrace??"Unknown").HtmlSafe())
-                };
-                }
+                    content =
+                    [
+                        new Paragraph((request.Exception.GetType().FullName??"Unknown").HtmlSafe()),
+                        new Heading("Message"), new Paragraph(request.Exception.Message.HtmlSafe()),
+                        new Heading("StackTrace"), new Paragraph((request.Exception.StackTrace??"Unknown").HtmlSafe())
+                    ];
                 else if (Server.Config.StatusMessages.TryGetValue(request.Status, out var statusMessage))
-                    content = new List<IContent> { new Paragraph(statusMessage) };
-                else content = new List<IContent>();
+                    content = [new Paragraph(statusMessage)];
+                else content = [];
 
                 foreach (string line in new HeadingElement($"Error {request.Status}", content, "red").Export())
                     yield return "\t\t\t\t" + line;
             }
         }
-        else
-        {
-            foreach (IPageElement e in Elements)
-                foreach (string line in e.Export())
-                    yield return "\t\t\t\t" + line;
-        }
+        else foreach (IPageElement e in Elements)
+            foreach (string line in e.Export())
+                yield return "\t\t\t\t" + line;
         yield return "\t\t\t</div>";
 
         //footer
@@ -286,17 +276,13 @@ public class Page : IPage
         {
             if (!Server.Config.Domains.CopyrightNames.TryGetValueAny(out var copyright, request.Domains))
                 copyright = request.Domain;
-            List<IContent> footerContent = new();
+            List<IContent> footerContent = [];
             if (copyright != null)
-            {
                 footerContent.Add(new Paragraph($"Copyright {DateTime.UtcNow.Year} {copyright} - All other trademarks, screenshots, logos and copyrights are the property of their respective owners."));
-            }
             footerContent.Add(new Paragraph("Powered by <a href=\"https://uwap.org/wf\">uwap.org/wf</a>"));
                 
             foreach (string line in new ContainerElement(null, footerContent, "footer").Export())
-            {
                 yield return "\t\t\t" + line;
-            }
         }
         yield return "\t\t</div>";
         yield return "\t</div>";
@@ -319,7 +305,8 @@ public class Page : IPage
     /// </summary>
     public void PopulateSidebar(bool addHeading)
     {
-        if (addHeading) Sidebar.Add(new ContainerElement("Navigation:", ""));
+        if (addHeading)
+            Sidebar.Add(new ContainerElement("Navigation:", ""));
         foreach (IPageElement element in Elements)
         {
             if (element.Id == null)

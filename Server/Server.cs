@@ -22,19 +22,12 @@ public static partial class Server
     /// The current thread's HttpContext or null if no context is assigned.
     /// </summary>
     public static HttpContext? CurrentHttpContext
-    {
-        get
-        {
-            if (ContextAccessor == null)
-                return null;
-            return ContextAccessor.HttpContext;
-        }
-    }
+        => ContextAccessor?.HttpContext;
 
     /// <summary>
     /// Whether the server is in debug mode.
     /// </summary>
-    public static bool DebugMode = false;
+    public static bool DebugMode { get; set; } = false;
 
     /// <summary>
     /// Whether the server is currently running.
@@ -52,9 +45,12 @@ public static partial class Server
     /// </summary>
     public static void Start(bool local = false)
     {
-        if (Running) throw new Exception("Server is already running.");
-        if (Config.HttpPort == null && Config.HttpsPort == null) throw new Exception("At least one port needs to be set.");
-        if (new DirectoryInfo(Directory.GetCurrentDirectory()).Parent == null) throw new Exception("The working directory must not be a root directory.");
+        if (Running)
+            throw new Exception("Server is already running.");
+        if (Config.HttpPort == null && Config.HttpsPort == null)
+            throw new Exception("At least one port needs to be set.");
+        if (new DirectoryInfo(Directory.GetCurrentDirectory()).Parent == null)
+            throw new Exception("The working directory must not be a root directory.");
 
         if (Config.HttpsPort != null)
         {
@@ -78,28 +74,22 @@ public static partial class Server
         {
             if (Config.HttpPort != null)
             {
-                if (local) kestrelOptions.ListenLocalhost((int)Config.HttpPort);
+                if (local)
+                    kestrelOptions.ListenLocalhost((int)Config.HttpPort);
                 else kestrelOptions.ListenAnyIP((int)Config.HttpPort);
             }
             if (Config.HttpsPort != null)
             {
-                Action<ListenOptions> options = listenOptions => listenOptions.UseHttps(httpsOptions =>
-                {
-                    httpsOptions.ServerCertificateSelector = (context, dnsName) =>
-                    {
-                        if (dnsName != null && CertificateStore.ContainsKey(dnsName)) return CertificateStore[dnsName].Certificate;
-                        else if (CertificateStore.ContainsKey("any")) return CertificateStore["any"].Certificate;
-                        else return null;
-                    };
-                });
-                if (local) kestrelOptions.ListenLocalhost((int)Config.HttpsPort, options);
-                else kestrelOptions.ListenAnyIP((int)Config.HttpsPort, options);
+                if (local)
+                    kestrelOptions.ListenLocalhost((int)Config.HttpsPort, ConfigureKestrel);
+                else kestrelOptions.ListenAnyIP((int)Config.HttpsPort, ConfigureKestrel);
             }
         });
 
         //enable/disable asp.net logs
-        if (Config.Log.AspNet) builder.Services.AddLogging(logging => logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning));
-        else builder.Services.AddLogging(logging => logging.ClearProviders());
+        builder.Services.AddLogging(Config.Log.AspNet
+            ? logging => logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning)
+            : logging => logging.ClearProviders());
 
         //context accessor part 1
         builder.Services.AddHttpContextAccessor();
@@ -114,7 +104,8 @@ public static partial class Server
         App.UseMiddleware<Middleware>();
 
         //start worker immediately
-        if (Config.WorkerInterval >= 0) Worker.Change(0, Timeout.Infinite);
+        if (Config.WorkerInterval >= 0)
+            Worker.Change(0, Timeout.Infinite);
 
         //run :)
         if (Config.Log.Startup)
@@ -123,13 +114,26 @@ public static partial class Server
         App.Run();
     }
 
+    private static void ConfigureKestrel(ListenOptions listenOptions) => listenOptions.UseHttps(httpsOptions =>
+    {
+        httpsOptions.ServerCertificateSelector = (context, domain) =>
+        {
+            if (domain != null && CertificateStore.TryGetValue(domain, out CertificateEntry? c1))
+                return c1.Certificate;
+            else if (CertificateStore.TryGetValue("any", out CertificateEntry? c2))
+                return c2.Certificate;
+            else return null;
+        };
+    });
+
     /// <summary>
     /// Creates a new thread to gracefully stop the server and exit the program while finishing the current thread's request.<br/>
     /// If doNotRestart is true, the server will tell the surrounding wrapper (if present) not to restart the program after it exited.
     /// </summary>
     public static void Exit(bool doNotRestart)
     {
-        if (doNotRestart) Console.WriteLine("wrapper set AutoRestart=false");
+        if (doNotRestart)
+            Console.WriteLine("wrapper set AutoRestart=false");
         new Thread(Exit).Start();
     }
 

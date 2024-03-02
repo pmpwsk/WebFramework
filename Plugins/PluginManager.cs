@@ -10,7 +10,7 @@ public static class PluginManager
     /// <summary>
     /// The structure that stores all of the plugins.
     /// </summary>
-    private static PluginMap Plugins = new();
+    private readonly static PluginMap Plugins = new();
 
     /// <summary>
     /// Finds the plugin that most closely matches the given path for any of the given domains and returns it and the relative path that is left over (rest), or returns null if no matching plugin was found.<br/>
@@ -42,19 +42,6 @@ public static class PluginManager
         return result.Item1;
     }
 
-    /*This is no longer used as it has been moved to the middleware in order to allow file serving!
-    /// <summary>
-    /// Handles the given page request with the plugin that most closely matches the given path for any of the given domains, or does nothing and returns false if no matching plugin was found.<br/>
-    /// Domains should be sorted by their priority among plugins with the same depth (the most relevant domain should be first).
-    /// </summary>
-    public static async Task<bool> Handle(List<string> domains, string path, AppRequest req)
-    {
-        var plugin = GetPlugin(domains, path, out string relPath, out string pathPrefix);
-        if (plugin == null) return false;
-        await plugin.Handle(req, relPath, pathPrefix);
-        return true;
-    }*/
-
     /// <summary>
     /// Handles the given API request with the plugin that most closely matches the given path for any of the given domains, or does nothing and returns false if no matching plugin was found.<br/>
     /// Domains should be sorted by their priority among plugins with the same depth (the most relevant domain should be first).
@@ -62,7 +49,8 @@ public static class PluginManager
     public static async Task<bool> Handle(string path, ApiRequest req)
     {
         var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix, out _);
-        if (plugin == null) return false;
+        if (plugin == null)
+            return false;
         await plugin.Handle(req, relPath, pathPrefix);
         return true;
     }
@@ -74,7 +62,8 @@ public static class PluginManager
     public static async Task<bool> Handle(string path, DownloadRequest req)
     {
         var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix, out _);
-        if (plugin == null) return false;
+        if (plugin == null)
+            return false;
         await plugin.Handle(req, relPath, pathPrefix);
         return true;
     }
@@ -86,7 +75,8 @@ public static class PluginManager
     public static async Task<bool> Handle(string path, PostRequest req)
     {
         var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix, out _);
-        if (plugin == null) return false;
+        if (plugin == null)
+            return false;
         await plugin.Handle(req, relPath, pathPrefix);
         return true;
     }
@@ -98,7 +88,8 @@ public static class PluginManager
     public static async Task<bool> Handle(string path, UploadRequest req)
     {
         var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix, out _);
-        if (plugin == null) return false;
+        if (plugin == null)
+            return false;
         await plugin.Handle(req, relPath, pathPrefix);
         return true;
     }
@@ -110,7 +101,8 @@ public static class PluginManager
     public static async Task<bool> Handle(string path, EventRequest req)
     {
         var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix, out _);
-        if (plugin == null) return false;
+        if (plugin == null)
+            return false;
         await plugin.Handle(req, relPath, pathPrefix);
         return true;
     }
@@ -134,14 +126,11 @@ public static class PluginManager
     /// </summary>
     public static async Task Work()
     {
-        Dictionary<IPlugin, string> plugins = new();
+        Dictionary<IPlugin, string> plugins = [];
         foreach (var p in Plugins.Children)
-        {
             AddPlugins(plugins, p.Key, p.Value);
-        }
 
         foreach (var p in plugins)
-        {
             try
             {
                 await p.Key.Work();
@@ -150,8 +139,6 @@ public static class PluginManager
             {
                 Console.WriteLine($"Error calling the worker method for plugin at '{p.Value}': {ex.Message}");
             }
-        }
-
     }
 
     /// <summary>
@@ -162,12 +149,9 @@ public static class PluginManager
     {
         Dictionary<IPlugin, string> plugins = [];
         foreach (var p in Plugins.Children)
-        {
             AddPlugins(plugins, p.Key, p.Value);
-        }
 
         foreach (var p in plugins)
-        {
             try
             {
                 await p.Key.Backup(id, basedOnIds);
@@ -176,8 +160,6 @@ public static class PluginManager
             {
                 Console.WriteLine($"Error calling the backup method for plugin at '{p.Value}': {ex.Message}");
             }
-        }
-
     }
 
     /// <summary>
@@ -188,12 +170,9 @@ public static class PluginManager
     {
         Dictionary<IPlugin, string> plugins = [];
         foreach (var p in Plugins.Children)
-        {
             AddPlugins(plugins, p.Key, p.Value);
-        }
 
         foreach (var p in plugins)
-        {
             try
             {
                 await p.Key.Restore(ids);
@@ -202,8 +181,6 @@ public static class PluginManager
             {
                 Console.WriteLine($"Error calling the restore method for plugin at '{p.Value}': {ex.Message}");
             }
-        }
-
     }
 
     /// <summary>
@@ -212,15 +189,11 @@ public static class PluginManager
     private static void AddPlugins(Dictionary<IPlugin,string> plugins, string name, PluginMap map)
     {
         if (map.Plugin != null)
-        {
             if (!plugins.ContainsKey(map.Plugin))
                 plugins[map.Plugin] = name;
-        }
 
         foreach (var p in map.Children)
-        {
             AddPlugins(plugins, $"{name}/{p.Key}", p.Value);
-        }
     }
 
     /// <summary>

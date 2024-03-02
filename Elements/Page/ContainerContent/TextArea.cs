@@ -11,10 +11,16 @@ public class TextArea : IContent
         get
         {
             List<string> properties = [];
-            if (Placeholder != "" && Placeholder != null) properties.Add($"placeholder=\"{Placeholder.HtmlValueSafe()}\"");
-            if (Rows != null) properties.Add($"rows=\"{Rows}\"");
-            if (Autofocus) properties.Add("autofocus");
-            if (OnInput != null) properties.Add($"oninput=\"{OnInput.HtmlValueSafe()}\"");
+
+            if (Placeholder != "" && Placeholder != null)
+                properties.Add($"placeholder=\"{Placeholder.HtmlValueSafe()}\"");
+            if (Rows != null)
+                properties.Add($"rows=\"{Rows}\"");
+            if (Autofocus)
+                properties.Add("autofocus");
+            if (OnInput != null)
+                properties.Add($"oninput=\"{OnInput.HtmlValueSafe()}\"");
+
             return string.Join(' ', properties);
         }
     }

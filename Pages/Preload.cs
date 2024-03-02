@@ -42,10 +42,14 @@ public class Preload
         if (Type == null)
         {
             string extension = Url;
-            if (extension.Contains('/')) extension = extension.Remove(0, extension.LastIndexOf('/')+1);
-            if (extension.Contains('.')) extension = extension.Remove(0, extension.LastIndexOf('.'));
+            if (extension.Contains('/'))
+                extension = extension.Remove(0, extension.LastIndexOf('/')+1);
+            if (extension.Contains('.'))
+                extension = extension.Remove(0, extension.LastIndexOf('.'));
             else extension = "";
-            if (Server.Config.MimeTypes.ContainsKey(extension)) Type = Server.Config.MimeTypes[extension];
+
+            if (Server.Config.MimeTypes.TryGetValue(extension, out string? mimeType))
+                Type = mimeType;
         }
     }
 

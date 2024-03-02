@@ -8,7 +8,7 @@ internal class PluginMap
     /// <summary>
     /// The dictionary of nodes that follow the current node (key is the next segment, value is the plugin map for it)-.
     /// </summary>
-    public Dictionary<string, PluginMap> Children = new();
+    public Dictionary<string, PluginMap> Children = [];
 
     /// <summary>
     /// The plugin that has the URL ending with the segment of this node or null if no plugin has been mapped to this exact URL.
@@ -43,15 +43,14 @@ internal class PluginMap
         if (!segments.Any())
         {
             Plugin = null;
-            if (!Children.Any()) return true;
+            if (Children.Count == 0)
+                return true;
             else return false;
         }
         else if (Children.TryGetValue(segments.First(), out var child) && child.Unmap(segments.Skip(1)))
             Children.Remove(segments.First());
 
-        if (Plugin == null && !Children.Any())
-            return true;
-        else return false;
+        return Plugin == null && Children.Count == 0;
     }
 
     /// <summary>
@@ -61,16 +60,10 @@ internal class PluginMap
     public void GetPlugins(Dictionary<int,Tuple<IPlugin,string>> results, int depth, IEnumerable<string> segments, string domain)
     {
         if (Plugin != null)
-        {
             if (!results.ContainsKey(depth))
-            {
                 results.Add(depth, new(Plugin,domain));
-            }
-        }
         
         if (segments.Any() && Children.TryGetValue(segments.First(), out var child))
-        {
             child.GetPlugins(results, depth+1, segments.Skip(1), domain);
-        }
     }
 }

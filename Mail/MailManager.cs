@@ -12,7 +12,7 @@ public static partial class MailManager
     /// The domain that should be used by this mail server in protocol welcome messages, outgoing mails and more.<br/>
     /// Default: null
     /// </summary>
-    public static string? ServerDomain = null;
+    public static string? ServerDomain { get; set; } = null;
 
     /// <summary>
     /// The DNS servers that should be used to look up mail servers (to send mail and evaluate mail authentication).<br/>
@@ -20,11 +20,7 @@ public static partial class MailManager
     /// </summary>
     public static IPEndPoint[]? DnsServers
     {
-        set
-        {
-            if (value == null) DnsLookup = new();
-            else DnsLookup = new(new LookupClientOptions(value));
-        }
+        set => DnsLookup = value == null ? new() : new(new LookupClientOptions(value));
     }
 
     /// <summary>
@@ -32,15 +28,13 @@ public static partial class MailManager
     /// This is meant to be used for the DnsServers setting.
     /// </summary>
     public static IPEndPoint[] DnsServersCloudflare
-    {
-        get =>
+        =>
         [
             NameServer.CloudflareIPv6,
             NameServer.Cloudflare2IPv6,
             NameServer.Cloudflare,
             NameServer.Cloudflare2
         ];
-    }
 
     /// <summary>
     /// The DNS lookup object that should be used to look up mail servers (to send mail and evaluate mail authentication).

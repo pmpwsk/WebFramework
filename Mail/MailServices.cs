@@ -23,20 +23,19 @@ public static partial class MailManager
             {
                 try
                 {
-                    if (HandleMail == null) return SmtpResponse.MailboxUnavailable;
+                    if (HandleMail == null)
+                        return SmtpResponse.MailboxUnavailable;
 
                     await using var stream = new MemoryStream();
 
                     var position = buffer.GetPosition(0);
                     while (buffer.TryGet(ref position, out var memory))
-                    {
                         await stream.WriteAsync(memory, cancellationToken);
-                    }
 
                     stream.Position = 0;
 
                     var message = await MimeKit.MimeMessage.LoadAsync(stream, cancellationToken);
-                    return HandleMail.Invoke(context, message, new MailConnectionData(context, message));
+                    return HandleMail.Invoke(context, message, new MailConnectionData(context));
                 }
                 catch (Exception ex)
                 {
@@ -60,6 +59,7 @@ public static partial class MailManager
                     throw new SmtpResponseException(SmtpResponse.MailboxNameNotAllowed);
                 else if (size > SizeLimit)
                     throw new SmtpResponseException(SmtpResponse.SizeLimitExceeded);
+
                 return Task.FromResult(true);
             }
 

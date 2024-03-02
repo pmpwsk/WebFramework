@@ -10,7 +10,7 @@ public class EventRequest(LayerRequestData data) : IRequest(data)
     /// <summary>
     /// Lock that assures that only one thread at a time can send a message.
     /// </summary>
-    private ReaderWriterLockSlim Lock = new();
+    private readonly ReaderWriterLockSlim Lock = new();
 
     /// <summary>
     /// Sends the given message to the client as an event.
@@ -30,7 +30,7 @@ public class EventRequest(LayerRequestData data) : IRequest(data)
     }
 
     /// <summary>
-    /// Sends ":keepalive:" every 30 seconds as long as the given cancallation token (if present) hasn't been cancelled.
+    /// Sends ":keepalive:" every 30 seconds as long as the given cancellation token (if present) hasn't been cancelled.
     /// </summary>
     public async Task KeepAlive(CancellationToken cancellationToken = default)
     {

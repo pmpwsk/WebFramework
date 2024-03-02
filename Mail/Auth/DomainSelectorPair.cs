@@ -5,14 +5,10 @@ public static partial class MailAuth
     /// <summary>
     /// Contains the domain and selector for a DKIM signature.
     /// </summary>
-    public readonly struct DomainSelectorPair
+    public readonly struct DomainSelectorPair(string domain, string selector)
     {
-        public readonly string Domain, Selector;
+        public readonly string Domain = domain;
 
-        public DomainSelectorPair(string domain, string selector)
-        {
-            Domain = domain;
-            Selector = selector;
-        }
+        public readonly string Selector = selector;
     }
 }

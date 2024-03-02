@@ -10,12 +10,12 @@ public static class Tables
     /// <summary>
     /// The dictionary of all imported tables (value) along with their names (key).
     /// </summary>
-    public static Dictionary<string,ITable> Dictionary = new();
+    public static Dictionary<string,ITable> Dictionary { get; set; } = [];
 
     /// <summary>
     /// All characters that are allowed as table names and keys.
     /// </summary>
-    public static string KeyChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-+.";
+    public static string KeyChars { get; set; } = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-+.";
 
     /// <summary>
     /// Checks all tables for errors and attempts to fix them.<br/>

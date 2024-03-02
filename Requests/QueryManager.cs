@@ -6,53 +6,42 @@ namespace uwap.WebFramework;
 /// <summary>
 /// Manages the query of an IRequest.
 /// </summary>
-public class QueryManager
+public class QueryManager(IQueryCollection query)
 {
     /// <summary>
     /// The query object.
     /// </summary>
-    private IQueryCollection Query;
-
-    /// <summary>
-    /// Creates a new object to manage the query of an IRequest.
-    /// </summary>
-    public QueryManager(IQueryCollection query)
-    {
-        Query = query;
-    }
+    private readonly IQueryCollection Query = query;
 
     /// <summary>
     /// Gets the value of the query entry with the given key. If no such query entry exists, an exception is thrown.
     /// </summary>
     public string this[string key]
-    {
-        get
-        {
-            string? value = Query[key];
-            if (value == null) throw new ArgumentException("Query does not contain the provided key.");
-            return value;
-        }
-    }
+        => (Query.TryGetValue(key, out var v) ? (string?)v : null) ?? throw new ArgumentException("Query does not contain the provided key.");
 
     /// <summary>
     /// Whether the query contains an entry with the given key.
     /// </summary>
-    public bool ContainsKey(string key) => Query.ContainsKey(key);
+    public bool ContainsKey(string key)
+        => Query.ContainsKey(key);
 
     /// <summary>
     /// Whether the query contains entries for all of the given keys.
     /// </summary>
-    public bool ContainsKeys(params string[] keys) => keys.All(Query.ContainsKey);
+    public bool ContainsKeys(params string[] keys)
+        => keys.All(Query.ContainsKey);
 
     /// <summary>
     /// Returns the value of the query entry with the given key or null if no such entry exists.
     /// </summary>
-    public string? TryGet(string key) => Query.TryGetValue(key, out var value) ? ((string?)value)??"" : null;
+    public string? TryGet(string key)
+        => Query.TryGetValue(key, out var value) ? ((string?)value)??"" : null;
 
     /// <summary>
     /// Returns the value of the query entry with the given key and type, or null/default if no such entry exists.
     /// </summary>
-    public T? TryGet<T>(string key) => TryGetValue<T>(key, out var value) ? value : default;
+    public T? TryGet<T>(string key)
+        => TryGetValue<T>(key, out var value) ? value : default;
 
     /// <summary>
     /// Returns whether the query contains an entry with the given key and the associated value as an out-argument if true.

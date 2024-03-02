@@ -52,39 +52,38 @@ public abstract class IRequest(LayerRequestData data)
     /// The associated user. If no user is associated with the request, an exception is thrown.<br/>
     /// A user is only associated if LoginState is not None or Banned. This can also be checked by getting bool IRequest.HasUser.
     /// </summary>
-    public User User => _User ?? throw new Exception("This request doesn't contain a user.");
+    public User User
+        => _User ?? throw new Exception("This request doesn't contain a user.");
 
     /// <summary>
     /// Whether a user is associated with the request.
     /// </summary>
-    public bool HasUser => _User != null;
+    public bool HasUser
+        => _User != null;
 
     /// <summary>
     /// The associated user table. If no table is assigned to requests to this domain, an exception is thrown.
     /// </summary>
-    public UserTable UserTable => _UserTable ?? throw new Exception("This request isn't referencing a user table.");
+    public UserTable UserTable
+        => _UserTable ?? throw new Exception("This request isn't referencing a user table.");
 
     /// <summary>
     /// Whether a user table is assigned to requests to this domain.
     /// </summary>
-    public bool HasUserTable => _UserTable != null;
+    public bool HasUserTable
+        => _UserTable != null;
 
     /// <summary>
     /// The requested path.
     /// </summary>
     public string Path
-    {
-        get
-        {
-            if (Context.Request.Path.Value == null) return "/";
-            else return Context.Request.Path.Value;
-        }
-    }
+        => Context.Request.Path.Value ?? "/";
 
     /// <summary>
     /// The requested domain.
     /// </summary>
-    public string Domain => Context.Domain();
+    public string Domain
+        => Context.Domain();
 
     /// <summary>
     /// The response status to be sent.
@@ -98,7 +97,8 @@ public abstract class IRequest(LayerRequestData data)
     /// <summary>
     /// Redirects the client to the given URL. 'permanent' (default: false) indicates whether the page has been moved permanently or just temporarily.
     /// </summary>
-    public void Redirect(string url, bool permanent = false) => Context.Response.Redirect(url, permanent);
+    public void Redirect(string url, bool permanent = false)
+        => Context.Response.Redirect(url, permanent);
 
     /// <summary>
     /// The URL that is specified in the 'redirect' parameter, or "/" if no such parameter has been provided.
@@ -136,9 +136,7 @@ public abstract class IRequest(LayerRequestData data)
     /// Whether the user is fully logged in.
     /// </summary>
     public bool LoggedIn
-    {
-        get => LoginState == LoginState.LoggedIn;
-    }
+        => LoginState == LoginState.LoggedIn;
 
     /// <summary>
     /// Whether the user is an administrator (access level = ushort.MaxValue). Also returns false if the client isn't fully logged in.
@@ -153,8 +151,8 @@ public abstract class IRequest(LayerRequestData data)
     internal async Task WriteStatus()
     {
         Context.Response.ContentType = "text/plain";
-        if (Status == 500 && Exception != null && IsAdmin())
-            await Context.Response.WriteAsync($"{Exception.GetType().FullName??"Exception"}\n{Exception.Message}\n{Exception.StackTrace??"No stacktrace"}");
-        else await Context.Response.WriteAsync(Parsers.StatusMessage(Status));
+        await Context.Response.WriteAsync((Status == 500 && Exception != null && IsAdmin())
+            ? $"{Exception.GetType().FullName??"Exception"}\n{Exception.Message}\n{Exception.StackTrace??"No stacktrace"}"
+            : Parsers.StatusMessage(Status));
     }
 }

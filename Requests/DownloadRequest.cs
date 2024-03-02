@@ -33,9 +33,7 @@ public class DownloadRequest(LayerRequestData data) : IRequest(data)
         {
             Finished = true;
             if (Status == 200)
-            {
                 Status = 404;
-            }
             await WriteStatus();
         }
     }
@@ -52,7 +50,8 @@ public class DownloadRequest(LayerRequestData data) : IRequest(data)
             if (filename.Contains('.'))
             {
                 string extension = filename.Remove(0, filename.LastIndexOf('.'));
-                if (Server.Config.MimeTypes.TryGetValue(extension, out string? type)) Context.Response.ContentType = type;
+                if (Server.Config.MimeTypes.TryGetValue(extension, out string? type))
+                    Context.Response.ContentType = type;
             }
             Context.Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{filename}\"");
             await Context.Response.SendFileAsync(path);
@@ -65,13 +64,15 @@ public class DownloadRequest(LayerRequestData data) : IRequest(data)
     /// </summary>
     public async Task SendBytes(byte[] bytes, string filename)
     {
-        if (Finished) throw new Exception("Something has already been sent.");
+        if (Finished)
+            throw new Exception("Something has already been sent.");
         else
         {
             if (filename.Contains('.'))
             {
                 string extension = filename.Remove(0, filename.LastIndexOf('.'));
-                if (Server.Config.MimeTypes.TryGetValue(extension, out string? type)) Context.Response.ContentType = type;
+                if (Server.Config.MimeTypes.TryGetValue(extension, out string? type))
+                    Context.Response.ContentType = type;
             }
             Context.Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{filename}\"");
             await Context.Response.BodyWriter.WriteAsync(bytes);

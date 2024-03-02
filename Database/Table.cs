@@ -20,23 +20,24 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
     /// The dictionary of table entries (value) and their keys (key).<br/>
     /// Default: empty dictionary
     /// </summary>
-    protected Dictionary<string, TableEntry<T>> Data = new();
+    protected Dictionary<string, TableEntry<T>> Data = [];
 
     /// <summary>
     /// Creates a new table object with the given name (nothing else is done).
     /// </summary>
     protected Table(string name)
-    {
-        Name = name;
-    }
+        => Name = name;
 
     /// <summary>
     /// Creates a new table with the given name (shouldn't contain characters that are illegal in the target file system).
     /// </summary>
     protected static Table<T> Create(string name)
     {
-        if (!name.All(Tables.KeyChars.Contains)) throw new Exception($"This name contains characters that are not part of Tables.KeyChars ({Tables.KeyChars}).");
-        if (Directory.Exists("../Database/" + name)) throw new Exception("A table with this name already exists, try importing it instead.");
+        if (!name.All(Tables.KeyChars.Contains))
+            throw new Exception($"This name contains characters that are not part of Tables.KeyChars ({Tables.KeyChars}).");
+        if (Directory.Exists("../Database/" + name))
+            throw new Exception("A table with this name already exists, try importing it instead.");
+
         Directory.CreateDirectory("../Database/" + name);
         Table<T> table = new(name);
         Tables.Dictionary[name] = table;
@@ -49,9 +50,12 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
     /// <param name="skipBroken">Whether to skip loading entries that failed to read (otherwise an exception is thrown).</param>
     public static Table<T> Import(string name, bool skipBroken = false)
     {
-        if (Tables.Dictionary.TryGetValue(name, out ITable? table)) return (Table<T>)table;
-        if (!name.All(Tables.KeyChars.Contains)) throw new Exception($"This name contains characters that are not part of Tables.KeyChars ({Tables.KeyChars}).");
-        if (!Directory.Exists("../Database/" + name)) return Create(name);
+        if (Tables.Dictionary.TryGetValue(name, out ITable? table))
+            return (Table<T>)table;
+        if (!name.All(Tables.KeyChars.Contains))
+            throw new Exception($"This name contains characters that are not part of Tables.KeyChars ({Tables.KeyChars}).");
+        if (!Directory.Exists("../Database/" + name))
+            return Create(name);
 
         if (Directory.Exists("../Database/Buffer/"+name) && Directory.GetFiles("../Database/Buffer/"+name, "*.json", SearchOption.AllDirectories).Length > 0)
             Console.WriteLine($"The database buffer of table '{name}' contains an entry because a database operation was interrupted. Please manually merge the files and delete the file from the buffer.");
@@ -68,7 +72,7 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
     /// <param name="skipBroken">Whether to skip loading entries that failed to read (otherwise an exception is thrown).</param>
     public virtual void Reload(bool skipBroken = false)
     {
-        Dictionary<string, TableEntry<T>> data = new();
+        Dictionary<string, TableEntry<T>> data = [];
 
         foreach (FileInfo file in new DirectoryInfo("../Database/" + Name).EnumerateFiles("*.json"))
         {
@@ -91,7 +95,8 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
             }
             catch
             {
-                if (!skipBroken) throw new Exception($"Key {key} could not be loaded.");
+                if (!skipBroken)
+                    throw new Exception($"Key {key} could not be loaded.");
             }
         }
 
@@ -111,7 +116,7 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
             result[entry.Key] = function(entry.Value.Value);
             entry.Value.Value.ContainingEntry = null;
         }
-        Data = new Dictionary<string, TableEntry<T>>(); //remove reference for garbage collector
+        Data = []; //remove reference for garbage collector
         Tables.Dictionary[Name] = result;
         return result;
     }
@@ -121,15 +126,15 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
     /// </summary>
     public void RenameTable(string newName)
     {
-        if (!newName.All(Tables.KeyChars.Contains)) throw new Exception($"This name contains characters that are not part of Tables.KeyChars ({Tables.KeyChars}).");
+        if (!newName.All(Tables.KeyChars.Contains))
+            throw new Exception($"This name contains characters that are not part of Tables.KeyChars ({Tables.KeyChars}).");
+
         Directory.Move("../Database/"+Name, "../Database/"+ newName);
         Tables.Dictionary[newName] = this;
         Tables.Dictionary.Remove(Name);
         Name = newName;
         foreach (TableEntry<T> entry in Data.Values)
-        {
             entry.Table = newName;
-        }
     }
 
     /// <summary>
@@ -140,7 +145,7 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
         Directory.Delete("../Database/"+Name, true);
         foreach (var entry in Data.Values)
             entry.Value.ContainingEntry = null;
-        Data = new Dictionary<string, TableEntry<T>>(); //remove reference for garbage collector
+        Data = []; //remove reference for garbage collector
         Tables.Dictionary.Remove(Name);
     }
 
@@ -149,7 +154,9 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
     /// </summary>
     public void Rename(string oldKey, string newKey)
     {
-        if (!newKey.All(Tables.KeyChars.Contains)) throw new Exception($"This key contains characters that are not part of Tables.KeyChars ({Tables.KeyChars}).");
+        if (!newKey.All(Tables.KeyChars.Contains))
+            throw new Exception($"This key contains characters that are not part of Tables.KeyChars ({Tables.KeyChars}).");
+
         File.Move($"../Database/{Name}/{oldKey}.json", $"../Database/{Name}/{newKey}.json");
         Data[newKey] = Data[oldKey];
         Data[newKey].Key = newKey;
@@ -161,10 +168,11 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
     /// </summary>
     public virtual bool Delete(string key)
     {
-        if (!Data.ContainsKey(key)) return false;
+        if (!Data.TryGetValue(key, out var e))
+            return false;
 
         File.Delete($"../Database/{Name}/{key}.json");
-        Data[key].Value.ContainingEntry = null;
+        e.Value.ContainingEntry = null;
         Data.Remove(key);
         return true;
     }
@@ -183,10 +191,7 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
     public void CheckAndFix()
     {
         foreach (string key in Data.Keys)
-        {
-            var entry = Data[key];
-            entry.CheckAndFix();
-        }
+            Data[key].CheckAndFix();
     }
 
     /// <summary>
@@ -197,11 +202,11 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
         get => Data[key].Value;
         set
         {
-            if (!key.All(Tables.KeyChars.Contains)) throw new Exception($"This key contains characters that are not part of Tables.KeyChars ({Tables.KeyChars}).");
+            if (!key.All(Tables.KeyChars.Contains))
+                throw new Exception($"This key contains characters that are not part of Tables.KeyChars ({Tables.KeyChars}).");
+            
             if (Data.TryGetValue(key, out var entry))
-            {
                 entry.SetValue(value);
-            }
             else
             {
                 byte[] json = Serialization.Serialize<T>(value);
@@ -216,7 +221,8 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
     /// <summary>
     /// Checks whether an element with the given key exists.
     /// </summary>
-    public bool ContainsKey(string key) => Data.ContainsKey(key);
+    public bool ContainsKey(string key)
+        => Data.ContainsKey(key);
 
     /// <summary>
     /// Checks whether an element with the given key exists and returns the found element using the out-argument.
@@ -244,12 +250,14 @@ public class Table<T> : ITable, IEnumerable<KeyValuePair<string,T>> where T : IT
     /// <summary>
     /// Returns all keys as a new list.
     /// </summary>
-    public List<string> ListKeys() => Data.Keys.ToList();
+    public List<string> ListKeys()
+        => [.. Data.Keys];
 
     /// <summary>
     /// Returns all values as a new list.
     /// </summary>
-    public List<T> ListValues() => Data.Values.Select(x => x.Value).ToList();
+    public List<T> ListValues()
+        => Data.Values.Select(x => x.Value).ToList();
 
     /// <summary>
     /// Enumerates other files that are associated with a given entry while it is locked (for backups).

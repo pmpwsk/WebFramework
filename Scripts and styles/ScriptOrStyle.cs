@@ -96,15 +96,13 @@ public abstract class ScriptOrStyle
     /// Finds the cache entry for the script or style, or returns null if it couldn't be found.
     /// </summary>
     /// <param name="domains">List of accepted domains.</param>
-    private Server.CacheEntry? FindEntry(List<string> domains, string urlWithoutQuery)
+    private static Server.CacheEntry? FindEntry(List<string> domains, string urlWithoutQuery)
     {
         Server.CacheEntry? entry;
         if (urlWithoutQuery.StartsWith("http"))
         {
             string? u = urlWithoutQuery.Remove(0, 4);
-            if (u.StartsWith("://")) u = u.Remove(0, 3);
-            else if (u.StartsWith("s://")) u = u.Remove(0, 4);
-            else u = null;
+            u = u.StartsWith("://") ? u.Remove(0, 3) : (u.StartsWith("s://") ? u.Remove(0, 4) : null);
 
             if (u != null)
             {
@@ -112,22 +110,24 @@ public abstract class ScriptOrStyle
                 if (firstSlash != -1)
                 {
                     string afterSlash = u.Remove(0, firstSlash);
-                    if (afterSlash.StartsWith('/')) afterSlash = afterSlash.Remove(0, 1);
+                    if (afterSlash.StartsWith('/'))
+                        afterSlash = afterSlash.Remove(0, 1);
                     foreach (string domain in domains)
-                        if (Server.Cache.TryGetValue(domain + "/" + afterSlash, out entry)) return entry;
-                    if (Server.Cache.TryGetValue(afterSlash, out entry)) return entry;
+                        if (Server.Cache.TryGetValue(domain + "/" + afterSlash, out entry))
+                            return entry;
+                    if (Server.Cache.TryGetValue(afterSlash, out entry))
+                        return entry;
                 }
             }
         }
         else if (urlWithoutQuery.StartsWith('/'))
         {
             foreach (string domain in domains)
-                if (Server.Cache.TryGetValue(domain + urlWithoutQuery, out entry)) return entry;
+                if (Server.Cache.TryGetValue(domain + urlWithoutQuery, out entry))
+                    return entry;
         }
-        else if (!urlWithoutQuery.Contains('/'))
-        {
-            if (Server.Cache.TryGetValue(urlWithoutQuery, out entry)) return entry;
-        }
+        else if ((!urlWithoutQuery.Contains('/')) && Server.Cache.TryGetValue(urlWithoutQuery, out entry))
+            return entry;
         return null;
     }
 }

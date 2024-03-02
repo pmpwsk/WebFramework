@@ -20,12 +20,12 @@ public static partial class Server
 
                         //handle based on the first segment
                         string prefix = data.Path;
-                        if (prefix.Length <= 1) prefix = "";
+                        if (prefix.Length <= 1)
+                            prefix = "";
                         else
                         {
                             prefix = prefix.Remove(0, 1);
-                            if (prefix.Contains('/')) prefix = prefix.Remove(prefix.IndexOf('/'));
-                            else prefix = "";
+                            prefix = prefix.Contains('/') ? prefix.Remove(prefix.IndexOf('/')) : "";
                         }
                         switch (prefix)
                         {
@@ -38,8 +38,10 @@ public static partial class Server
                                         string path2 = request.Path;
                                         if (path2.StartsWith("/api"))
                                             path2 = path2.Remove(0, 4);
-                                        if (await PluginManager.Handle(path2, request)) { }
-                                        else if (ApiRequestReceived != null) await ApiRequestReceived.Invoke(request);
+                                        if (await PluginManager.Handle(path2, request))
+                                        { }
+                                        else if (ApiRequestReceived != null)
+                                            await ApiRequestReceived.Invoke(request);
                                         else request.Status = 501;
                                     }
                                     catch (Exception ex)
@@ -58,8 +60,10 @@ public static partial class Server
                                         string path2 = request.Path;
                                         if (path2.StartsWith("/dl"))
                                             path2 = path2.Remove(0, 3);
-                                        if (await PluginManager.Handle(path2, request)) { }
-                                        else if (DownloadRequestReceived != null) await DownloadRequestReceived.Invoke(request);
+                                        if (await PluginManager.Handle(path2, request))
+                                        { }
+                                        else if (DownloadRequestReceived != null)
+                                            await DownloadRequestReceived.Invoke(request);
                                         else request.Status = 501;
                                     }
                                     catch (Exception ex)
@@ -79,8 +83,10 @@ public static partial class Server
                                         string path2 = request.Path;
                                         if (path2.StartsWith("/event"))
                                             path2 = path2.Remove(0, 6);
-                                        if (await PluginManager.Handle(path2, request)) { }
-                                        else if (EventRequestReceived != null) await EventRequestReceived.Invoke(request);
+                                        if (await PluginManager.Handle(path2, request))
+                                        { }
+                                        else if (EventRequestReceived != null)
+                                            await EventRequestReceived.Invoke(request);
                                         else request.Status = 501;
                                     }
                                     catch (Exception ex)
@@ -127,9 +133,12 @@ public static partial class Server
                                         else
                                         {
                                             string path2 = request.Path;
-                                            if (path2 == "/") path2 = "";
-                                            if (plugin != null) await plugin.Handle(request, relPath, pathPrefix);
-                                            else if (AppRequestReceived != null) await AppRequestReceived.Invoke(request);
+                                            if (path2 == "/")
+                                                path2 = "";
+                                            if (plugin != null)
+                                                await plugin.Handle(request, relPath, pathPrefix);
+                                            else if (AppRequestReceived != null)
+                                                await AppRequestReceived.Invoke(request);
                                             else request.Status = 501;
                                         }
                                     }
@@ -154,9 +163,12 @@ public static partial class Server
                             try
                             {
                                 string path2 = request.Path;
-                                if (path2 == "/") path2 = "";
-                                if (await PluginManager.Handle(path2, request)) { }
-                                else if (PostRequestReceived != null) await PostRequestReceived.Invoke(request);
+                                if (path2 == "/")
+                                    path2 = "";
+                                if (await PluginManager.Handle(path2, request))
+                                { }
+                                else if (PostRequestReceived != null)
+                                    await PostRequestReceived.Invoke(request);
                                 else request.Status = 501;
                             }
                             catch (Exception ex)
@@ -172,9 +184,12 @@ public static partial class Server
                             try
                             {
                                 string path2 = request.Path;
-                                if (path2 == "/") path2 = "";
-                                if (await PluginManager.Handle(path2, request)) { }
-                                else if (UploadRequestReceived != null) await UploadRequestReceived.Invoke(request);
+                                if (path2 == "/")
+                                    path2 = "";
+                                if (await PluginManager.Handle(path2, request))
+                                { }
+                                else if (UploadRequestReceived != null)
+                                    await UploadRequestReceived.Invoke(request);
                                 else request.Status = 501;
                             }
                             catch (Exception ex)
@@ -187,9 +202,11 @@ public static partial class Server
                     }
                     break;
                 case "HEAD": //just the headers should be returned
-                    data.Context.Response.Headers.Append("Cache-Control", "no-cache, private");
-                    if (data.Path != "/")
-                        data.Status = 404; //currently, only path / is "handled" to allow for web server discovery using HEAD requests
+                    {
+                        data.Context.Response.Headers.Append("Cache-Control", "no-cache, private");
+                        if (data.Path != "/")
+                            data.Status = 404; //currently, only path / is "handled" to allow for web server discovery using HEAD requests
+                    }
                     break;
                 default: //method not supported
                     {
@@ -212,8 +229,10 @@ public static partial class Server
         string path = request.Path;
         if (path.StartsWith("/api"))
             path = path.Remove(0, 4);
-        if (await PluginManager.Handle(path, request)) { }
-        else if (ApiRequestReceived != null) await ApiRequestReceived.Invoke(request);
+        if (await PluginManager.Handle(path, request))
+        { }
+        else if (ApiRequestReceived != null)
+            await ApiRequestReceived.Invoke(request);
         else request.Status = 501;
     }
 
@@ -225,8 +244,10 @@ public static partial class Server
         string path = request.Path;
         if (path.StartsWith("/dl"))
             path = path.Remove(0, 3);
-        if (await PluginManager.Handle(path, request)) { }
-        else if (DownloadRequestReceived != null) await DownloadRequestReceived.Invoke(request);
+        if (await PluginManager.Handle(path, request))
+        { }
+        else if (DownloadRequestReceived != null)
+            await DownloadRequestReceived.Invoke(request);
         else request.Status = 501;
     }
 }

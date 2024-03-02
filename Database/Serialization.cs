@@ -14,7 +14,7 @@ public static class Serialization
     /// <typeparam name="T">The object's type.</typeparam>
     public static byte[] Serialize<T>(T obj)
     {
-        DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T));
+        DataContractJsonSerializer serializer = new(typeof(T));
         using MemoryStream stream = new();
         serializer.WriteObject(stream, obj);
         byte[] json = stream.ToArray();
@@ -46,8 +46,8 @@ public static class Serialization
     /// <param name="updateDatabase">Whether the returned object is different from the originally serialized object (= should be written back to the disk).</param>
     public static User DeserializeUser(byte[] json, out bool updateDatabase)
     {
-        DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(User));
-        using MemoryStream stream = new MemoryStream(json);
+        DataContractJsonSerializer serializer = new(typeof(User));
+        using MemoryStream stream = new(json);
         User result = (User)(serializer.ReadObject(stream) ?? throw new Exception("Failed to deserialize the provided JSON."));
         stream.Close();
         try

@@ -21,12 +21,12 @@ public static partial class MailAuth
             var fields = value.Split(' ', ';').Where(x => x != "");
             if (!fields.Any())
                 continue;
-            if (protocol != null && fields.First().ToLower() != $"v={protocol.ToLower()}")
+            if (protocol != null && !fields.First().Equals($"v={protocol.ToLower()}", StringComparison.CurrentCultureIgnoreCase))
                 continue;
-            List<KeyValuePair<string, string?>> result = new();
+            List<KeyValuePair<string, string?>> result = [];
             foreach (string field in fields)
             {
-                int split = field.IndexOfAny(new[] { '=', ':' });
+                int split = field.IndexOfAny(['=', ':']);
                 if (split == -1)
                     result.Add(new(field, null));
                 else

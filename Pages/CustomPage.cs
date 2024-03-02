@@ -3,44 +3,36 @@
 /// <summary>
 /// An IPage with custom lines for head and body as well as a title string and lists for styles and scripts.
 /// </summary>
-public class CustomPage : IPage
+public class CustomPage(string title) : IPage
 {
     /// <summary>
     /// The title of the page, an extension might be appended.
     /// </summary>
-    public string Title;
+    public string Title = title;
 
     /// <summary>
     /// The list of styles that will be sent.<br/>
     /// Default: empty list
     /// </summary>
-    public List<IStyle> Styles = new();
+    public List<IStyle> Styles = [];
 
     /// <summary>
     /// The list of scripts that will be sent.<br/>
     /// Default: empty list
     /// </summary>
-    public List<IScript> Scripts = new();
+    public List<IScript> Scripts = [];
 
     /// <summary>
     /// The lines of the HTML head that will be sent.<br/>
     /// Default: empty list
     /// </summary>
-    public List<string> HeadLines = new();
+    public List<string> HeadLines = [];
 
     /// <summary>
     /// The lines of the HTML head that will be sent.<br/>
     /// Default: empty list
     /// </summary>
-    public List<string> BodyLines = new();
-
-    /// <summary>
-    /// Creates a new empty page with the given title.
-    /// </summary>
-    public CustomPage(string title)
-    {
-        Title = title;
-    }
+    public List<string> BodyLines = [];
 
     //documentation inherited from IPage
     public IEnumerable<string> Export(AppRequest request)

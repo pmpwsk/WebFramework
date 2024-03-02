@@ -14,26 +14,26 @@ public class Password2
     /// The hash algorithm to use for newly set passwords.<br/>
     /// Default: SHA512
     /// </summary>
-    public static KeyDerivationPrf DefaultAlgorithm = KeyDerivationPrf.HMACSHA512;
+    public static KeyDerivationPrf DefaultAlgorithm { get; set; } = KeyDerivationPrf.HMACSHA512;
 
     /// <summary>
     /// The amount of times the password should be hashed for newly set passwords.<br/>
     /// Default: 1048576 = 2^20
     /// </summary>
-    public static int DefaultPassCount = 1048576;
+    public static int DefaultPassCount { get; set; } = 1048576;
 
     /// <summary>
     /// The length of the salt for newly set passwords.<br/>
     /// Default: 16
     /// </summary>
-    public static int DefaultSaltLength = 16;
+    public static int DefaultSaltLength { get; set; } = 16;
 
     /// <summary>
     /// The length (in bytes) of the hash that gets saved.<br/>
     /// This should correspond to the specified hash algorithm!<br/>
     /// Default: 64
     /// </summary>
-    public static int DefaultHashLength = 64;
+    public static int DefaultHashLength { get; set; } = 64;
 
     /// <summary>
     /// Calculates the hash of the given password using the default hashing parameters.<br/>
@@ -41,7 +41,7 @@ public class Password2
     /// </summary>
     public static void WasteTime(string password)
     {
-        KeyDerivation.Pbkdf2(password, new byte[] { 1, 2, 3, 4, 5 }, DefaultAlgorithm, DefaultPassCount, DefaultHashLength);
+        KeyDerivation.Pbkdf2(password, [1, 2, 3, 4, 5], DefaultAlgorithm, DefaultPassCount, DefaultHashLength);
     }
 
     /// <summary>

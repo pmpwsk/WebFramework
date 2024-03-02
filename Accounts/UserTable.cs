@@ -12,12 +12,12 @@ public class UserTable : Table<User>
     /// <summary>
     /// A cache to quickly find users using their username.
     /// </summary>
-    internal Dictionary<string, User> Usernames = new();
+    internal Dictionary<string, User> Usernames = [];
     
     /// <summary>
     /// A cache to quickly find users using their mail address.
     /// </summary>
-    internal Dictionary<string, User> MailAddresses = new();
+    internal Dictionary<string, User> MailAddresses = [];
 
     /// <summary>
     /// Creates a new user table with the given name (shouldn't contain characters that are illegal in the target file system).
@@ -29,8 +29,11 @@ public class UserTable : Table<User>
     /// </summary>
     protected static new UserTable Create(string name)
     {
-        if (!name.All(Tables.KeyChars.Contains)) throw new Exception($"This name contains characters that are not part of Tables.KeyChars ({Tables.KeyChars}).");
-        if (Directory.Exists("../Database/" + name)) throw new Exception("A table with this name already exists, try importing it instead.");
+        if (!name.All(Tables.KeyChars.Contains))
+            throw new Exception($"This name contains characters that are not part of Tables.KeyChars ({Tables.KeyChars}).");
+        if (Directory.Exists("../Database/" + name))
+            throw new Exception("A table with this name already exists, try importing it instead.");
+
         Directory.CreateDirectory("../Database/" + name);
         UserTable table = new(name);
         Tables.Dictionary[name] = table;
@@ -43,9 +46,12 @@ public class UserTable : Table<User>
     /// <param name="skipBroken">Whether to skip loading entries that failed to read (otherwise an exception is thrown).</param>
     public static new UserTable Import(string name, bool skipBroken = false)
     {
-        if (Tables.Dictionary.TryGetValue(name, out ITable? table)) return (UserTable)table;
-        if (!name.All(Tables.KeyChars.Contains)) throw new Exception($"This name contains characters that are not part of Tables.KeyChars ({Tables.KeyChars}).");
-        if (!Directory.Exists("../Database/" + name)) return Create(name);
+        if (Tables.Dictionary.TryGetValue(name, out ITable? table))
+            return (UserTable)table;
+        if (!name.All(Tables.KeyChars.Contains))
+            throw new Exception($"This name contains characters that are not part of Tables.KeyChars ({Tables.KeyChars}).");
+        if (!Directory.Exists("../Database/" + name))
+            return Create(name);
 
         if (Directory.Exists("../Database/Buffer/" + name) && Directory.GetFiles("../Database/Buffer/" + name, "*.json", SearchOption.AllDirectories).Length > 0)
             Console.WriteLine($"The database buffer of table '{name}' contains an entry because a database operation was interrupted. Please manually merge the files and delete the file from the buffer.");
@@ -62,7 +68,7 @@ public class UserTable : Table<User>
     /// <param name="skipBroken">Whether to skip loading entries that failed to read (otherwise an exception is thrown).</param>
     public override void Reload(bool skipBroken = false)
     {
-        Dictionary<string, TableEntry<User>> data = new();
+        Dictionary<string, TableEntry<User>> data = [];
 
         foreach (FileInfo file in new DirectoryInfo("../Database/" + Name).EnumerateFiles("*.json"))
         {
@@ -90,13 +96,14 @@ public class UserTable : Table<User>
             }
             catch
             {
-                if (!skipBroken) throw new Exception($"Key {key} could not be loaded.");
+                if (!skipBroken)
+                    throw new Exception($"Key {key} could not be loaded.");
             }
         }
 
         Data = data;
 
-        Dictionary<string, User> usernames = new(), mailAddresses = new();
+        Dictionary<string, User> usernames = [], mailAddresses = [];
         foreach (var entry in Data.Values)
         {
             usernames[entry.Value.Username] = entry.Value;
@@ -130,7 +137,9 @@ public class UserTable : Table<User>
     /// </summary>
     public override bool Delete(string key)
     {
-        if (!Data.TryGetValue(key, out var entry)) return false;
+        if (!Data.TryGetValue(key, out var entry))
+            return false;
+
         Usernames.Remove(entry.Value.Username);
         MailAddresses.Remove(entry.Value.MailAddress);
         base.Delete(key);
@@ -175,14 +184,13 @@ public class UserTable : Table<User>
             return LoginState.Banned;
         }
 
-        if (!context.Request.Cookies.ContainsKey("AuthToken"))
+        if (!context.Request.Cookies.TryGetValue("AuthToken", out var combinedToken))
         { //no token present
             user = null;
             limitedToPaths = null;
             return LoginState.None;
         }
 
-        string combinedToken = context.Request.Cookies["AuthToken"] ?? "";
         string id = combinedToken.Remove(12);
         string authToken = combinedToken.Remove(0, 12); //the auth token length isn't fixed
         if ((!TryGetValue(id, out user)) || (!user.Auth.TryGetValue(authToken, out var tokenData)))
@@ -204,8 +212,10 @@ public class UserTable : Table<User>
         }
 
         limitedToPaths = tokenData.LimitedToPaths;
-        if (tokenData.Needs2FA) return LoginState.Needs2FA;
-        else if (user.MailToken != null) return LoginState.NeedsMailVerification;
+        if (tokenData.Needs2FA)
+            return LoginState.Needs2FA;
+        else if (user.MailToken != null)
+            return LoginState.NeedsMailVerification;
         else
         {
             if (tokenData.Expires < DateTime.UtcNow + Server.Config.Accounts.TokenExpiration - Server.Config.Accounts.TokenRenewalAfter)
@@ -224,12 +234,14 @@ public class UserTable : Table<User>
     /// <param name="logoutOthers">Whether to log out all other clients or the current client.</param>
     private void Logout(HttpContext context, bool logoutOthers)
     {
-        if (!context.Request.Cookies.ContainsKey("AuthToken")) return;
-        string combinedToken = context.Request.Cookies["AuthToken"] ?? "";
-        if (!logoutOthers) context.Response.Cookies.Delete("AuthToken", new CookieOptions { Domain = AccountManager.GetWildcardDomain(context.Domain())});
+        if (!context.Request.Cookies.TryGetValue("AuthToken", out var combinedToken))
+            return;
+        if (!logoutOthers)
+            context.Response.Cookies.Delete("AuthToken", new CookieOptions { Domain = AccountManager.GetWildcardDomain(context.Domain())});
         string id = combinedToken.Remove(12);
         string authToken = combinedToken.Remove(0, 12);
-        if (!ContainsKey(id)) return;
+        if (!ContainsKey(id))
+            return;
         User user = this[id];
         if (logoutOthers)
             user.Auth.DeleteAllExcept(authToken);
@@ -271,13 +283,18 @@ public class UserTable : Table<User>
     /// </summary>
     public User Register(string username, string mailAddress, string? password)
     {
-        if (!AccountManager.CheckUsernameFormat(username)) throw new Exception("Invalid username format.");
-        if (!AccountManager.CheckMailAddressFormat(mailAddress)) throw new Exception("Invalid mail address format.");
-        if (password != null && !AccountManager.CheckPasswordFormat(password)) throw new Exception("Invalid password format.");
+        if (!AccountManager.CheckUsernameFormat(username))
+            throw new Exception("Invalid username format.");
+        if (!AccountManager.CheckMailAddressFormat(mailAddress))
+            throw new Exception("Invalid mail address format.");
+        if (password != null && !AccountManager.CheckPasswordFormat(password))
+            throw new Exception("Invalid password format.");
 
-        if (FindByUsername(username) != null) throw new Exception("Another user with the provided username already exists.");
-        if (FindByMailAddress(mailAddress) != null) throw new Exception("Another user with the provided email address already exists.");
-        User user = new User(username, mailAddress, password, this);
+        if (FindByUsername(username) != null)
+            throw new Exception("Another user with the provided username already exists.");
+        if (FindByMailAddress(mailAddress) != null)
+            throw new Exception("Another user with the provided email address already exists.");
+        User user = new(username, mailAddress, password, this);
         this[user.Id] = user;
         return user;
     }
@@ -287,7 +304,8 @@ public class UserTable : Table<User>
     /// </summary>
     public User? Login(string username, string password, IRequest request)
     {
-        if (AccountManager.IsBanned(request.Context)) return null;
+        if (AccountManager.IsBanned(request.Context))
+            return null;
 
         User? user = Login(username, password);
 
@@ -302,7 +320,8 @@ public class UserTable : Table<User>
     /// </summary>
     public User? Login(string username, string password)
     {
-        if (!AccountManager.CheckUsernameFormat(username)) return null;
+        if (!AccountManager.CheckUsernameFormat(username))
+            return null;
         //if (!CheckPasswordFormat(password)) return null;
 
         User? user = FindByUsername(username);

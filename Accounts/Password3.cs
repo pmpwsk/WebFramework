@@ -33,7 +33,7 @@ public class Password3
     /// If you change this, you need to change DefaultParameters as well.<br/>
     /// Default: Argon2
     /// </summary>
-    public static DerivationAlgorithm DefaultAlgorithm = DerivationAlgorithm.Argon2;
+    public static DerivationAlgorithm DefaultAlgorithm { get; set; } = DerivationAlgorithm.Argon2;
 
     /// <summary>
     /// The default parameters for PBKDF2.<br/>
@@ -41,7 +41,7 @@ public class Password3
     /// Iterations=1048576<br/>
     /// HashLength=64
     /// </summary>
-    public static Dictionary<string, string> DefaultParameters_PBKDF2 = new()
+    public static Dictionary<string, string> DefaultParameters_PBKDF2 { get; set; } = new()
     {
         { "PRF", "HMACSHA512" },
         { "Iterations", "1048576" },
@@ -57,7 +57,7 @@ public class Password3
     /// Lanes=8<br/>
     /// HashLength=32
     /// </summary>
-    public static Dictionary<string, string> DefaultParameters_Argon2 = new()
+    public static Dictionary<string, string> DefaultParameters_Argon2 { get; set; } = new()
     {
         { "Type", "id" },
         { "Version", "19" },
@@ -72,13 +72,13 @@ public class Password3
     /// If you're uncertain whether your current parameters work and how long it takes, execute WasteTime() to find out.<br/>
     /// Default: DefaultParameters_Argon2
     /// </summary>
-    public static Dictionary<string, string> DefaultParameters = DefaultParameters_Argon2;
+    public static Dictionary<string, string> DefaultParameters { get; set; } = DefaultParameters_Argon2;
 
     /// <summary>
     /// The length of the salt for newly set passwords.<br/>
     /// Default: 16
     /// </summary>
-    public static int DefaultSaltLength = 16;
+    public static int DefaultSaltLength { get; set; } = 16;
 
     /// <summary>
     /// Calculates the hash of the given password using the default hashing algorithm and parameters.<br/>
@@ -125,7 +125,7 @@ public class Password3
     public Password3(string password)
     {
         Algorithm = DefaultAlgorithm;
-        Parameters = new();
+        Parameters = [];
         foreach (var kv in DefaultParameters)
             Parameters[kv.Key] = kv.Value;
         Salt = RandomNumberGenerator.GetBytes(DefaultSaltLength);
@@ -164,17 +164,10 @@ public class Password3
     /// Whether the algorithm and parameters match the selected default
     /// </summary>
     internal bool MatchesDefault()
-    {
-        if (Algorithm != DefaultAlgorithm)
-            return false;
-        if (Salt.Length != DefaultSaltLength)
-            return false;
-        if (Parameters.Count != DefaultParameters.Count)
-            return false;
-        if (DefaultParameters.Any(x => (!Parameters.TryGetValue(x.Key, out var v)) || v != x.Value))
-            return false;
-        return true;
-    }
+        => Algorithm == DefaultAlgorithm
+        && Salt.Length == DefaultSaltLength
+        && Parameters.Count == DefaultParameters.Count
+        && DefaultParameters.All(x => Parameters.TryGetValue(x.Key, out var v) && v == x.Value);
 
     /// <summary>
     /// Generates the hash for the given password according to the set salt, algorithm and parameters.

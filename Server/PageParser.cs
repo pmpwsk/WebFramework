@@ -10,8 +10,10 @@ public static partial class Server
     private static bool ParsePage(AppRequest request, List<string> domains)
     {
         string path = request.Path;
-        if (path.EndsWith("/index")) return false;
-        if (path.EndsWith('/')) path += "index";
+        if (path.EndsWith("/index"))
+            return false;
+        if (path.EndsWith('/'))
+            path += "index";
         path += ".wfpg";
         foreach (string domain in domains)
         {
@@ -52,7 +54,8 @@ public static partial class Server
                 currentContentElement = null;
                 currentSidebarElement = null;
             }
-            else if (line.StartsWith("#")) { }
+            else if (line.StartsWith('#'))
+            { }
             else if (line.StartsWith(">>"))
                 ParseCommand(req, page, line.Remove(0, 2).TrimStart());
             else if (line.StartsWith("<<"))
@@ -172,7 +175,7 @@ public static partial class Server
             if (line.StartsWith('-'))
             {
                 line = line.Remove(0, 1).Trim();
-                if (container.Contents.Any() && container.Contents.Last() is BulletList bullets)
+                if (container.Contents.Count != 0 && container.Contents.Last() is BulletList bullets)
                     bullets.List.Add(line);
                 else container.Contents.Add(new BulletList(line));
             }
@@ -218,7 +221,7 @@ public static partial class Server
             }
             else result = new ButtonElementJS(titleLg, titleSm, target.Replace('"', '\''), p2, id: sidebar ? null : p1.ToId());
         }
-        else if (!e.Any())
+        else if (e.Count == 0)
         {
             string? text = ParseTitle(line.Trim(), out string? classes, out string? id);
             if (sidebar)

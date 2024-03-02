@@ -19,7 +19,7 @@ public static partial class Server
             /// The domains that should always get certificates, in addition to the domains that have been discovered elsewhere.
             /// Default: empty list
             /// </summary>
-            public static List<string> Domains { get; set; } = new();
+            public static List<string> Domains { get; set; } = [];
 
             /// <summary>
             /// Whether to complain in the console if the server is unavailable over any of the domains (= no certificates can be requested for those domains).<br/>

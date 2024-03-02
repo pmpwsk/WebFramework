@@ -53,7 +53,7 @@ public class BackupPartInfo
         Tree = new();
     }
 
-    private void LoadRecursive(StreamReader reader, BackupTree tree)
+    private static void LoadRecursive(StreamReader reader, BackupTree tree)
     {
         int read;
 
@@ -237,16 +237,15 @@ public class BackupPartInfo
             string b64 = d.Name.ToBase64();
 
             //known tree
-            BackupTree? k;
-            if (knownTree == null || !knownTree.Directories.TryGetValue(b64, out k))
+            if (knownTree == null || !knownTree.Directories.TryGetValue(b64, out BackupTree? k))
                 k = null;
 
             //current tree
             bool potential;
-            BackupTree? c;
-            if (currentTree.Directories.TryGetValue(b64, out c) && c != null)
+            if (currentTree.Directories.TryGetValue(b64, out BackupTree? c) && c != null)
                 potential = false;
-            else {
+            else
+            {
                 potential = true;
                 c = new();
             }
@@ -264,10 +263,9 @@ public class BackupPartInfo
         foreach (var f in dir.GetFiles("*", SearchOption.TopDirectoryOnly))
         {
             string b64 = f.Name.ToBase64();
-            
+
             //known timestamp
-            string? knownTimestamp;
-            if (knownTree == null || !knownTree.Files.TryGetValue(b64, out knownTimestamp))
+            if (knownTree == null || !knownTree.Files.TryGetValue(b64, out string? knownTimestamp))
                 knownTimestamp = null;
 
             //current timestamp, skip if it's up to date already
@@ -304,7 +302,7 @@ public class BackupPartInfo
         File.WriteAllText($"{Server.Config.Backup.Directory}{BackupId}/{PartName}/Metadata.txt", Tree.Encode());
     }
 
-    private void FindDeleted(BackupTree knownTree, BackupTree currentTree, string path)
+    private static void FindDeleted(BackupTree knownTree, BackupTree currentTree, string path)
     {
         //directories
         foreach (var dKV in knownTree.Directories)
@@ -317,10 +315,10 @@ public class BackupPartInfo
             {
                 //current
                 bool potential;
-                BackupTree? c;
-                if (currentTree.Directories.TryGetValue(dKV.Key, out c) && c != null)
+                if (currentTree.Directories.TryGetValue(dKV.Key, out BackupTree? c) && c != null)
                     potential = false;
-                else {
+                else
+                {
                     potential = true;
                     c = new();
                 }

@@ -22,10 +22,6 @@ public static partial class MailAuth
         }
 
         public override Task<AsymmetricKeyParameter> LocatePublicKeyAsync(string methods, string domain, string selector, CancellationToken cancellationToken = default)
-        {
-            return Task.Run(() => {
-                return LocatePublicKey(methods, domain, selector, cancellationToken);
-            }, cancellationToken);
-        }
+            => Task.Run(() => LocatePublicKey(methods, domain, selector, cancellationToken), cancellationToken);
     }
 }

@@ -20,22 +20,19 @@ public abstract class IContainerElement : IPageElement
     /// The list of contents.<br/>
     /// Default: empty list
     /// </summary>
-    public List<IContent> Contents = new();
+    public List<IContent> Contents = [];
 
     /// <summary>
     /// The list of buttons.<br/>
     /// Default: empty list
     /// </summary>
-    public List<IButton> Buttons = new();
+    public List<IButton> Buttons = [];
     
     /// <summary>
     /// Sets the list of buttons to a list with only the given button in it.
     /// </summary>
     public IButton Button
     {
-        set
-        {
-            Buttons = new List<IButton> { value };
-        }
+        set => Buttons = [value];
     }
 }

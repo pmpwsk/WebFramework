@@ -28,7 +28,7 @@ public abstract class SimpleResponseRequest(LayerRequestData data) : IRequest(da
         /// </summary>
         Text,
         /// <summary>
-        /// Writing has finished and no more text or datra can be written.
+        /// Writing has finished and no more text or data can be written.
         /// </summary>
         Finished,
         /// <summary>
@@ -60,11 +60,7 @@ public abstract class SimpleResponseRequest(LayerRequestData data) : IRequest(da
     public bool WriteImmediately
     {
         get => _WriteImmediately;
-        set
-        {
-            if (State == ResponseState.None) _WriteImmediately = value;
-            else throw new Exception("Something has already been written/sent.");
-        }
+        set => _WriteImmediately = State == ResponseState.None ? value : throw new Exception("Something has already been written/sent.");
     }
 
     /// <summary>
@@ -76,7 +72,8 @@ public abstract class SimpleResponseRequest(LayerRequestData data) : IRequest(da
         {
             case ResponseState.None:
                 await _Write(text);
-                State = ResponseState.Text; break;
+                State = ResponseState.Text;
+                break;
             case ResponseState.Text:
                 await _Write(text);
                 break;
@@ -137,7 +134,8 @@ public abstract class SimpleResponseRequest(LayerRequestData data) : IRequest(da
         {
             case ResponseState.None:
                 string extension = new FileInfo(path).Extension;
-                if (Server.Config.MimeTypes.TryGetValue(extension, out string? type)) Context.Response.ContentType = type;
+                if (Server.Config.MimeTypes.TryGetValue(extension, out string? type))
+                    Context.Response.ContentType = type;
                 await Context.Response.SendFileAsync(path);
                 State = ResponseState.Finished; break;
             case ResponseState.Text:

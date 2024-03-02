@@ -12,7 +12,7 @@ public class DictionaryTableValue : ITableValue
     /// The string-string dictionary containing the values.
     /// </summary>
     [DataMember]
-    private Dictionary<string,string> Data = new Dictionary<string, string>();
+    private Dictionary<string,string> Data = [];
 
     /// <summary>
     /// Gets or sets the value for the given key.

@@ -11,47 +11,34 @@ public partial class User : ITableValue
     /// <summary>
     /// The user's auth tokens (key) along with their additional data (value).
     /// </summary>
-    [DataMember] private Dictionary<string, AuthTokenData> _AuthTokens = new();
+    [DataMember] private Dictionary<string, AuthTokenData> _AuthTokens = [];
 
     /// <summary>
     /// The authentication manager object that is associated with this user or null if none have been created yet.
     /// </summary>
     private AuthManager? _AuthManager = null;
+
     /// <summary>
     /// The authentication manager object that is associated with this user. A new one is created if none have been created yet.
     /// </summary>
     public AuthManager Auth
-    {
-        get
-        {
-            _AuthManager ??= new(this);
-            return _AuthManager;
-        }
-    }
+        => _AuthManager ??= new(this);
 
     /// <summary>
     /// Contains methods to manage authentication for the associated user.
     /// </summary>
-    public class AuthManager : IEnumerable<KeyValuePair<string, AuthTokenData>>
+    public class AuthManager(User user) : IEnumerable<KeyValuePair<string, AuthTokenData>>
     {
         /// <summary>
         /// The user this object is associated with.
         /// </summary>
-        readonly User User;
-
-        /// <summary>
-        /// Creates a new authentication manager object for the given user.
-        /// </summary>
-        public AuthManager(User user)
-        {
-            User = user;
-        }
+        readonly User User = user;
 
         /// <summary>
         /// Checks whether the given authentication token exists without checking if it has finished the login process.
         /// </summary>
         public bool Exists(string authToken)
-        => User._AuthTokens.ContainsKey(authToken);
+            => User._AuthTokens.ContainsKey(authToken);
 
         public bool TryGetValue(string authToken, [MaybeNullWhen(false)] out AuthTokenData authTokenData)
             => User._AuthTokens.TryGetValue(authToken, out authTokenData);
@@ -151,8 +138,8 @@ public partial class User : ITableValue
         /// </summary>
         public void DeleteExpired()
         {
-            var affected = User._AuthTokens.Keys.Where(key => User._AuthTokens[key].Expires < DateTime.UtcNow);
-            if (affected.Any())
+            var affected = User._AuthTokens.Keys.Where(key => User._AuthTokens[key].Expires < DateTime.UtcNow).ToList();
+            if (affected.Count != 0)
             {
                 User.Lock();
                 foreach (string token in affected)
@@ -170,8 +157,8 @@ public partial class User : ITableValue
         /// </summary>
         public void DeleteAllExcept(string authToken)
         {
-            var affected = User._AuthTokens.Keys.Where(key => key != authToken);
-            if (affected.Any())
+            var affected = User._AuthTokens.Keys.Where(key => key != authToken).ToList();
+            if (affected.Count != 0)
             {
                 User.Lock();
                 foreach (string token in affected)
@@ -185,7 +172,7 @@ public partial class User : ITableValue
         /// </summary>
         public void DeleteAll()
         {
-            if (User._AuthTokens.Any())
+            if (User._AuthTokens.Count != 0)
             {
                 User.Lock();
                 User._AuthTokens.Clear();

@@ -11,7 +11,7 @@ public partial class User : ITableValue
     /// <summary>
     /// The user's settings dictionary.
     /// </summary>
-    [DataMember] private Dictionary<string, string> _Settings = new();
+    [DataMember] private Dictionary<string, string> _Settings = [];
 
     /// <summary>
     /// The settings manager object that is associated with this user or null if none have been created yet.
@@ -21,31 +21,17 @@ public partial class User : ITableValue
     /// The settings manager object that is associated with this user. A new one is created if none have been created yet.
     /// </summary>
     public SettingsManager Settings
-    {
-        get
-        {
-            _SettingsManager ??= new(this);
-            return _SettingsManager;
-        }
-    }
+        => _SettingsManager ??= new(this);
 
     /// <summary>
     /// Contains methods to manage settings for the associated user.
     /// </summary>
-    public class SettingsManager : IEnumerable<KeyValuePair<string, string>>
+    public class SettingsManager(User user) : IEnumerable<KeyValuePair<string, string>>
     {
         /// <summary>
         /// The user this object is associated with.
         /// </summary>
-        readonly User User;
-
-        /// <summary>
-        /// Creates a new settings manager object for the given user.
-        /// </summary>
-        public SettingsManager(User user)
-        {
-            User = user;
-        }
+        readonly User User = user;
 
         /// <summary>
         /// Gets or sets the setting with the given key.
@@ -64,7 +50,8 @@ public partial class User : ITableValue
         /// <summary>
         /// Checks whether a setting with the given key exists.
         /// </summary>
-        public bool ContainsKey(string key) => User._Settings.ContainsKey(key);
+        public bool ContainsKey(string key)
+            => User._Settings.ContainsKey(key);
 
         /// <summary>
         /// Deletes the setting with the given key if it exists and returns true if it did.

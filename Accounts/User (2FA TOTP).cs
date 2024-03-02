@@ -67,9 +67,7 @@ public class TwoFactorTotp
     {
         //banned?
         if (request != null && AccountManager.IsBanned(request.Context))
-        {
             return false;
-        }
 
         //recovery code?
         if (tolerateRecovery && Data.Recovery.Contains(code))
@@ -85,15 +83,15 @@ public class TwoFactorTotp
         {
             User.Lock();
 
-            //add to used time stepts (and remove the oldest one if the list is full)
+            //add to used time steps (and remove the oldest one if the list is full)
             Data.UsedTimeSteps.Add(timeStepMatched);
-            if (Data.UsedTimeSteps.Count > 3) Data.UsedTimeSteps.Remove(Data.UsedTimeSteps.Min());
+            if (Data.UsedTimeSteps.Count > 3)
+                Data.UsedTimeSteps.Remove(Data.UsedTimeSteps.Min());
 
             //does an auth token even exist? (this should be the case, but you never know)
-            if (request != null && request.Cookies.Contains("AuthToken"))
+            if (request != null && request.Cookies.TryGetValue("AuthToken", out var combinedToken))
             {
                 //get and decode the auth token
-                string combinedToken = request.Cookies["AuthToken"];
                 string id = combinedToken.Remove(12);
                 string authToken = combinedToken.Remove(0, 12);
                 if (User.Id == id && User.Auth.TryGetValue(authToken, out var data))
@@ -110,7 +108,8 @@ public class TwoFactorTotp
         else
         {
             //invalid, report as a failed attempt
-            if (request != null) AccountManager.ReportFailedAuth(request.Context);
+            if (request != null)
+                AccountManager.ReportFailedAuth(request.Context);
             return false;
         }
     }
@@ -141,7 +140,7 @@ internal class _TwoFactorTotp
     /// The 3 most recently used time steps. This is used so a code isn't used twice within its active duration.
     /// </summary>
     [DataMember]
-    public List<long> UsedTimeSteps = new();
+    public List<long> UsedTimeSteps = [];
 
     public _TwoFactorTotp()
     {
@@ -163,12 +162,12 @@ internal class _TwoFactorTotp
     /// </summary>
     public static List<string> GenerateRecoveryCodes()
     {
-        List<string> result = new();
+        List<string> result = [];
         while (result.Count < 8)
         {
             string code;
             do code = Parsers.RandomString(10);
-            while (result.Contains(code));
+                while (result.Contains(code));
             result.Add(code);
         }
         return result;

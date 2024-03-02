@@ -22,7 +22,7 @@ public static partial class Server
             /// The user table (value) for each domain (key). "any" is supported as a fallback.<br/>
             /// Default: empty dictionary
             /// </summary>
-            public static Dictionary<string, UserTable> UserTables { get; set; } = new();
+            public static Dictionary<string, UserTable> UserTables { get; set; } = [];
 
             /// <summary>
             /// The path of the two-factor authentication page while logging in.<br/>
@@ -40,7 +40,7 @@ public static partial class Server
             /// Paths that are always allowed while the user is in the process of logging in but hasn't finished doing so yet (e.g. when requiring verification or 2FA).<br/>
             /// Default: { /account/logout }
             /// </summary>
-            public static string[]? LoginAllowedPaths { get; set; } = new[] { "/account/logout" };
+            public static string[]? LoginAllowedPaths { get; set; } = ["/account/logout"];
 
             /// <summary>
             /// The path of the login page.<br/>
@@ -78,7 +78,7 @@ public static partial class Server
             /// If you're using different servers for the domain and different subdomains, make sure that the auth tokens are synchronized between the servers, otherwise they will delete each other's cookies.<br/>
             /// Example: including "uwap.org" here will share auth cookies between uwap.org, mail.uwap.org, notes.uwap.org and so on, but not subsubdomain.subdomain.uwap.org and so on.
             /// </summary>
-            public static List<string> WildcardDomains { get; set; } = new();
+            public static List<string> WildcardDomains { get; set; } = [];
 
             /// <summary>
             /// Whether to use SameSite=Strict (true) instead of Lax (false) for authentication cookies.<br/>

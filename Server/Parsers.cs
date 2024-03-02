@@ -17,15 +17,15 @@ public static class Parsers
     /// </summary>
     public static List<string> Domains(string domain)
     {
-        List<string> domains = new()
-        {
-            domain
-        };
+        List<string> domains = [ domain ];
         if (Server.Config.Domains.UseCanonicalForHandling && Server.Config.Domains.CanonicalDomains.TryGetValue(domain, out string? tempOrigin) && tempOrigin != null)
-            if (!domains.Contains(tempOrigin)) domains.Add(tempOrigin);
+            if (!domains.Contains(tempOrigin))
+                domains.Add(tempOrigin);
         if (Server.Config.Domains.UseCanonicalForHandling && Server.Config.Domains.CanonicalDomains.TryGetValue("any", out tempOrigin) && tempOrigin != null)
-            if (!domains.Contains(tempOrigin)) domains.Add(tempOrigin);
-        if (!domains.Contains("any")) domains.Add("any");
+            if (!domains.Contains(tempOrigin))
+                domains.Add(tempOrigin);
+        if (!domains.Contains("any"))
+            domains.Add("any");
         return domains;
     }
 
@@ -33,7 +33,7 @@ public static class Parsers
     /// Generates a status message for the given HTTP status code.
     /// </summary>
     public static string StatusMessage(int status)
-        => ((status<400) ? "Status" : "Error") + " " + status + (Server.Config.StatusMessages.ContainsKey(status) ? $": {Server.Config.StatusMessages[status]}" : "");
+        => ((status<400) ? "Status" : "Error") + " " + status + (Server.Config.StatusMessages.TryGetValue(status, out string? m) ? $": {m}" : "");
 
     /// <summary>
     /// Protocol + Host + Path + Query.
@@ -74,27 +74,16 @@ public static class Parsers
     /// Host (with port if necessary).
     /// </summary>
     public static string Host(this HttpContext c)
-    {
-        if (c.Request.IsHttps)
-        {
-            if (Server.Config.HttpsPort == 443) return c.Request.Host.Host;
-            else return $"{c.Request.Host.Host}:{Server.Config.HttpsPort}";
-        }
-        else
-        {
-            if (Server.Config.HttpPort == 80) return c.Request.Host.Host;
-            else return $"{c.Request.Host.Host}:{Server.Config.HttpPort}";
-        }
-    }
+        => c.Request.IsHttps
+            ? (Server.Config.HttpsPort == 443 ? c.Request.Host.Host : $"{c.Request.Host.Host}:{Server.Config.HttpsPort}")
+            : (Server.Config.HttpPort == 80 ? c.Request.Host.Host : $"{c.Request.Host.Host}:{Server.Config.HttpPort}");
     /// <summary>
     /// Host without port.
     /// </summary>
     public static string Domain(this HttpContext c)
     {
         string host = Host(c);
-        if (host.SplitAtLast(':', out string part1, out string part2) && ushort.TryParse(part2, out _))
-            return part1;
-        else return host;
+        return host.SplitAtLast(':', out string part1, out string part2) && ushort.TryParse(part2, out _) ? part1 : host;
     }
 
     /// <summary>
@@ -103,8 +92,10 @@ public static class Parsers
     public static string? IP(this HttpContext context)
     {
         var ip = context.Connection.RemoteIpAddress;
-        if (ip == null) return null;
-        if (ip.ToString().StartsWith("::ffff:")) return ip.ToString().Replace("::ffff:", "");
+        if (ip == null)
+            return null;
+        if (ip.ToString().StartsWith("::ffff:"))
+            return ip.ToString().Replace("::ffff:", "");
         else return ip.ToString();
     }
     /// <summary>
@@ -122,12 +113,12 @@ public static class Parsers
     /// Returns the SHA256 byte array of the UTF8 representation of the given string.
     /// </summary>
     public static byte[] ToSha256(this string source)
-        => SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(source));
+        => SHA256.HashData(Encoding.UTF8.GetBytes(source));
     /// <summary>
     /// Returns the SHA512 byte array of the UTF8 representation of the given string.
     /// </summary>
     public static byte[] ToSha512(this string source)
-        => SHA512.Create().ComputeHash(Encoding.UTF8.GetBytes(source));
+        => SHA512.HashData(Encoding.UTF8.GetBytes(source));
 
     /// <summary>
     /// Returns a random string of the given length. Possible characters are lowercase and uppercase letters and digits.
@@ -135,12 +126,10 @@ public static class Parsers
     public static string RandomString(int length)
     {
         string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        string result = "";
+        StringBuilder result = new();
         while (result.Length < length)
-        {
-            result += chars[RandomNumberGenerator.GetInt32(chars.Length)];
-        }
-        return result;
+            result.Append(chars[RandomNumberGenerator.GetInt32(chars.Length)]);
+        return result.ToString();
     }
 
     /// <summary>
@@ -257,13 +246,11 @@ public static class Parsers
     public static bool TryGetValueAny<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, [MaybeNullWhen(false)] out TValue result, params TKey[] keys) where TKey : notnull
     {
         foreach (TKey key in keys)
-        {
             if (dictionary.TryGetValue(key, out var value))
             {
                 result = value;
                 return true;
             }
-        }
 
         result = default;
         return false;
@@ -277,13 +264,11 @@ public static class Parsers
     public static bool TryGetValueAny<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, [MaybeNullWhen(false)] out TValue result, IEnumerable<TKey> keys) where TKey : notnull
     {
         foreach (TKey key in keys)
-        {
             if (dictionary.TryGetValue(key, out var value))
             {
                 result = value;
                 return true;
             }
-        }
 
         result = default;
         return false;
@@ -293,12 +278,7 @@ public static class Parsers
     /// Capitalizes the first letter of the given string.
     /// </summary>
     public static string CapitalizeFirstLetter(this string value)
-    {
-        if (value == "") return "";
-        string part1 = value.Remove(1);
-        string part2 = value.Remove(0, 1);
-        return part1.ToUpper() + part2;
-    }
+        => value == "" ? "" : (value.Remove(1).ToUpper() + value.Remove(0, 1));
 
     /// <summary>
     /// Returns the part of the given string before the first occurrence of the given separator.
@@ -306,7 +286,8 @@ public static class Parsers
     public static string Before(this string value, string separator)
     {
         int index = value.IndexOf(separator);
-        if (index == -1) return value;
+        if (index == -1)
+            return value;
         return value.Remove(index);
     }
 
@@ -316,7 +297,8 @@ public static class Parsers
     public static string Before(this string value, char separator)
     {
         int index = value.IndexOf(separator);
-        if (index == -1) return value;
+        if (index == -1)
+            return value;
         return value.Remove(index);
     }
 
@@ -326,7 +308,8 @@ public static class Parsers
     public static string After(this string value, string separator)
     {
         int index = value.LastIndexOf(separator);
-        if (index == -1) return value;
+        if (index == -1)
+            return value;
         return value.Remove(0, index + separator.Length);
     }
 
@@ -336,7 +319,8 @@ public static class Parsers
     public static string After(this string value, char separator)
     {
         int index = value.LastIndexOf(separator);
-        if (index == -1) return value;
+        if (index == -1)
+            return value;
         return value.Remove(0, index + 1);
     }
 
@@ -424,7 +408,7 @@ public static class Parsers
     /// Removes the last [count] characters from the string.
     /// </summary>
     public static string RemoveLast(this string value, int count)
-        => value.Substring(0, value.Length - count);
+        => value[..^count];
 
     /// <summary>
     /// Returns whether the string starts with any of the given options.
@@ -455,7 +439,7 @@ public static class Parsers
     /// </summary>
     public static string Extension(this string path)
     {
-        int slash = path.LastIndexOfAny(new char[] { '/', '\\' });
+        int slash = path.LastIndexOfAny(['/', '\\']);
         if (slash != -1)
             path = path.Remove(0, slash + 1);
         int dot = path.LastIndexOf('.');
@@ -468,14 +452,12 @@ public static class Parsers
     /// Returns something like this: "[0], [1], [2] and [3]".
     /// </summary>
     public static string EnumerationText(this IEnumerable<string> values)
-    {
-        return values.Count() switch
+        => values.Count() switch
         {
             0 => "",
             1 => values.First(),
             _ => string.Join(", ", values.SkipLast(1)) + " and " + values.Last(),
         };
-    }
 
     /// <summary>
     /// Returns the home path of a plugin with the given plugin prefix.<br/>
