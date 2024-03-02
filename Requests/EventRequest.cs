@@ -30,7 +30,7 @@ public class EventRequest(LayerRequestData data) : IRequest(data)
     }
 
     /// <summary>
-    /// Sends ":keepalive:" every 30 seconds as long as the given cancellation token (if present) hasn't been cancelled.
+    /// Sends ":keepalive" every 30 seconds as long as the given cancellation token (if present) hasn't been cancelled.
     /// </summary>
     public async Task KeepAlive(CancellationToken cancellationToken = default)
     {
