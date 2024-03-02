@@ -8,17 +8,19 @@ Changelog: https://uwap.org/changes/webframework
 Guides: https://uwap.org/guides/webframework
 
 ## Main features
-- Events for different types of HTTP requests (app, API, post, upload, download) with objects for easy access to everything you need to handle those requests.
+- Modular structure for high customizability
+- Events for different types of HTTP requests (app, API, post, upload, download) with objects for easy access to everything you need to handle those requests
 - Automatic SSL certificates using Let's Encrypt
 - Pages and elements so you don't have to write any HTML code
 - .wfpg files to quickly create static web pages
 - Accounts with everything one would expect from an account
-- Mail server (incoming and outgoing)
+- Mail server (incoming and outgoing) with SPF, DKIM and DMARC
 - Object-oriented database
 - File server with server cache and browser cache management
 - Worker to regularly update files, handle memory integrity, certificates and more
 - Plugins (see more below)
 - Option for usage as a local web server for local web apps as interfaces for proper apps on a computer
+- Backups for the database and external files
  
 ...and much more!
 
@@ -35,10 +37,10 @@ This library is based on ASP.NET, so it's best to create an empty ASP.NET projec
 - Server (interface for server management by administrator accounts)
 - Users (interface for accounts)
 - Notes (web app for user's notes)
+- Mail (mailbox system and interface for the mail server)
 - Redirects (allows for static redirects)
 
 ## Planned plugins
-- Mail (mailbox system and interface for the mail server)
 - Files (file management for admins and interface for a file server)
 - Git (interface for a git server running on the same machine)
 - Finances (simple finance manager for users)
