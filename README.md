@@ -34,16 +34,17 @@ You can also download the source code from GitHub and add a reference to it from
 This library is based on ASP.NET, so it's best to create an empty ASP.NET project rather than a console app (those will terminate unless paused otherwise).
 
 ## Official plugins
-- Server (interface for server management by administrator accounts)
-- Users (interface for accounts)
-- Notes (web app for user's notes)
-- Mail (mailbox system and interface for the mail server)
-- Redirects (allows for static redirects)
+- ServerPlugin (interface for server management by administrator accounts)
+- UsersPlugin (interface for accounts)
+- NotesPlugin (web app for user's notes)
+- MailPlugin (mailbox system and interface for the mail server)
+- RedirectPlugin (allows for static redirects)
+- BackupDownloaderPlugin (for off-site backup storage)
 
 ## Planned plugins
-- Files (file management for admins and interface for a file server)
-- Git (interface for a git server running on the same machine)
-- Finances (simple finance manager for users)
+- FilesPlugin (file management for admins and interface for a file server)
+- GitPlugin (interface for a git server running on the same machine)
+- FinancesPlugin (simple finance manager for users)
 
 ## Used libraries
 - [Certes](https://github.com/fszlin/certes) to talk to Let's Encrypt
