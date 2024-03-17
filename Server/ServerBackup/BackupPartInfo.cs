@@ -132,7 +132,7 @@ public class BackupPartInfo
     /// </summary>
     public void BackupFile(string path)
     {
-        var componentsB64 = path.Split('/', '\\').Select(x => x.ToBase64()).ToArray();
+        var componentsB64 = path.Split('/', '\\').Select(x => x.ToBase64PathSafe()).ToArray();
 
         //known timestamp
         string? knownTimestamp;
@@ -180,7 +180,7 @@ public class BackupPartInfo
     /// </summary>
     public void BackupDirectory(string path)
     {
-        var componentsB64 = path.Split('/', '\\').Select(x => x.ToBase64()).ToArray();
+        var componentsB64 = path.Split('/', '\\').Select(x => x.ToBase64PathSafe()).ToArray();
 
         //known tree
         BackupTree? knownTree = LastKnownState;
@@ -234,7 +234,7 @@ public class BackupPartInfo
         //directories
         foreach (var d in dir.GetDirectories("*", SearchOption.TopDirectoryOnly))
         {
-            string b64 = d.Name.ToBase64();
+            string b64 = d.Name.ToBase64PathSafe();
 
             //known tree
             if (knownTree == null || !knownTree.Directories.TryGetValue(b64, out BackupTree? k))
@@ -262,7 +262,7 @@ public class BackupPartInfo
         //files
         foreach (var f in dir.GetFiles("*", SearchOption.TopDirectoryOnly))
         {
-            string b64 = f.Name.ToBase64();
+            string b64 = f.Name.ToBase64PathSafe();
 
             //known timestamp
             if (knownTree == null || !knownTree.Files.TryGetValue(b64, out string? knownTimestamp))
@@ -310,7 +310,7 @@ public class BackupPartInfo
             if (dKV.Value == null)
                 continue;
 
-            string name = dKV.Key.FromBase64();
+            string name = dKV.Key.FromBase64PathSafe();
             if (Directory.Exists($"{path}{name}"))
             {
                 //current
@@ -336,7 +336,7 @@ public class BackupPartInfo
         //files
         foreach (var fKV in knownTree.Files)
         {
-            string name = fKV.Key.FromBase64();
+            string name = fKV.Key.FromBase64PathSafe();
             if (!File.Exists($"{path}{name}"))
                 currentTree.Files[fKV.Key] = null;
         }
