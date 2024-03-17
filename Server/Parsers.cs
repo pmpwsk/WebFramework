@@ -491,4 +491,10 @@ public static class Parsers
     /// </summary>
     public static string ToBase64PathSafe(this string value)
         => Convert.ToBase64String(Encoding.UTF8.GetBytes(value)).Replace('/', '_');
+
+    /// <summary>
+    /// Returns the UTF8 string of the bytes decoded from the given Base64 string, while replacing / with _ and + with -.
+    /// </summary>
+    public static string FromBase64PathSafe(this string base64)
+        => Encoding.UTF8.GetString(Convert.FromBase64String(base64.Replace('_', '/')));
 }
