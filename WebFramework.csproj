@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>2.0</Version>
+    <Version>2.0.0.1</Version>
     <Company>uwap.org</Company>
     <PackageProjectUrl>https://uwap.org/projects/webframework</PackageProjectUrl>
     <Description>Cross-platform .NET library written in C# that allows you to create a web server for dynamic and/or static websites and web apps with ease.</Description>
