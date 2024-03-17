@@ -122,7 +122,7 @@ public class RestorePartInfo
         {
             if (d.Value == null)
                 continue;
-            if (Restore($"{originDirRel}{d.Key}/", $"{targetDir}{d.Key.FromBase64()}/", d.Value))
+            if (Restore($"{originDirRel}{d.Key}/", $"{targetDir}{d.Key.FromBase64PathSafe()}/", d.Value))
                 directoryCreated = true;
         }
 
@@ -134,7 +134,7 @@ public class RestorePartInfo
                 Directory.CreateDirectory(targetDir);
                 directoryCreated = true;
             }
-            File.Copy($"{Server.Config.Backup.Directory}{f.Value}/{PartName}/{originDirRel}{f.Key}", $"{targetDir}{f.Key.FromBase64()}");
+            File.Copy($"{Server.Config.Backup.Directory}{f.Value}/{PartName}/{originDirRel}{f.Key}", $"{targetDir}{f.Key.FromBase64PathSafe()}");
         }
 
         return directoryCreated;
