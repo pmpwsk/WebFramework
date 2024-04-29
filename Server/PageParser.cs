@@ -33,20 +33,18 @@ public static partial class Server
     {
         Presets.CreatePage(request, cacheEntry.Key.After('/').RemoveLast(5).CapitalizeFirstLetter(), out Page page, out _);
         Presets.Navigation(request, page);
-        ParsePage(request, page, cacheEntry);
-        if (page.Description == "")
-            page.Description = null;
+        ParseIntoPage(request, page, cacheEntry.EnumerateTextLines());
     }
 
     /// <summary>
     /// Parses the .wfpg file in the given cache entry and populates the given page with it.
     /// </summary>
-    private static void ParsePage(AppRequest req, Page page, CacheEntry cacheEntry)
+    public static void ParseIntoPage(AppRequest req, Page page, IEnumerable<string> lines)
     {
         IPageElement? currentContentElement = null;
         IPageElement? currentSidebarElement = null;
 
-        foreach (string lineUntrimmed in cacheEntry.EnumerateTextLines())
+        foreach (string lineUntrimmed in lines)
         {
             string line = lineUntrimmed.Trim();
             if (line == "")
@@ -86,6 +84,9 @@ public static partial class Server
                 }
             }
         }
+        
+        if (page.Description == "")
+            page.Description = null;
     }
 
     /// <summary>
@@ -109,7 +110,7 @@ public static partial class Server
             case "import":
             case "i":
                 if (Cache.TryGetValue($"{arguments}.wfpg", out CacheEntry? cacheEntry))
-                    ParsePage(req, page, cacheEntry);
+                    ParseIntoPage(req, page, cacheEntry.EnumerateTextLines());
                 break;
             case "script":
                 if (arguments == "")

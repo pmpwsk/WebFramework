@@ -8,7 +8,7 @@ public static partial class Server
     {
         Presets.CreatePage(request, cacheEntry.Key.After('/').RemoveLast(5).CapitalizeFirstLetter(), out Page page, out _);
         Presets.Navigation(request, page);
-        ParsePage(request, page, cacheEntry);
+        ParseIntoPage(request, page, cacheEntry.EnumerateTextLines());
         if (page.Description == "")
             page.Description = null;
 
