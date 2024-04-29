@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using uwap.WebFramework.Elements;
 
 namespace uwap.WebFramework.Plugins;
 
@@ -9,46 +10,111 @@ namespace uwap.WebFramework.Plugins;
 public abstract class Plugin : IPlugin
 {
     //documentation is inherited from IPlugin
-    public virtual Task Handle(AppRequest req, string rest, string pathPrefix)
+    public virtual async Task Handle(AppRequest req, string rest, string pathPrefix)
     {
-        req.Status = 501;
-        return Task.CompletedTask;
+        Presets.CreatePage(req, "Untitled", out var page, out var elements);
+        Presets.Navigation(req, page);
+        int status = await HandleNeatly(req, rest, pathPrefix, page, elements);
+        switch (status)
+        {
+            case 0:
+            case 200:
+                break;
+            case -1:
+                req.RedirectToLogin();
+                break;
+            default:
+                req.Status = status;
+                break;
+        }
     }
+    protected virtual Task<int> HandleNeatly(AppRequest req, string rest, string pathPrefix, Page page, List<IPageElement> elements)
+     => Task.FromResult(501);
 
     //documentation is inherited from IPlugin
-    public virtual Task Handle(ApiRequest req, string rest, string pathPrefix)
+    public virtual async Task Handle(ApiRequest req, string rest, string pathPrefix)
     {
-        req.Status = 501;
-        return Task.CompletedTask;
+        int status = await HandleNeatly(req, rest, pathPrefix);
+        switch (status)
+        {
+            case 0:
+            case 200:
+                break;
+            default:
+                req.Status = status;
+                break;
+        }
     }
+    protected virtual Task<int> HandleNeatly(ApiRequest req, string rest, string pathPrefix)
+        => Task.FromResult(501);
 
     //documentation is inherited from IPlugin
-    public virtual Task Handle(UploadRequest req, string rest, string pathPrefix)
+    public virtual async Task Handle(UploadRequest req, string rest, string pathPrefix)
     {
-        req.Status = 501;
-        return Task.CompletedTask;
+        int status = await HandleNeatly(req, rest, pathPrefix);
+        switch (status)
+        {
+            case 0:
+            case 200:
+                break;
+            default:
+                req.Status = status;
+                break;
+        }
     }
+    protected virtual Task<int> HandleNeatly(UploadRequest req, string rest, string pathPrefix)
+        => Task.FromResult(501);
 
     //documentation is inherited from IPlugin
-    public virtual Task Handle(DownloadRequest req, string rest, string pathPrefix)
+    public async virtual Task Handle(DownloadRequest req, string rest, string pathPrefix)
     {
-        req.Status = 501;
-        return Task.CompletedTask;
+        int status = await HandleNeatly(req, rest, pathPrefix);
+        switch (status)
+        {
+            case 0:
+            case 200:
+                break;
+            default:
+                req.Status = status;
+                break;
+        }
     }
+    protected virtual Task<int> HandleNeatly(DownloadRequest req, string rest, string pathPrefix)
+        => Task.FromResult(501);
 
     //documentation is inherited from IPlugin
-    public virtual Task Handle(PostRequest req, string rest, string pathPrefix)
+    public async virtual Task Handle(PostRequest req, string rest, string pathPrefix)
     {
-        req.Status = 501;
-        return Task.CompletedTask;
+        int status = await HandleNeatly(req, rest, pathPrefix);
+        switch (status)
+        {
+            case 0:
+            case 200:
+                break;
+            default:
+                req.Status = status;
+                break;
+        }
     }
+    protected virtual Task<int> HandleNeatly(PostRequest req, string rest, string pathPrefix)
+        => Task.FromResult(501);
 
     //documentation is inherited from IPlugin
-    public virtual Task Handle(EventRequest req, string rest, string pathPrefix)
+    public async virtual Task Handle(EventRequest req, string rest, string pathPrefix)
     {
-        req.Status = 501;
-        return Task.CompletedTask;
+        int status = await HandleNeatly(req, rest, pathPrefix);
+        switch (status)
+        {
+            case 0:
+            case 200:
+                break;
+            default:
+                req.Status = status;
+                break;
+        }
     }
+    protected virtual Task<int> HandleNeatly(EventRequest req, string rest, string pathPrefix)
+        => Task.FromResult(501);
 
     //documentation is inherited from IPlugin
     public virtual Task Work()
