@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -95,6 +95,9 @@ public static partial class Server
 
         //context accessor part 1
         builder.Services.AddHttpContextAccessor();
+
+        //configure services according to config
+        Config.ConfigureServices?.Invoke(builder.Services);
 
         //build
         App = builder.Build();

@@ -1,4 +1,6 @@
-using Microsoft.AspNetCore.Server.Kestrel.Core;
+﻿using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.DependencyInjection;
+
 namespace uwap.WebFramework;
 
 public static partial class Server
@@ -201,5 +203,10 @@ public static partial class Server
         /// The function that should be called to configure the Kestrel server.
         /// </summary>
         public static Action<KestrelServerOptions>? ConfigureKestrel {get; set;} = null;
+
+        /// <summary>
+        /// The function that should be called to configure the ASP.NET services.
+        /// </summary>
+        public static Action<IServiceCollection>? ConfigureServices {get; set;} = null;
     }
 }
