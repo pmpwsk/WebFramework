@@ -19,11 +19,6 @@ public interface IPlugin
     public Task Handle(ApiRequest req, string relPath, string pathPrefix);
 
     /// <summary>
-    /// Handles the given upload request with the given relative path and plugin path (without the domain or preceding slash).
-    /// </summary>
-    public Task Handle(UploadRequest req, string relPath, string pathPrefix);
-
-    /// <summary>
     /// Handles the given download request with the given relative path and plugin path (without the domain or preceding slash).
     /// </summary>
     public Task Handle(DownloadRequest req, string relPath, string pathPrefix);

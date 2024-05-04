@@ -49,23 +49,6 @@ public abstract class Plugin : IPlugin
         => Task.FromResult(501);
 
     //documentation is inherited from IPlugin
-    public virtual async Task Handle(UploadRequest req, string rest, string pathPrefix)
-    {
-        int status = await HandleNeatly(req, rest, pathPrefix);
-        switch (status)
-        {
-            case 0:
-            case 200:
-                break;
-            default:
-                req.Status = status;
-                break;
-        }
-    }
-    protected virtual Task<int> HandleNeatly(UploadRequest req, string rest, string pathPrefix)
-        => Task.FromResult(501);
-
-    //documentation is inherited from IPlugin
     public async virtual Task Handle(DownloadRequest req, string rest, string pathPrefix)
     {
         int status = await HandleNeatly(req, rest, pathPrefix);

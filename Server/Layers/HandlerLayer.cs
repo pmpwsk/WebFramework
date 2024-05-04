@@ -157,48 +157,24 @@ public static partial class Server
                     {
                         data.Context.Response.Headers.Append("Cache-Control", "no-cache, private");
                         data.Context.Response.ContentType = "text/plain;charset=utf-8";
-                        if ((!data.Context.Request.HasFormContentType) || data.Context.Request.Form.Files.Count == 0)
-                        { //regular post
-                            PostRequest request = new(data);
-                            try
-                            {
-                                string path2 = request.Path;
-                                if (path2 == "/")
-                                    path2 = "";
-                                if (await PluginManager.Handle(path2, request))
-                                { }
-                                else if (PostRequestReceived != null)
-                                    await PostRequestReceived.Invoke(request);
-                                else request.Status = 501;
-                            }
-                            catch (Exception ex)
-                            {
-                                request.Exception = ex;
-                                request.Status = 500;
-                            }
-                            try { await request.Finish(); } catch { }
+                        PostRequest request = new(data);
+                        try
+                        {
+                            string path2 = request.Path;
+                            if (path2 == "/")
+                                path2 = "";
+                            if (await PluginManager.Handle(path2, request))
+                            { }
+                            else if (PostRequestReceived != null)
+                                await PostRequestReceived.Invoke(request);
+                            else request.Status = 501;
                         }
-                        else
-                        { //file upload
-                            UploadRequest request = new(data);
-                            try
-                            {
-                                string path2 = request.Path;
-                                if (path2 == "/")
-                                    path2 = "";
-                                if (await PluginManager.Handle(path2, request))
-                                { }
-                                else if (UploadRequestReceived != null)
-                                    await UploadRequestReceived.Invoke(request);
-                                else request.Status = 501;
-                            }
-                            catch (Exception ex)
-                            {
-                                request.Exception = ex;
-                                request.Status = 500;
-                            }
-                            try { await request.Finish(); } catch { }
+                        catch (Exception ex)
+                        {
+                            request.Exception = ex;
+                            request.Status = 500;
                         }
+                        try { await request.Finish(); } catch { }
                     }
                     break;
                 case "HEAD": //just the headers should be returned

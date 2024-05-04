@@ -23,11 +23,6 @@ public delegate Task AppRequestHandler(AppRequest request);
 public delegate Task DownloadRequestHandler(DownloadRequest request);
 
 /// <summary>
-/// Delegate for asynchronous upload request handlers.
-/// </summary>
-public delegate Task UploadRequestHandler(UploadRequest request);
-
-/// <summary>
 /// Delegate for asynchronous POST request handlers.
 /// </summary>
 public delegate Task PostRequestHandler(PostRequest request);
@@ -68,11 +63,6 @@ public static partial class Server
     /// Called when a download request has been received.
     /// </summary>
     public static event DownloadRequestHandler? DownloadRequestReceived = null;
-
-    /// <summary>
-    /// Called when an upload request has been received.
-    /// </summary>
-    public static event UploadRequestHandler? UploadRequestReceived = null;
 
     /// <summary>
     /// Called when a POST request without files has been received.
