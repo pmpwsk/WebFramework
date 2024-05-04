@@ -1,4 +1,5 @@
-﻿namespace uwap.WebFramework;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+namespace uwap.WebFramework;
 
 public static partial class Server
 {
@@ -195,5 +196,10 @@ public static partial class Server
             {501, "Not implemented."},
             {507, "Insufficient storage."}
         };
+
+        /// <summary>
+        /// The function that should be called to configure the Kestrel server.
+        /// </summary>
+        public static Action<KestrelServerOptions>? ConfigureKestrel {get; set;} = null;
     }
 }

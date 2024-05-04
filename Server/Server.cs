@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -84,6 +84,8 @@ public static partial class Server
                     kestrelOptions.ListenLocalhost((int)Config.HttpsPort, ConfigureKestrel);
                 else kestrelOptions.ListenAnyIP((int)Config.HttpsPort, ConfigureKestrel);
             }
+
+            Config.ConfigureKestrel?.Invoke(kestrelOptions);
         });
 
         //enable/disable asp.net logs
