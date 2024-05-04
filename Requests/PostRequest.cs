@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace uwap.WebFramework;
 
@@ -7,6 +8,14 @@ namespace uwap.WebFramework;
 /// </summary>
 public class PostRequest(LayerRequestData data) : SimpleResponseRequest(data)
 {
+    /// <summary>
+    /// The largest allowed request body size for this request in bytes. This may only be set once and only before any reading has begun.
+    /// </summary>
+    public long? BodySizeLimit
+    {
+        set => (Context.Features.Get<IHttpMaxRequestBodySizeFeature>() ?? throw new Exception("IHttpMaxRequestBodySizeFeature is not supported.")).MaxRequestBodySize = value;
+    }
+
     /// <summary>
     /// Whether the request has set a content type for a form.
     /// </summary>
