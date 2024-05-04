@@ -10,7 +10,7 @@ public class PostRequest(LayerRequestData data) : SimpleResponseRequest(data)
     /// <summary>
     /// Whether the request has set a content type for a form.
     /// </summary>
-    public bool HasForm
+    public bool IsForm
         => Context.Request.HasFormContentType;
 
     /// <summary>
