@@ -91,9 +91,10 @@ public static partial class Server
             TimeSpan age = dt - d;
             
             if (!((age <= TimeSpan.FromDays(14))
-                || (age <= TimeSpan.FromDays(60) && File.ReadAllText($"{Config.Backup.Directory}{d.Ticks}/BasedOn.txt") == "-")
-                || (age <= TimeSpan.FromDays(730) && currentMonth != d.Month)
-                || currentYear != d.Year))
+                || (File.ReadAllText($"{Config.Backup.Directory}{d.Ticks}/BasedOn.txt") == "-"
+                    && (age <= TimeSpan.FromDays(60)
+                    || (age <= TimeSpan.FromDays(730) && currentMonth != d.Month)
+                    || currentYear != d.Year))))
                 Directory.Delete($"{Config.Backup.Directory}{d.Ticks}", true);
             
             currentYear = d.Year;
