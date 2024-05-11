@@ -25,7 +25,16 @@ public static partial class Server
                         else
                         {
                             prefix = prefix.Remove(0, 1);
-                            prefix = prefix.Contains('/') ? prefix.Remove(prefix.IndexOf('/')) : "";
+                            switch (prefix)
+                            {
+                                case "api":
+                                case "dl":
+                                case "event":
+                                    break;
+                                default:
+                                    prefix = prefix.Contains('/') ? prefix.Remove(prefix.IndexOf('/')) : "";
+                                    break;
+                            }
                         }
                         switch (prefix)
                         {
