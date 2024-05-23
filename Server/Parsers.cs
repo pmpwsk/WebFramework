@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using QRCoder;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -492,4 +493,16 @@ public static class Parsers
     /// </summary>
     public static string FromBase64PathSafe(this string base64)
         => Encoding.UTF8.GetString(Convert.FromBase64String(base64.Replace('_', '/')));
+
+    public static string VersionString(Assembly assembly)
+    {
+        var version = assembly.GetName().Version;
+        if (version == null)
+            return "0.1";
+        if (version.MinorRevision != 0)
+            return $"{version.Major}.{version.Minor}.{version.Build}.{version.MinorRevision}";
+        if (version.Build != 0)
+            return $"{version.Major}.{version.Minor}.{version.Build}";
+        return $"{version.Major}.{version.Minor}";
+    }
 }
