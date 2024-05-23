@@ -88,15 +88,50 @@ public static class IFormFileExtensions
                 output.Write(buffer, 0, lastBytes);
         }
 
-        input.Close();
-        output.Close();
-
         if (totalBytes > limitBytes)
         {
+            output.Close();
             File.Delete(path);
             return false;
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Downloads the file into a memory stream and returns it as a byte array. If the given byte limit is exceeded, the download is cancelled and null is returned.
+    /// </summary>
+    public static byte[]? ToArray(this IFormFile file, long limitBytes)
+    {
+        if (file.Length > limitBytes)
+            return null;
+        using Stream input = file.OpenReadStream();
+        try
+        {
+            if (input.Length > limitBytes)
+                return null;
+        }
+        catch (NotSupportedException) { }
+        catch { throw; }
+
+        using MemoryStream output = new();
+        byte[] buffer = new byte[32768];
+        long totalBytes = 0;
+        int lastBytes;
+
+        while (totalBytes <= limitBytes)
+        {
+            lastBytes = input.Read(buffer, 0, (int)Math.Min(buffer.Length, limitBytes - totalBytes));
+            if (lastBytes <= 0)
+                break;
+            totalBytes += lastBytes;
+            if (totalBytes <= limitBytes)
+                output.Write(buffer, 0, lastBytes);
+        }
+
+        if (totalBytes > limitBytes)
+            return null;
+
+        return output.ToArray();
     }
 }
