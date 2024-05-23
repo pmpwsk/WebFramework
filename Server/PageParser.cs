@@ -59,7 +59,7 @@ public static partial class Server
             else if (line.StartsWith("<<"))
             {
                 line = line.Remove(0, 2).TrimStart();
-                IPageElement? newElement = ParseElement(page.Sidebar, currentSidebarElement, line, true, page);
+                IPageElement? newElement = ParseElement(req, page.Sidebar, currentSidebarElement, line, true, page);
                 if (newElement != null)
                 {
                     currentSidebarElement = newElement;
@@ -69,14 +69,24 @@ public static partial class Server
             else if (line.StartsWith("^^") && ParseSpecialElement(line.Remove(0, 2).TrimStart(), out string p1, out string? p2, out string target))
             {
                 IButton button;
-                if (target.StartsWithAny("/", "http://", "https://"))
-                    button = new Button(p1, target, p2, newTab: !target.StartsWithAny("/", "#"), noFollow: !target.StartsWithAny("/", "#"));
-                else button = new ButtonJS(p1, target.Replace('"', '\''), p2);
+                if (target.StartsWith("http://"))
+                    if (target == $"http://{req.Domain}" || target.StartsWithAny($"http://{req.Domain}/", $"http://{req.Domain}#", $"http://{req.Domain}?"))
+                        button = new Button(p1, target, p2, newTab: false, noFollow: false);
+                    else button = new Button(p1, target, p2, newTab: true, noFollow: true);
+                else if (target.StartsWith("https://"))
+                    if (target == $"https://{req.Domain}" || target.StartsWithAny($"https://{req.Domain}/", $"https://{req.Domain}#", $"https://{req.Domain}?"))
+                        button = new Button(p1, target, p2, newTab: false, noFollow: false);
+                    else button = new Button(p1, target, req.Domain, newTab: true, noFollow: true);
+                else if (target.StartsWith("js:"))
+                    button = new ButtonJS(p1, target[3..].HtmlValueSafe(), p2);
+                else if (target.StartsWith("javascript:"))
+                    button = new ButtonJS(p1, target[11..].HtmlValueSafe(), p2);
+                else button = new Button(p1, target, p2, newTab: false, noFollow: false);
                 page.Navigation.Add(button);
             }
             else
             {
-                IPageElement? newElement = ParseElement(page.Elements, currentContentElement, line, false, page);
+                IPageElement? newElement = ParseElement(req, page.Elements, currentContentElement, line, false, page);
                 if (newElement != null)
                 {
                     currentContentElement = newElement;
@@ -168,7 +178,7 @@ public static partial class Server
     /// <summary>
     /// Parses the line and adds the element to the page.
     /// </summary>
-    private static IPageElement? ParseElement(List<IPageElement> e, IPageElement? currentElement, string line, bool sidebar, Page page)
+    private static IPageElement? ParseElement(AppRequest req, List<IPageElement> e, IPageElement? currentElement, string line, bool sidebar, Page page)
     {
         IPageElement? result = null;
         if (currentElement != null && currentElement is ContainerElement container)
@@ -182,13 +192,21 @@ public static partial class Server
             }
             else if (ParseSpecialElement(line, out string p1, out string? p2, out string target))
             {
-                if (target.StartsWithAny("/", "#", "http://", "https://"))
-                {
-                    if (target.EndsWithAny(".jpg", ".jpeg", ".png", ".gif", ".bmp"))
-                        container.Contents.Add(new Image(target, "max-height: " + p1, title: p2));
-                    else container.Buttons.Add(new Button(p1, target, p2, newTab: !target.StartsWithAny("/", "#"), noFollow: !target.StartsWithAny("/", "#")));
-                }
-                else container.Buttons.Add(new ButtonJS(p1, target.Replace('"', '\''), p2));
+                if (target.Before('?').EndsWithAny(".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"))
+                    container.Contents.Add(new Image(target, $"max-height: {p1}", title: p2));
+                else if (target.StartsWith("http://"))
+                    if (target == $"http://{req.Domain}" || target.StartsWithAny($"http://{req.Domain}/", $"http://{req.Domain}#", $"http://{req.Domain}?"))
+                        container.Buttons.Add(new Button(p1, target, p2, newTab: false, noFollow: false));
+                    else container.Buttons.Add(new Button(p1, target, p2, newTab: true, noFollow: true));
+                else if (target.StartsWith("https://"))
+                    if (target == $"https://{req.Domain}" || target.StartsWithAny($"https://{req.Domain}/", $"https://{req.Domain}#", $"https://{req.Domain}?"))
+                        container.Buttons.Add(new Button(p1, target, p2, newTab: false, noFollow: false));
+                    else container.Buttons.Add(new Button(p1, target, req.Domain, newTab: true, noFollow: true));
+                else if (target.StartsWith("js:"))
+                    container.Buttons.Add(new ButtonJS(p1, target[3..].HtmlValueSafe(), p2));
+                else if (target.StartsWith("javascript:"))
+                    container.Buttons.Add(new ButtonJS(p1, target[11..].HtmlValueSafe(), p2));
+                else container.Buttons.Add(new Button(p1, target, p2, newTab: false, noFollow: false));
             }
             else
             {
@@ -206,21 +224,21 @@ public static partial class Server
         {
             string? titleLg = sidebar ? null : (p1 == "" ? null : p1);
             string? titleSm = sidebar ? (p1 == "" ? null : p1) : null;
-            if (target.StartsWithAny("/", "#", "http://", "https://"))
-            {
-                if (target.EndsWithAny(".jpg", ".jpeg", ".png", ".gif", ".bmp"))
-                {
-                    if (p2 == null)
-                        result = new ContainerElement(null, new Image(target, "max-height: " + p1));
-                    else
-                    {
-                        string? title = ParseTitle(p2, out string? classes, out string? id);
-                        result = new ContainerElement(sidebar ? null : title, new Image(target, "max-height: " + p1, title: title), classes, id: sidebar ? null : id);
-                    }
-                }
-                else result = new ButtonElement(titleLg, titleSm, target, p2, newTab: !target.StartsWithAny("/", "#"), noFollow: !target.StartsWithAny("/", "#"), id: sidebar ? null : p1.ToId());
-            }
-            else result = new ButtonElementJS(titleLg, titleSm, target.Replace('"', '\''), p2, id: sidebar ? null : p1.ToId());
+            if (target.Before('?').EndsWithAny(".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"))
+                result = new ContainerElement(null, new Image(target, $"max-height: {p1}", title: p2));
+            else if (target.StartsWith("http://"))
+                if (target == $"http://{req.Domain}" || target.StartsWithAny($"http://{req.Domain}/", $"http://{req.Domain}#", $"http://{req.Domain}?"))
+                    result = new ButtonElement(titleLg, titleSm, target, p2, newTab: false, noFollow: false, id: sidebar ? null : p1.ToId());
+                else result = new ButtonElement(titleLg, titleSm, target, p2, newTab: true, noFollow: true, id: sidebar ? null : p1.ToId());
+            else if (target.StartsWith("https://"))
+                if (target == $"https://{req.Domain}" || target.StartsWithAny($"https://{req.Domain}/", $"https://{req.Domain}#", $"https://{req.Domain}?"))
+                    result = new ButtonElement(titleLg, titleSm, target, p2, newTab: false, noFollow: false, id: sidebar ? null : p1.ToId());
+                else result = new ButtonElement(titleLg, titleSm, target, req.Domain, newTab: true, noFollow: true, id: sidebar ? null : p1.ToId());
+            else if (target.StartsWith("js:"))
+                result = new ButtonElementJS(titleLg, titleSm, target[3..].HtmlValueSafe(), p2, id: sidebar ? null : p1.ToId());
+            else if (target.StartsWith("javascript:"))
+                result = new ButtonElementJS(titleLg, titleSm, target[11..].HtmlValueSafe(), p2, id: sidebar ? null : p1.ToId());
+            else result = new ButtonElement(titleLg, titleSm, target, p2, newTab: false, noFollow: false, id: sidebar ? null : p1.ToId());
         }
         else if (e.Count == 0)
         {
