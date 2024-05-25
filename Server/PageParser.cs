@@ -76,7 +76,7 @@ public static partial class Server
                 else if (target.StartsWith("https://"))
                     if (target == $"https://{req.Domain}" || target.StartsWithAny($"https://{req.Domain}/", $"https://{req.Domain}#", $"https://{req.Domain}?"))
                         button = new Button(p1, target, p2, newTab: false, noFollow: false);
-                    else button = new Button(p1, target, req.Domain, newTab: true, noFollow: true);
+                    else button = new Button(p1, target, p2, newTab: true, noFollow: true);
                 else if (target.StartsWith("js:"))
                     button = new ButtonJS(p1, target[3..].HtmlValueSafe(), p2);
                 else if (target.StartsWith("javascript:"))
@@ -201,7 +201,7 @@ public static partial class Server
                 else if (target.StartsWith("https://"))
                     if (target == $"https://{req.Domain}" || target.StartsWithAny($"https://{req.Domain}/", $"https://{req.Domain}#", $"https://{req.Domain}?"))
                         container.Buttons.Add(new Button(p1, target, p2, newTab: false, noFollow: false));
-                    else container.Buttons.Add(new Button(p1, target, req.Domain, newTab: true, noFollow: true));
+                    else container.Buttons.Add(new Button(p1, target, p2, newTab: true, noFollow: true));
                 else if (target.StartsWith("js:"))
                     container.Buttons.Add(new ButtonJS(p1, target[3..].HtmlValueSafe(), p2));
                 else if (target.StartsWith("javascript:"))
@@ -233,7 +233,7 @@ public static partial class Server
             else if (target.StartsWith("https://"))
                 if (target == $"https://{req.Domain}" || target.StartsWithAny($"https://{req.Domain}/", $"https://{req.Domain}#", $"https://{req.Domain}?"))
                     result = new ButtonElement(titleLg, titleSm, target, p2, newTab: false, noFollow: false, id: sidebar ? null : p1.ToId());
-                else result = new ButtonElement(titleLg, titleSm, target, req.Domain, newTab: true, noFollow: true, id: sidebar ? null : p1.ToId());
+                else result = new ButtonElement(titleLg, titleSm, target, p2, newTab: true, noFollow: true, id: sidebar ? null : p1.ToId());
             else if (target.StartsWith("js:"))
                 result = new ButtonElementJS(titleLg, titleSm, target[3..].HtmlValueSafe(), p2, id: sidebar ? null : p1.ToId());
             else if (target.StartsWith("javascript:"))
