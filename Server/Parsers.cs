@@ -494,6 +494,11 @@ public static class Parsers
     public static string FromBase64PathSafe(this string base64)
         => Encoding.UTF8.GetString(Convert.FromBase64String(base64.Replace('_', '/')));
 
+    /// <summary>
+    /// Formats the version of the given assembly as a string while skipping unnecessary zero segments at the end.<br/>
+    /// A.0.0.0 will be formatted as A.0, A.B.0.0 as A.B, A.B.C.0 as A.B.C and A.B.C.D as A.B.C.D.<br/>
+    /// If the given assembly doesn't have a version, 0.1 will be returned.
+    /// </summary>
     public static string VersionString(Assembly assembly)
     {
         var version = assembly.GetName().Version;
