@@ -9,29 +9,9 @@ namespace uwap.WebFramework.Plugins;
 public interface IPlugin
 {
     /// <summary>
-    /// Handles the given page request with the given relative path and plugin path (without the domain or preceding slash).
+    /// Handles the given request.
     /// </summary>
-    public Task Handle(AppRequest req, string relPath, string pathPrefix);
-
-    /// <summary>
-    /// Handles the given API request with the given relative path and plugin path (without the domain or preceding slash).
-    /// </summary>
-    public Task Handle(ApiRequest req, string relPath, string pathPrefix);
-
-    /// <summary>
-    /// Handles the given download request with the given relative path and plugin path (without the domain or preceding slash).
-    /// </summary>
-    public Task Handle(DownloadRequest req, string relPath, string pathPrefix);
-
-    /// <summary>
-    /// Handles the given POST request (without any files) with the given relative path and plugin path (without the domain or preceding slash).
-    /// </summary>
-    public Task Handle(PostRequest req, string relPath, string pathPrefix);
-
-    /// <summary>
-    /// Handles the given event request with the given relative path and plugin path (without the domain or preceding slash).
-    /// </summary>
-    public Task Handle(EventRequest req, string relPath, string pathPrefix);
+    public Task Handle(Request req);
 
     /// <summary>
     /// Does something that should be done regularly (every time the worker is active).

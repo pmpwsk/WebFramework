@@ -8,5 +8,5 @@ public interface IStyle
     /// <summary>
     /// Enumerates the style element's lines.
     /// </summary>
-    public IEnumerable<string> Export(IRequest request);
+    public IEnumerable<string> Export(Request req);
 }

@@ -29,11 +29,12 @@ public static partial class Server
                         return true;
 
                     //send file
-                    ApiRequest request = new(data) { CorsDomain = Config.FileCorsDomain };
+                    Request request = new(data) { CorsDomain = Config.FileCorsDomain };
                     try
                     {
-                        if (entry.File == null) await request.SendFile($"../Public/{key}");
-                        else await request.SendBytes(entry.File.Content);
+                        if (entry.File == null)
+                            await request.WriteFile($"../Public/{key}");
+                        else await request.WriteBytes(entry.File.Content);
                     }
                     catch (Exception ex)
                     {
@@ -44,7 +45,7 @@ public static partial class Server
                 }
                 catch (Exception ex)
                 {
-                    await new ApiRequest(data) { Exception = ex, Status = 500 }.Finish();
+                    await new Request(data) { Exception = ex, Status = 500 }.Finish();
                 }
 
                 return true;

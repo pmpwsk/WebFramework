@@ -169,23 +169,8 @@ public static class Parsers
     /// <summary>
     /// Returns the first segment of a path as well as the remainder, e.g. for /abc/xyz/... it returns "abc" and "/xyz/...".
     /// </summary>
-    public static string GetFirstSegment(this AppRequest request, out string rest)
-        => GetFirstSegment(request.Path, out rest);
-    /// <summary>
-    /// Returns the first segment of a path as well as the remainder, e.g. for /abc/xyz/... it returns "abc" and "/xyz/...".
-    /// </summary>
-    public static string GetFirstSegment(this PostRequest request, out string rest)
-        => GetFirstSegment(request.Path, out rest);
-    /// <summary>
-    /// Returns the first segment of a path as well as the remainder, e.g. for /abc/xyz/... it returns "abc" and "/xyz/...".
-    /// </summary>
-    public static string GetFirstSegment(this ApiRequest request, out string rest)
-        => GetFirstSegment(request.Path.Remove(0,4), out rest);
-    /// <summary>
-    /// Returns the first segment of a path as well as the remainder, e.g. for /abc/xyz/... it returns "abc" and "/xyz/...".
-    /// </summary>
-    public static string GetFirstSegment(this DownloadRequest request, out string rest)
-        => GetFirstSegment(request.Path.Remove(0,3), out rest);
+    public static string GetFirstSegment(this Request req, out string rest)
+        => GetFirstSegment(req.Path, out rest);
 
     /// <summary>
     /// Replaces < with &lt; and > with &gt;.

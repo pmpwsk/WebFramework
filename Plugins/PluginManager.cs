@@ -35,63 +35,9 @@ public static class PluginManager
         pathPrefix = path.Remove(path.Length - relPath.Length + 1);
         if (pathPrefix.EndsWith('/'))
             pathPrefix = pathPrefix[..^1];
-        if (path == "/" || (relPath == "/" && !path.EndsWith('/')))
-            relPath = "";
         var result = results[max];
         domain = result.Item2;
         return result.Item1;
-    }
-
-    /// <summary>
-    /// Handles the given API request with the plugin that most closely matches the given path for any of the given domains, or does nothing and returns false if no matching plugin was found.<br/>
-    /// Domains should be sorted by their priority among plugins with the same depth (the most relevant domain should be first).
-    /// </summary>
-    public static async Task<bool> Handle(string path, ApiRequest req)
-    {
-        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix, out _);
-        if (plugin == null)
-            return false;
-        await plugin.Handle(req, relPath, pathPrefix);
-        return true;
-    }
-
-    /// <summary>
-    /// Handles the given download request with the plugin that most closely matches the given path for any of the given domains, or does nothing and returns false if no matching plugin was found.<br/>
-    /// Domains should be sorted by their priority among plugins with the same depth (the most relevant domain should be first).
-    /// </summary>
-    public static async Task<bool> Handle(string path, DownloadRequest req)
-    {
-        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix, out _);
-        if (plugin == null)
-            return false;
-        await plugin.Handle(req, relPath, pathPrefix);
-        return true;
-    }
-
-    /// <summary>
-    /// Handles the given POST request with the plugin that most closely matches the given path for any of the given domains, or does nothing and returns false if no matching plugin was found.<br/>
-    /// Domains should be sorted by their priority among plugins with the same depth (the most relevant domain should be first).
-    /// </summary>
-    public static async Task<bool> Handle(string path, PostRequest req)
-    {
-        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix, out _);
-        if (plugin == null)
-            return false;
-        await plugin.Handle(req, relPath, pathPrefix);
-        return true;
-    }
-
-    /// <summary>
-    /// Handles the given event request with the plugin that most closely matches the given path for any of the given domains, or does nothing and returns false if no matching plugin was found.<br/>
-    /// Domains should be sorted by their priority among plugins with the same depth (the most relevant domain should be first).
-    /// </summary>
-    public static async Task<bool> Handle(string path, EventRequest req)
-    {
-        var plugin = GetPlugin(req.Domains, path, out string relPath, out string pathPrefix, out _);
-        if (plugin == null)
-            return false;
-        await plugin.Handle(req, relPath, pathPrefix);
-        return true;
     }
 
     /// <summary>

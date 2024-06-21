@@ -8,5 +8,5 @@ public interface IScript
     /// <summary>
     /// Enumerates the script element's lines.
     /// </summary>
-    public IEnumerable<string> Export(IRequest request);
+    public IEnumerable<string> Export(Request req);
 }

@@ -14,177 +14,64 @@ public static partial class Server
         {
             switch (data.Context.Request.Method.ToUpper())
             {
-                case "GET": //get method
-                    {
-                        data.Context.Response.Headers.Append("Cache-Control", "no-cache, private");
+                case "GET":
+                case "POST":
+                    data.Context.Response.Headers.Append("Cache-Control", "no-cache, private");
 
-                        //handle based on the first segment
-                        string prefix = data.Path;
-                        if (prefix.Length <= 1)
-                            prefix = "";
-                        else
+                    IPlugin? plugin = PluginManager.GetPlugin(data.Domains, data.Path, out string relPath, out string pathPrefix, out _);
+                    if (plugin != null)
+                    {
+                        byte[]? file = plugin.GetFile(relPath, pathPrefix, data.Domain);
+                        string? timestamp = plugin.GetFileVersion(relPath);
+                        if (file != null && timestamp != null)
                         {
-                            prefix = prefix.Remove(0, 1);
-                            switch (prefix)
+                            //headers
+                            if (AddFileHeaders(data.Context, Parsers.Extension(relPath), timestamp))
+                                break;
+
+                            //send file
+                            Request fileRequest = new(data) { CorsDomain = Config.FileCorsDomain };
+                            try
                             {
-                                case "api":
-                                case "dl":
-                                case "event":
-                                    break;
-                                default:
-                                    prefix = prefix.Contains('/') ? prefix.Remove(prefix.IndexOf('/')) : "";
-                                    break;
+                                await fileRequest.WriteBytes(file);
+                            }
+                            catch (Exception ex)
+                            {
+                                fileRequest.Exception = ex;
+                                fileRequest.Status = 500;
+                                try { await fileRequest.Finish(); } catch { }
                             }
                         }
-                        switch (prefix)
-                        {
-                            case "api": //api request
-                                {
-                                    data.Context.Response.ContentType = "text/plain;charset=utf-8";
-                                    ApiRequest request = new(data);
-                                    try
-                                    {
-                                        string path2 = request.Path;
-                                        if (path2.StartsWith("/api"))
-                                            path2 = path2.Remove(0, 4);
-                                        if (await PluginManager.Handle(path2, request))
-                                        { }
-                                        else if (ApiRequestReceived != null)
-                                            await ApiRequestReceived.Invoke(request);
-                                        else request.Status = 501;
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        request.Exception = ex;
-                                        request.Status = 500;
-                                    }
-                                    try { await request.Finish(); } catch { }
-                                }
-                                break;
-                            case "dl": //download request
-                                {
-                                    DownloadRequest request = new(data);
-                                    try
-                                    {
-                                        string path2 = request.Path;
-                                        if (path2.StartsWith("/dl"))
-                                            path2 = path2.Remove(0, 3);
-                                        if (await PluginManager.Handle(path2, request))
-                                        { }
-                                        else if (DownloadRequestReceived != null)
-                                            await DownloadRequestReceived.Invoke(request);
-                                        else request.Status = 501;
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        request.Exception = ex;
-                                        request.Status = 500;
-                                    }
-                                    try { await request.Finish(); } catch { }
-                                }
-                                break;
-                            case "event": //event request
-                                {
-                                    data.Context.Response.ContentType = "text/event-stream";
-                                    EventRequest request = new(data);
-                                    try
-                                    {
-                                        string path2 = request.Path;
-                                        if (path2.StartsWith("/event"))
-                                            path2 = path2.Remove(0, 6);
-                                        if (await PluginManager.Handle(path2, request))
-                                        { }
-                                        else if (EventRequestReceived != null)
-                                            await EventRequestReceived.Invoke(request);
-                                        else request.Status = 501;
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        request.Exception = ex;
-                                        request.Status = 500;
-                                    }
-                                }
-                                break;
-                            default: //app request
-                                {
-                                    IPlugin? plugin = PluginManager.GetPlugin(data.Domains, data.Path, out string relPath, out string pathPrefix, out _);
-                                    if (plugin != null)
-                                    {
-                                        byte[]? file = plugin.GetFile(relPath, pathPrefix, data.Domain);
-                                        string? timestamp = plugin.GetFileVersion(relPath);
-                                        if (file != null && timestamp != null)
-                                        {
-                                            //headers
-                                            if (AddFileHeaders(data.Context, Parsers.Extension(relPath), timestamp))
-                                                break;
-
-                                            //send file
-                                            ApiRequest fileRequest = new(data) { CorsDomain = Config.FileCorsDomain };
-                                            try
-                                            {
-                                                await fileRequest.SendBytes(file);
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                fileRequest.Exception = ex;
-                                                fileRequest.Status = 500;
-                                                try { await fileRequest.Finish(); } catch { }
-                                            }
-                                            break;
-                                        }
-                                    }
-
-                                    data.Context.Response.ContentType = "text/html;charset=utf-8";
-                                    AppRequest request = new(data);
-                                    try
-                                    {
-                                        if (ParsePage(request, data.Domains)) { }
-                                        else
-                                        {
-                                            string path2 = request.Path;
-                                            if (path2 == "/")
-                                                path2 = "";
-                                            if (plugin != null)
-                                                await plugin.Handle(request, relPath, pathPrefix);
-                                            else if (AppRequestReceived != null)
-                                                await AppRequestReceived.Invoke(request);
-                                            else request.Status = 501;
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        request.Exception = ex;
-                                        request.Status = 500;
-                                    }
-                                    try { await request.Finish(); } catch { }
-                                }
-                                break;
-                        }
                     }
-                    break;
-                case "POST": //post method
+
+                    Request req = new(data);
+                    try
                     {
-                        data.Context.Response.Headers.Append("Cache-Control", "no-cache, private");
-                        data.Context.Response.ContentType = "text/plain;charset=utf-8";
-                        PostRequest request = new(data);
-                        try
+                        if (ParsePage(req, data.Domains)) { }
+                        else
                         {
-                            string path2 = request.Path;
-                            if (path2 == "/")
-                                path2 = "";
-                            if (await PluginManager.Handle(path2, request))
-                            { }
-                            else if (PostRequestReceived != null)
-                                await PostRequestReceived.Invoke(request);
-                            else request.Status = 501;
+                            if (plugin != null)
+                            {
+                                if (relPath == "")
+                                    req.Redirect(req.FullPath + '/');
+                                else
+                                {
+                                    req.Path = relPath;
+                                    req.PluginPathPrefix = pathPrefix;
+                                    await plugin.Handle(req);
+                                }
+                            }
+                            else if (RequestReceived != null)
+                                await RequestReceived.Invoke(req);
+                            else req.Status = 501;
                         }
-                        catch (Exception ex)
-                        {
-                            request.Exception = ex;
-                            request.Status = 500;
-                        }
-                        try { await request.Finish(); } catch { }
                     }
+                    catch (Exception ex)
+                    {
+                        req.Exception = ex;
+                        req.Status = 500;
+                    }
+                    try { await req.Finish(); } catch { }
                     break;
                 case "HEAD": //just the headers should be returned
                     {
@@ -204,35 +91,5 @@ public static partial class Server
 
             return true;
         }
-    }
-
-    /// <summary>
-    /// Calls the handler for a given API request (used by AppRequest.CallApi).
-    /// </summary>
-    internal static async Task CallApi(ApiRequest request)
-    {
-        string path = request.Path;
-        if (path.StartsWith("/api"))
-            path = path.Remove(0, 4);
-        if (await PluginManager.Handle(path, request))
-        { }
-        else if (ApiRequestReceived != null)
-            await ApiRequestReceived.Invoke(request);
-        else request.Status = 501;
-    }
-
-    /// <summary>
-    /// Calls the handler for a given download request (used by AppRequest.CallDownload).
-    /// </summary>
-    internal static async Task CallDownload(DownloadRequest request)
-    {
-        string path = request.Path;
-        if (path.StartsWith("/dl"))
-            path = path.Remove(0, 3);
-        if (await PluginManager.Handle(path, request))
-        { }
-        else if (DownloadRequestReceived != null)
-            await DownloadRequestReceived.Invoke(request);
-        else request.Status = 501;
     }
 }

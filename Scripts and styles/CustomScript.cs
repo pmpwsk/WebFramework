@@ -29,7 +29,7 @@ public class CustomScript : IScript
         => Lines = lines;
 
     //documentation inherited from IScript
-    public IEnumerable<string> Export(IRequest request)
+    public IEnumerable<string> Export(Request req)
     {
         yield return "<script>";
         foreach (string line in Lines)

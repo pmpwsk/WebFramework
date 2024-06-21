@@ -35,7 +35,7 @@ public class CustomPage(string title) : IPage
     public List<string> BodyLines = [];
 
     //documentation inherited from IPage
-    public IEnumerable<string> Export(AppRequest request)
+    public IEnumerable<string> Export(Request req)
     {
         yield return "<!DOCTYPE html>";
         yield return "<html>";
@@ -44,7 +44,7 @@ public class CustomPage(string title) : IPage
         yield return "<head>";
         //title
         string title = Title.HtmlSafe();
-        if (Server.Config.Domains.TitleExtensions.TryGetValueAny(out var titleExtension, request.Domains) && titleExtension != null)
+        if (Server.Config.Domains.TitleExtensions.TryGetValueAny(out var titleExtension, req.Domains) && titleExtension != null)
             title += " | " + titleExtension;
         yield return $"\t<title>{title}</title>";
         //viewport settings + charset
@@ -52,7 +52,7 @@ public class CustomPage(string title) : IPage
         yield return "\t<meta charset=\"utf-8\">";
         //styles
         foreach (IStyle style in Styles)
-            foreach (string line in style.Export(request))
+            foreach (string line in style.Export(req))
                 yield return "\t" + line;
         foreach (string item in HeadLines)
             yield return "\t" + item;
@@ -63,7 +63,7 @@ public class CustomPage(string title) : IPage
         foreach (string item in BodyLines)
             yield return "\t" + item;
         foreach (IScript script in Scripts)
-            foreach (string line in script.Export(request))
+            foreach (string line in script.Export(req))
                 yield return "\t" + line;
         yield return "</body>";
 

@@ -134,8 +134,8 @@ public static partial class AccountManager
     /// <summary>
     /// Creates a new authentication token for the given user and adds a cookie for it to the given context.
     /// </summary>
-    internal static void Login(User user, IRequest request)
-        => AddAuthTokenCookie(user.Id + user.Auth.AddNew(out bool temporary), request.Context, temporary);
+    internal static void Login(User user, Request req)
+        => AddAuthTokenCookie(user.Id + user.Auth.AddNew(out bool temporary), req.Context, temporary);
 
     /// <summary>
     /// Check whether the given username satisfies the username requirements.

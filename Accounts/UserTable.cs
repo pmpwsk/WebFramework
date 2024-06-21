@@ -258,23 +258,24 @@ public class UserTable : Table<User>
     /// Logs out the current client.
     /// </summary>
     /// <param name="request"></param>
-    public void Logout(IRequest request)
-        => Logout(request.Context, false);
+    public void Logout(Request req)
+        => Logout(req.Context, false);
 
     /// <summary>
     /// Logs out all other clients.
     /// </summary>
     /// <param name="request"></param>
-    public void LogoutOthers(IRequest request)
-        => Logout(request.Context, true);
+    public void LogoutOthers(Request req)
+        => Logout(req.Context, true);
 
     /// <summary>
     /// Creates and adds a new user using the given data and logs in the given request or throws an Exception if some of the data wasn't acceptable.
     /// </summary>
-    public User Register(string username, string mailAddress, string? password, IRequest request)
+    public User Register(string username, string mailAddress, string? password, Request req)
     {
         User user = Register(username, mailAddress, password);
-        if (request != null) AccountManager.Login(user, request);
+        if (req != null)
+            AccountManager.Login(user, req);
         return user;
     }
 
@@ -302,15 +303,15 @@ public class UserTable : Table<User>
     /// <summary>
     /// Logs in the user using the given data or returns null and reports the attempt if the login attempt failed.
     /// </summary>
-    public User? Login(string username, string password, IRequest request)
+    public User? Login(string username, string password, Request req)
     {
-        if (AccountManager.IsBanned(request.Context))
+        if (AccountManager.IsBanned(req.Context))
             return null;
 
         User? user = Login(username, password);
 
-        if (user == null) AccountManager.ReportFailedAuth(request.Context);
-        else AccountManager.Login(user, request);
+        if (user == null) AccountManager.ReportFailedAuth(req.Context);
+        else AccountManager.Login(user, req);
 
         return user;
     }

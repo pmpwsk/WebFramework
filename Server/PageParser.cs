@@ -7,9 +7,9 @@ public static partial class Server
     /// <summary>
     /// Attempts to handle the given request using a .wfpg file in ../Public for any of the domains (in order) and returns true if that was possible. If no matching file was found, false is returned.
     /// </summary>
-    private static bool ParsePage(AppRequest request, List<string> domains)
+    private static bool ParsePage(Request req, List<string> domains)
     {
-        string path = request.Path;
+        string path = req.Path;
         if (path.EndsWith("/index"))
             return false;
         if (path.EndsWith('/'))
@@ -19,7 +19,7 @@ public static partial class Server
         {
             if (Cache.TryGetValue(domain + path, out CacheEntry? entry) && entry.IsPublic)
             {
-                ParsePage(request, entry);
+                ParsePage(req, entry);
                 return true;
             }
         }
@@ -29,17 +29,17 @@ public static partial class Server
     /// <summary>
     /// Creates a blank page and parses the .wfpg file in the given cache entry to populate it with data and elements.
     /// </summary>
-    private static void ParsePage(AppRequest request, CacheEntry cacheEntry)
+    private static void ParsePage(Request req, CacheEntry cacheEntry)
     {
-        Presets.CreatePage(request, cacheEntry.Key.After('/').RemoveLast(5).CapitalizeFirstLetter(), out Page page, out _);
-        Presets.Navigation(request, page);
-        ParseIntoPage(request, page, cacheEntry.EnumerateTextLines());
+        Presets.CreatePage(req, cacheEntry.Key.After('/').RemoveLast(5).CapitalizeFirstLetter(), out Page page, out _);
+        Presets.Navigation(req, page);
+        ParseIntoPage(req, page, cacheEntry.EnumerateTextLines());
     }
 
     /// <summary>
     /// Parses the .wfpg file in the given cache entry and populates the given page with it.
     /// </summary>
-    public static void ParseIntoPage(AppRequest req, Page page, IEnumerable<string> lines)
+    public static void ParseIntoPage(Request req, Page page, IEnumerable<string> lines)
     {
         IPageElement? currentContentElement = null;
         IPageElement? currentSidebarElement = null;
@@ -102,7 +102,7 @@ public static partial class Server
     /// <summary>
     /// Parses and applies the command to the page.
     /// </summary>
-    private static void ParseCommand(AppRequest req, Page page, string command)
+    private static void ParseCommand(Request req, Page page, string command)
     {
         command.SplitAtFirst(' ', out string operation, out string arguments);
         operation = operation.Trim();
@@ -178,7 +178,7 @@ public static partial class Server
     /// <summary>
     /// Parses the line and adds the element to the page.
     /// </summary>
-    private static IPageElement? ParseElement(AppRequest req, List<IPageElement> e, IPageElement? currentElement, string line, bool sidebar, Page page)
+    private static IPageElement? ParseElement(Request req, List<IPageElement> e, IPageElement? currentElement, string line, bool sidebar, Page page)
     {
         IPageElement? result = null;
         if (currentElement != null && currentElement is ContainerElement container)

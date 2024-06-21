@@ -4,11 +4,11 @@ namespace uwap.WebFramework;
 
 public static partial class Server
 {
-    internal static IEnumerable<string> ParseStatusPageAndReturnExport(AppRequest request, CacheEntry cacheEntry, string message)
+    internal static IEnumerable<string> ParseStatusPageAndReturnExport(Request req, CacheEntry cacheEntry, string message)
     {
-        Presets.CreatePage(request, cacheEntry.Key.After('/').RemoveLast(5).CapitalizeFirstLetter(), out Page page, out _);
-        Presets.Navigation(request, page);
-        ParseIntoPage(request, page, cacheEntry.EnumerateTextLines());
+        Presets.CreatePage(req, cacheEntry.Key.After('/').RemoveLast(5).CapitalizeFirstLetter(), out Page page, out _);
+        Presets.Navigation(req, page);
+        ParseIntoPage(req, page, cacheEntry.EnumerateTextLines());
         if (page.Description == "")
             page.Description = null;
 
@@ -36,10 +36,10 @@ public static partial class Server
                     }
             }
 
-        return page.ExportWithoutCheckingForError(request);
+        return page.ExportWithoutCheckingForError(req);
 
         string Replace(string v)
-            => v.Replace("[STATUS]", request.Status.ToString())
+            => v.Replace("[STATUS]", req.Status.ToString())
                 .Replace("[MESSAGE]", message);
 
         void ReplaceR(ref string v)

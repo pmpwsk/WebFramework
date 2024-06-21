@@ -29,7 +29,7 @@ public class CustomStyle : IStyle
         => Lines = lines;
 
     //documentation inherited from IStyle
-    public IEnumerable<string> Export(IRequest request)
+    public IEnumerable<string> Export(Request req)
     {
         yield return "<style>";
         foreach (string line in Lines)

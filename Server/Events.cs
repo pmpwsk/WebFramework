@@ -8,29 +8,9 @@ namespace uwap.WebFramework;
 public delegate Task Handler();
 
 /// <summary>
-/// Delegate for asynchronous API request handlers.
+/// Delegate for asynchronous request handlers.
 /// </summary>
-public delegate Task ApiRequestHandler(ApiRequest request);
-
-/// <summary>
-/// Delegate for asynchronous app request handlers.
-/// </summary>
-public delegate Task AppRequestHandler(AppRequest request);
-
-/// <summary>
-/// Delegate for asynchronous download request handlers.
-/// </summary>
-public delegate Task DownloadRequestHandler(DownloadRequest request);
-
-/// <summary>
-/// Delegate for asynchronous POST request handlers.
-/// </summary>
-public delegate Task PostRequestHandler(PostRequest request);
-
-/// <summary>
-/// Delegate for asynchronous event request handlers.
-/// </summary>
-public delegate Task EventRequestHandler(EventRequest request);
+public delegate Task RequestHandler(Request req);
 
 /// <summary>
 /// Delegate for backup handlers.
@@ -50,29 +30,9 @@ public static partial class Server
     public static event Handler? WorkerWorked = null;
 
     /// <summary>
-    /// Called when an API request has been received.
+    /// Called when a request has been received.
     /// </summary>
-    public static event ApiRequestHandler? ApiRequestReceived = null;
-
-    /// <summary>
-    /// Called when an app request has been received.
-    /// </summary>
-    public static event AppRequestHandler? AppRequestReceived = null;
-
-    /// <summary>
-    /// Called when a download request has been received.
-    /// </summary>
-    public static event DownloadRequestHandler? DownloadRequestReceived = null;
-
-    /// <summary>
-    /// Called when a POST request without files has been received.
-    /// </summary>
-    public static event PostRequestHandler? PostRequestReceived = null;
-
-    /// <summary>
-    /// Called when an event request has been received.
-    /// </summary>
-    public static event EventRequestHandler? EventRequestReceived = null;
+    public static event RequestHandler? RequestReceived = null;
 
     /// <summary>
     /// Called when the server is being backed up (after everything else has been backed up).

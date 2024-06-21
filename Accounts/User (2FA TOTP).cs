@@ -63,10 +63,10 @@ public class TwoFactorTotp
     /// </summary>
     /// <param name="request">The current request (used to handle failed attempts and tokens).</param>
     /// <param name="tolerateRecovery">Whether to tolerate the usage of a recovery code.</param>
-    public bool Validate(string code, IRequest? request, bool tolerateRecovery)
+    public bool Validate(string code, Request? req, bool tolerateRecovery)
     {
         //banned?
-        if (request != null && AccountManager.IsBanned(request.Context))
+        if (req != null && AccountManager.IsBanned(req.Context))
             return false;
 
         //recovery code?
@@ -89,7 +89,7 @@ public class TwoFactorTotp
                 Data.UsedTimeSteps.Remove(Data.UsedTimeSteps.Min());
 
             //does an auth token even exist? (this should be the case, but you never know)
-            if (request != null && request.Cookies.TryGetValue("AuthToken", out var combinedToken))
+            if (req != null && req.Cookies.TryGetValue("AuthToken", out var combinedToken))
             {
                 //get and decode the auth token
                 string id = combinedToken.Remove(12);
@@ -99,7 +99,7 @@ public class TwoFactorTotp
                     //renew
                     if (Server.Config.Log.AuthTokenRenewed)
                         Console.WriteLine($"Renewed a token after 2FA for user {User.Id}.");
-                    AccountManager.AddAuthTokenCookie(User.Id + User.Auth.Renew(authToken, data), request.Context, false);
+                    AccountManager.AddAuthTokenCookie(User.Id + User.Auth.Renew(authToken, data), req.Context, false);
                 }
             }
             User.UnlockSave();
@@ -108,8 +108,8 @@ public class TwoFactorTotp
         else
         {
             //invalid, report as a failed attempt
-            if (request != null)
-                AccountManager.ReportFailedAuth(request.Context);
+            if (req != null)
+                AccountManager.ReportFailedAuth(req.Context);
             return false;
         }
     }

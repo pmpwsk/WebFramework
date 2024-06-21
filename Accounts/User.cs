@@ -185,9 +185,9 @@ public partial class User : ITableValue
     /// Checks whether the given token is the token for mail verification and sets it to null (=verified) if it's the correct one.
     /// </summary>
     /// <param name="request">The request to handle failed attempts to verify the mail address as login attempts.</param>
-    public bool VerifyMail(string token, IRequest request)
+    public bool VerifyMail(string token, Request req)
     {
-        if (AccountManager.IsBanned(request.Context))
+        if (AccountManager.IsBanned(req.Context))
             return false;
         if (MailToken == null)
             throw new Exception("This user's mail address is already verified.");
@@ -199,7 +199,7 @@ public partial class User : ITableValue
             UnlockSave();
 
             //does an auth token even exist? (this should be the case, but you never know)
-            if (request != null && request.Cookies.TryGetValue("AuthToken", out var combinedToken))
+            if (req != null && req.Cookies.TryGetValue("AuthToken", out var combinedToken))
             {
                 //get and decode the auth token
                 string id = combinedToken.Remove(12);
@@ -209,14 +209,14 @@ public partial class User : ITableValue
                     //renew
                     if (Server.Config.Log.AuthTokenRenewed)
                         Console.WriteLine($"Renewed a token after mail verification for user {Id}.");
-                    AccountManager.AddAuthTokenCookie(Id + Auth.Renew(authToken, data), request.Context, false);
+                    AccountManager.AddAuthTokenCookie(Id + Auth.Renew(authToken, data), req.Context, false);
                 }
             }
             return true;
         }
         else
         {
-            AccountManager.ReportFailedAuth(request.Context);
+            AccountManager.ReportFailedAuth(req.Context);
             return false;
         }
     }
@@ -225,11 +225,11 @@ public partial class User : ITableValue
     /// Checks whether the given password is correct.
     /// </summary>
     /// <param name="request">The request to handle failed login attempts.</param>
-    public bool ValidatePassword(string password, IRequest? request)
+    public bool ValidatePassword(string password, Request? req)
     {
         if (Password == null)
             return false;
-        if (request != null && AccountManager.IsBanned(request.Context))
+        if (req != null && AccountManager.IsBanned(req.Context))
             return false;
 
         if (Password.Check(password))
@@ -243,8 +243,8 @@ public partial class User : ITableValue
             return true;
         }
 
-        if (request != null)
-            AccountManager.ReportFailedAuth(request.Context);
+        if (req != null)
+            AccountManager.ReportFailedAuth(req.Context);
 
         return false;
     }

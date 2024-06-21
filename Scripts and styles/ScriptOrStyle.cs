@@ -54,15 +54,15 @@ public abstract class ScriptOrStyle
     /// <summary>
     /// Enumerates the script or style element's lines.
     /// </summary>
-    public IEnumerable<string> Export(IRequest request)
+    public IEnumerable<string> Export(Request req)
     {
         int queryIndex = Url.IndexOf('?');
         string urlWithoutQuery = queryIndex > -1 ? Url.Remove(queryIndex) : Url;
 
-        var entry = FindEntry(request.Domains, urlWithoutQuery);
+        var entry = FindEntry(req.Domains, urlWithoutQuery);
         if (entry == null)
         {
-            IPlugin? plugin = PluginManager.GetPlugin(request.Domains, urlWithoutQuery, out string relPath, out string pathPrefix, out string domain);
+            IPlugin? plugin = PluginManager.GetPlugin(req.Domains, urlWithoutQuery, out string relPath, out string pathPrefix, out string domain);
             if (plugin != null)
             {
                 string? timestamp = plugin.GetFileVersion(relPath);

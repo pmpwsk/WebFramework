@@ -20,51 +20,51 @@ public static class Presets
         => Handler.WarningMail(user, subject, text, useThisAddress);
 
     /// <summary>
-    /// Creates a new Page (not IPage!) for the AppRequest with the given title and returns the new Page and its list of elements for easy access.
+    /// Creates a new Page (not IPage!) for the request with the given title and returns the new Page and its list of elements for easy access.
     /// </summary>
-    public static void CreatePage(AppRequest request, string title, out Page page, out List<IPageElement> e)
-        => Handler.CreatePage(request, title, out page, out e);
+    public static void CreatePage(Request req, string title, out Page page, out List<IPageElement> e)
+        => Handler.CreatePage(req, title, out page, out e);
 
     /// <summary>
-    /// Populates the navigation bar of the given page using information from the given AppRequest.
+    /// Populates the navigation bar of the given page using information from the given request.
     /// </summary>
-    public static void Navigation(AppRequest request, Page page)
-        => Handler.Navigation(request, page);
+    public static void Navigation(Request req, Page page)
+        => Handler.Navigation(req, page);
 
     /// <summary>
     /// Returns a list of styles that should be used for the given request as well as the URL of the used font in order to preload this if desired.
     /// </summary>
-    public static List<IStyle> Styles(IRequest request, out string fontUrl)
-        => Handler.Styles(request, out fontUrl);
+    public static List<IStyle> Styles(Request req, out string fontUrl)
+        => Handler.Styles(req, out fontUrl);
 
     /// <summary>
     /// Assumes that the request already has a Page (not IPage!) object and returns the page object as well as the list of elements for easy access.
     /// </summary>
-    public static void Init(this AppRequest request, out Page page, out List<IPageElement> elements)
+    public static void Init(this Request req, out Page page, out List<IPageElement> elements)
     {
-        if (request.Page == null)
+        if (req.Page == null)
             throw new Exception("No page was set.");
 
-        page = (Page)request.Page;
+        page = (Page)req.Page;
         elements = page.Elements;
     }
 
     /// <summary>
-    /// Adds the script at /scripts[PATH].js to the Page to the given AppRequest (assuming it has one).
+    /// Adds the script at /scripts[PATH].js to the Page to the given request (assuming it has one).
     /// </summary>
-    public static void AddScript(this AppRequest request)
+    public static void AddScript(this Request req)
     {
-        if (request.Page != null)
-            ((Page)request.Page).AddScript(request.Path);
+        if (req.Page != null)
+            ((Page)req.Page).AddScript(req.Path);
     }
 
     /// <summary>
-    /// Adds the script at /scripts[PATH]-[SUFFIX].js to the Page to the given AppRequest (assuming it has one).
+    /// Adds the script at /scripts[PATH]-[SUFFIX].js to the Page to the given request (assuming it has one).
     /// </summary>
-    public static void AddScript(this AppRequest request, string suffix)
+    public static void AddScript(this Request req, string suffix)
     {
-        if (request.Page != null)
-            ((Page)request.Page).AddScript(request.Path + "-" + suffix);
+        if (req.Page != null)
+            ((Page)req.Page).AddScript(req.Path + "-" + suffix);
     }
 
     /// <summary>
@@ -118,45 +118,45 @@ public static class Presets
     /// <summary>
     /// Returns an account navbar button (to log in or access the logged in account).
     /// </summary>
-    public static IButton AccountButton(AppRequest request)
-        => Handler.AccountButton(request);
+    public static IButton AccountButton(Request req)
+        => Handler.AccountButton(req);
 
     /// <summary>
     /// Adds elements to allow for password (and 2FA if present) verification with input IDs 'password' and 'code'.
     /// </summary>
-    public static void AddAuthElements(this AppRequest request)
-        => Handler.AddAuthElements(request);
+    public static void AddAuthElements(this Request req)
+        => Handler.AddAuthElements(req);
 
     /// <summary>
     /// Checks whether the given password (and 2FA code if necessary) provided in the query (keys 'password' and 'code') is correct for the given user.<br/>
     /// If it is correct, true is returned and nothing else happens.
     /// If it is incorrect, false is returned and "no" is written and the user is reported for failed authentication.
     /// </summary>
-    public static async Task<bool> Auth(this ApiRequest request, User user)
+    public static async Task<bool> Auth(this Request req, User user)
     {
-        if (request.Query.ContainsKey("password") && request.Query.ContainsKey("code"))
+        if (req.Query.ContainsKey("password") && req.Query.ContainsKey("code"))
         {
-            string password = request.Query["password"], code = request.Query["code"];
+            string password = req.Query["password"], code = req.Query["code"];
             if (user.ValidatePassword(password, null))
             {
-                if (user.TwoFactor.TOTPEnabled(out var totp) && !totp.Validate(code, request, true))
+                if (user.TwoFactor.TOTPEnabled(out var totp) && !totp.Validate(code, req, true))
                 {
-                    AccountManager.ReportFailedAuth(request.Context);
-                    await request.Write("no");
+                    AccountManager.ReportFailedAuth(req.Context);
+                    await req.Write("no");
                     return false;
                 }
                 else return true;
             }
             else
             {
-                AccountManager.ReportFailedAuth(request.Context);
-                await request.Write("no");
+                AccountManager.ReportFailedAuth(req.Context);
+                await req.Write("no");
                 return false;
             }
         }
         else
         {
-            request.Status = 400;
+            req.Status = 400;
             return false;
         }
     }

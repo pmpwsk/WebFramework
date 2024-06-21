@@ -106,37 +106,37 @@ public class Page : IPage
     }
 
     //documentation inherited from IPage
-    public IEnumerable<string> Export(AppRequest request)
-        => Export(request, true);
+    public IEnumerable<string> Export(Request req)
+        => Export(req, true);
 
-    public IEnumerable<string> ExportWithoutCheckingForError(AppRequest request)
-        => Export(request, false);
+    public IEnumerable<string> ExportWithoutCheckingForError(Request req)
+        => Export(req, false);
 
-    private IEnumerable<string> Export(AppRequest request, bool checkForErrors)
+    private IEnumerable<string> Export(Request req, bool checkForErrors)
     {
-        bool error = request.Status != 200;
+        bool error = req.Status != 200;
 
         if (error && checkForErrors)
         {
-            if (!Server.Config.StatusMessages.TryGetValue(request.Status, out var message))
-                message = $"{((request.Status < 400) ? "Status" : "Error")} {request.Status}";
-            if (request.Status == 500 && request.Exception != null && request.IsAdmin())
-                message += $"<br/>Type: {(request.Exception.GetType().FullName ?? "Unknown").HtmlSafe()}" +
-                    $"<br/>Message: {request.Exception.Message.HtmlSafe()}" +
-                    $"<br/>StackTrace: {(request.Exception.StackTrace??"Unknown").HtmlSafe()}";
+            if (!Server.Config.StatusMessages.TryGetValue(req.Status, out var message))
+                message = $"{((req.Status < 400) ? "Status" : "Error")} {req.Status}";
+            if (req.Status == 500 && req.Exception != null && req.IsAdmin)
+                message += $"<br/>Type: {(req.Exception.GetType().FullName ?? "Unknown").HtmlSafe()}" +
+                    $"<br/>Message: {req.Exception.Message.HtmlSafe()}" +
+                    $"<br/>StackTrace: {(req.Exception.StackTrace??"Unknown").HtmlSafe()}";
 
-            foreach (string domain in request.Domains)
+            foreach (string domain in req.Domains)
             {
-                if (Server.Cache.TryGetValue($"{domain}/status/{request.Status}.wfpg", out var entry))
+                if (Server.Cache.TryGetValue($"{domain}/status/{req.Status}.wfpg", out var entry))
                 {
-                    foreach (string line in Server.ParseStatusPageAndReturnExport(request, entry, message))
+                    foreach (string line in Server.ParseStatusPageAndReturnExport(req, entry, message))
                         yield return line;
                     goto end;
                 }
 
                 if (Server.Cache.TryGetValue($"{domain}/status/any.wfpg", out entry))
                 {
-                    foreach (string line in Server.ParseStatusPageAndReturnExport(request, entry, message))
+                    foreach (string line in Server.ParseStatusPageAndReturnExport(req, entry, message))
                         yield return line;
                     goto end;
                 }
@@ -148,8 +148,8 @@ public class Page : IPage
         yield return "<head>";
 
         //title
-        string title = (error && checkForErrors) ? ((request.Status == 301 || request.Status == 302) ? "Redirecting" : "Error") : Title.HtmlSafe();
-        if (Server.Config.Domains.TitleExtensions.TryGetValueAny(out var titleExtension, request.Domains) && titleExtension != null)
+        string title = (error && checkForErrors) ? ((req.Status == 301 || req.Status == 302) ? "Redirecting" : "Error") : Title.HtmlSafe();
+        if (Server.Config.Domains.TitleExtensions.TryGetValueAny(out var titleExtension, req.Domains) && titleExtension != null)
             title += " | " + titleExtension;
         yield return $"\t<title>{title}</title>";
 
@@ -158,10 +158,10 @@ public class Page : IPage
             yield return $"\t<meta name=\"description\" content=\"{Description.HtmlValueSafe()}\" />";
 
         //canonical
-        if (Server.Config.Domains.CanonicalDomains.TryGetValueAny(out var canonical, request.Domains))
+        if (Server.Config.Domains.CanonicalDomains.TryGetValueAny(out var canonical, req.Domains))
         {
-            canonical ??= request.Domain;
-            yield return $"\t<link rel=\"canonical\" href=\"https://{canonical}{request.Path}{request.Context.Request.QueryString}\" />";
+            canonical ??= req.Domain;
+            yield return $"\t<link rel=\"canonical\" href=\"https://{canonical}{req.Path}{req.Context.Request.QueryString}\" />";
         }
 
         //viewport settings + charset
@@ -184,11 +184,11 @@ public class Page : IPage
                 else mime = "";
             }
 
-            if (Server.Cache.TryGetValueAny(out var faviconA, request.Domains.Select(d => d + Favicon).ToArray()))
+            if (Server.Cache.TryGetValueAny(out var faviconA, req.Domains.Select(d => d + Favicon).ToArray()))
                 yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}?t={faviconA.GetModifiedUtc().Ticks}\">";
             else
             {
-                IPlugin? plugin = PluginManager.GetPlugin(request.Domains, Favicon, out string relPath, out _, out _);
+                IPlugin? plugin = PluginManager.GetPlugin(req.Domains, Favicon, out string relPath, out _, out _);
                 if (plugin != null)
                 {
                     string? timestamp = plugin.GetFileVersion(relPath);
@@ -206,7 +206,7 @@ public class Page : IPage
 
         //styles
         foreach (IStyle style in Styles)
-            foreach (string line in style.Export(request))
+            foreach (string line in style.Export(req))
                 yield return "\t" + line;
 
         //custom head items
@@ -217,7 +217,7 @@ public class Page : IPage
         yield return $"<body{((error&&checkForErrors)||Onload==null?"":$" onload=\"{Onload}\"")}>";
 
         //navbar
-        var nav = (Navigation.Count != 0) ? Navigation : [new Button(request.Domain, "/")];
+        var nav = (Navigation.Count != 0) ? Navigation : [new Button(req.Domain, "/")];
         yield return "\t<div class=\"nav\">";
         foreach (IButton n in nav)
             yield return "\t\t" + n.Export();
@@ -236,12 +236,12 @@ public class Page : IPage
         //content
         yield return "\t\t<div class=\"content\">";
         yield return "\t\t\t<div class=\"content-items\">";
-        if (request.LoginState == Accounts.LoginState.Banned && Server.Config.Accounts.FailedAttempts.BanMessage != null)
+        if (req.LoginState == Accounts.LoginState.Banned && Server.Config.Accounts.FailedAttempts.BanMessage != null)
             foreach (string line in Server.Config.Accounts.FailedAttempts.BanMessage.Export())
                 yield return "\t\t\t\t" + line;
         if (error && checkForErrors)
         {
-            if (request.Status == 301 || request.Status == 302)
+            if (req.Status == 301 || req.Status == 302)
             {
                 foreach (string line in new HeadingElement($"Redirecting...", "").Export())
                     yield return "\t\t\t\t" + line;
@@ -251,18 +251,18 @@ public class Page : IPage
             else
             {
                 List<IContent> content;
-                if (request.Status == 500 && request.Exception != null && request.IsAdmin())
+                if (req.Status == 500 && req.Exception != null && req.IsAdmin)
                     content =
                     [
-                        new Paragraph((request.Exception.GetType().FullName??"Unknown").HtmlSafe()),
-                        new Heading("Message"), new Paragraph(request.Exception.Message.HtmlSafe()),
-                        new Heading("StackTrace"), new Paragraph((request.Exception.StackTrace??"Unknown").HtmlSafe())
+                        new Paragraph((req.Exception.GetType().FullName??"Unknown").HtmlSafe()),
+                        new Heading("Message"), new Paragraph(req.Exception.Message.HtmlSafe()),
+                        new Heading("StackTrace"), new Paragraph((req.Exception.StackTrace??"Unknown").HtmlSafe())
                     ];
-                else if (Server.Config.StatusMessages.TryGetValue(request.Status, out var statusMessage))
+                else if (Server.Config.StatusMessages.TryGetValue(req.Status, out var statusMessage))
                     content = [new Paragraph(statusMessage)];
                 else content = [];
 
-                foreach (string line in new HeadingElement($"Error {request.Status}", content, "red").Export())
+                foreach (string line in new HeadingElement($"Error {req.Status}", content, "red").Export())
                     yield return "\t\t\t\t" + line;
             }
         }
@@ -274,8 +274,8 @@ public class Page : IPage
         //footer
         if (!HideFooter)
         {
-            if (!Server.Config.Domains.CopyrightNames.TryGetValueAny(out var copyright, request.Domains))
-                copyright = request.Domain;
+            if (!Server.Config.Domains.CopyrightNames.TryGetValueAny(out var copyright, req.Domains))
+                copyright = req.Domain;
             List<IContent> footerContent = [];
             if (copyright != null)
                 footerContent.Add(new Paragraph($"Copyright {DateTime.UtcNow.Year} {copyright} - All other trademarks, screenshots, logos and copyrights are the property of their respective owners."));
@@ -290,7 +290,7 @@ public class Page : IPage
         //scripts
         if (!(error&&checkForErrors))
             foreach (IScript script in Scripts)
-                foreach (string line in script.Export(request))
+                foreach (string line in script.Export(req))
                     yield return "\t" + line;
 
         yield return "</body>";
