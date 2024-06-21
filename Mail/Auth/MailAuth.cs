@@ -16,7 +16,7 @@ public static partial class MailAuth
     {
         var query = MailManager.DnsLookup.Query(domain, DnsClient.QueryType.TXT);
         var records = query.Answers.TxtRecords();
-        foreach (string value in records.SelectMany(x => x.Text))
+        foreach (string value in records.Select(x => string.Join("", x.Text)))
         {
             var fields = value.Split(' ', ';').Where(x => x != "");
             if (!fields.Any())
