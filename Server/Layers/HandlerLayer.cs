@@ -66,6 +66,14 @@ public static partial class Server
                             else req.Status = 501;
                         }
                     }
+                    catch (RedirectSignal redirect)
+                    {
+                        try { req.Redirect(redirect.Location, redirect.Permanent); } catch { }
+                    }
+                    catch (HttpStatusSignal status)
+                    {
+                        try { req.Status = status.Status; } catch { }
+                    }
                     catch (Exception ex)
                     {
                         req.Exception = ex;
