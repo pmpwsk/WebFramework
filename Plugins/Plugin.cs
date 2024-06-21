@@ -10,23 +10,8 @@ namespace uwap.WebFramework.Plugins;
 public abstract class Plugin : IPlugin
 {
     //documentation is inherited from IPlugin
-    public virtual async Task Handle(Request req)
-    {
-        int status = await HandleNeatly(req);
-        switch (status)
-        {
-            case 0:
-                break;
-            case -1:
-                req.RedirectToLogin();
-                break;
-            default:
-                req.Status = status;
-                break;
-        }
-    }
-    protected virtual Task<int> HandleNeatly(Request req)
-        => Task.FromResult(501);
+    public virtual Task Handle(Request req)
+        => Task.CompletedTask;
 
     //documentation is inherited from IPlugin
     public virtual Task Work()
