@@ -24,6 +24,13 @@ public static partial class Server
                     if (entry.File == null && !File.Exists($"../Public/{key}"))
                         continue;
 
+                    //check method
+                    if (data.Method != "GET")
+                    {
+                        await new Request(data) { Status = 405 }.Finish();
+                        return true;
+                    }
+
                     //headers
                     if (AddFileHeaders(data.Context, entry.Extension, entry.GetModifiedUtc().Ticks.ToString()))
                         return true;
