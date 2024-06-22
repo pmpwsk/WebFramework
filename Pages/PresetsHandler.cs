@@ -48,6 +48,13 @@ public class PresetsHandler
         => false;
 
     /// <summary>
+    /// The favicon path to use in CreatePage for the given request.<br/>
+    /// Default: null (uses favicon.ico if present)
+    /// </summary>
+    public virtual string? Favicon(Request req)
+        => null;
+
+    /// <summary>
     /// </summary>
     public virtual void CreatePage(Request req, string title, out Page page, out List<IPageElement> e)
     {
