@@ -228,6 +228,15 @@ public class Request(LayerRequestData data)
     public void MarkAsFinished()
     => State = RequestState.Finished;
 
+    /// <summary>
+    /// Throws a BadMethodSignal (status 405) if the HTTP method is something other than GET.
+    /// </summary>
+    public void ForceGET()
+    {
+        if (Method != "GET")
+            throw new BadMethodSignal();
+    }
+
     #endregion
 
     #region Interface
