@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 
 namespace uwap.WebFramework;
 
@@ -17,6 +17,7 @@ public static partial class Server
             if (PauseRequests)
             {
                 data.Context.Response.ContentType = "text/plain;charset=utf-8";
+                data.Status = 503;
                 await data.Context.Response.WriteAsync("The server is not accepting requests at this time, most likely because it is being updated. Please try again in a few seconds.");
                 return true;
             }
