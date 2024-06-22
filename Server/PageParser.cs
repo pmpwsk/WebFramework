@@ -1,4 +1,4 @@
-﻿using uwap.WebFramework.Elements;
+using uwap.WebFramework.Elements;
 
 namespace uwap.WebFramework;
 
@@ -19,6 +19,7 @@ public static partial class Server
         {
             if (Cache.TryGetValue(domain + path, out CacheEntry? entry) && entry.IsPublic)
             {
+                req.ForceGET();
                 ParsePage(req, entry);
                 return true;
             }
