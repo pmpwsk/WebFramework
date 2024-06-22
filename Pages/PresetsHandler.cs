@@ -74,7 +74,7 @@ public class PresetsHandler
                     ? ("/account/login" + req.CurrentRedirectQuery)
                     : "/account/login?redirect=" + HttpUtility.UrlEncode(req.Path + req.Context.Request.QueryString), "right"),
             LoginState.LoggedIn
-                => new Button("Account", "/account", "right"),
+                => new Button("Account", "/account/", "right"),
             LoginState.Banned
                 => new Button("Banned", "#", "right"),
             _ => new Button("Logout", "/account/logout" + req.CurrentRedirectQuery, "right"),
