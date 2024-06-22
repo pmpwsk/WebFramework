@@ -11,7 +11,6 @@ public static partial class Server
         {
             if (Config.AutoCertificate.Email != null && data.Path.StartsWith("/.well-known/acme-challenge/"))
             {
-                data.Context.Response.ContentType = "text/plain;charset=utf-8";
                 Request request = new(data);
                 string url = request.Domain + request.Path;
                 if (AutoCertificateTokens.TryGetValue(url, out string? value))
