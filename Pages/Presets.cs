@@ -1,4 +1,4 @@
-using uwap.WebFramework.Accounts;
+﻿using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
 
 namespace uwap.WebFramework.Elements;
@@ -20,10 +20,36 @@ public static class Presets
         => Handler.WarningMail(req, user, subject, text, useThisAddress);
 
     /// <summary>
-    /// Creates a new Page (not IPage!) for the request with the given title and returns the new Page and its list of elements for easy access.
+    /// Creates a new Page (not IPage!) for the request with the given title, adds the favicon, navigation and style(s) from the preset, sets req.Page to the new page and returns it.
+    /// </summary>
+    public static Page CreatePage(Request req, string title)
+    {
+        Page page = Handler.CreatePage(req, title);
+        page.Favicon = Handler.Favicon(req);
+        page.Styles = Handler.Styles(req, out var fontUrl);
+        if (Handler.PreloadFont)
+            page.Preloads.Add(new Preload(fontUrl, "font"));
+        Navigation(req, page);
+        req.Page = page;
+        return page;
+    }
+    
+    /// <summary>
+    /// Creates a new Page (not IPage!) for the request with the given title, adds the favicon, navigation and style(s) from the preset, sets req.Page to the new page and returns as an out parameter.
+    /// </summary>
+    public static void CreatePage(Request req, string title, out Page page)
+    {
+        page = CreatePage(req, title);
+    }
+
+    /// <summary>
+    /// Creates a new Page (not IPage!) for the request with the given title, adds the favicon, navigation and style(s) from the preset, sets req.Page to the new page and returns it and its list of elements as an out parameter for easy access.
     /// </summary>
     public static void CreatePage(Request req, string title, out Page page, out List<IPageElement> e)
-        => Handler.CreatePage(req, title, out page, out e);
+    {
+        page = CreatePage(req, title);
+        e = page.Elements;
+    }
 
     /// <summary>
     /// Populates the navigation bar of the given page using information from the given request.

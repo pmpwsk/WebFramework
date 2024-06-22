@@ -1,4 +1,4 @@
-using uwap.WebFramework.Elements;
+﻿using uwap.WebFramework.Elements;
 
 namespace uwap.WebFramework;
 
@@ -33,7 +33,6 @@ public static partial class Server
     private static void ParsePage(Request req, CacheEntry cacheEntry)
     {
         Presets.CreatePage(req, cacheEntry.Key.After('/').RemoveLast(5).CapitalizeFirstLetter(), out Page page, out _);
-        Presets.Navigation(req, page);
         ParseIntoPage(req, page, cacheEntry.EnumerateTextLines());
     }
 

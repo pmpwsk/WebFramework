@@ -1,4 +1,4 @@
-using MimeKit;
+﻿using MimeKit;
 using System.Web;
 using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
@@ -55,13 +55,10 @@ public class PresetsHandler
         => null;
 
     /// <summary>
+    /// Creates a new Page (not IPage!) for the request with the given title and returns the new Page.
     /// </summary>
-    public virtual void CreatePage(Request req, string title, out Page page, out List<IPageElement> e)
-    {
-        page = new(title);
-        req.Page = page;
-        e = page.Elements;
-    }
+    public virtual Page CreatePage(Request req, string title)
+        => new(title);
 
     /// <summary>
     /// Returns an account navbar button (to log in or access the logged in account).
