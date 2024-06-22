@@ -41,7 +41,13 @@ public class PresetsHandler
     }
 
     /// <summary>
-    /// Creates a new Page (not IPage!) for the request with the given title and returns the new Page and its list of elements for easy access.
+    /// Whether to add the primary font of Styles as a preload in CreatePage.<br/>
+    /// Default: false
+    /// </summary>
+    public virtual bool PreloadFont
+        => false;
+
+    /// <summary>
     /// </summary>
     public virtual void CreatePage(Request req, string title, out Page page, out List<IPageElement> e)
     {
