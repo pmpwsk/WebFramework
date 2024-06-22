@@ -27,7 +27,7 @@ public class PresetsHandler
     /// <summary>
     /// Sends an important email to the given user using the given subject and text. A different address may be specified.
     /// </summary>
-    public virtual MailSendResult WarningMail(User user, string subject, string text, string? useThisAddress = null)
+    public virtual MailSendResult WarningMail(Request req, User user, string subject, string text, string? useThisAddress = null)
     {
         string? address = GetSupportEmail(req);
         if (address == null)
