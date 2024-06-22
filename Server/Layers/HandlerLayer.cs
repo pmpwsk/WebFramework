@@ -25,6 +25,13 @@ public static partial class Server
                         string? timestamp = plugin.GetFileVersion(relPath);
                         if (file != null && timestamp != null)
                         {
+                            //check method
+                            if (data.Method != "GET")
+                            {
+                                await new Request(data) { Status = 405 }.Finish();
+                                break;
+                            }
+
                             //headers
                             if (AddFileHeaders(data.Context, Parsers.Extension(relPath), timestamp))
                                 break;
