@@ -31,10 +31,10 @@ public static class PluginManager
         }
 
         int max = results.Keys.Max();
-        relPath = "/" + string.Join('/', path.Split('/').Skip(max));
-        pathPrefix = path.Remove(path.Length - relPath.Length + 1);
-        if (pathPrefix.EndsWith('/'))
-            pathPrefix = pathPrefix[..^1];
+        pathPrefix = string.Join('/', path.Split('/').Take(max));
+        if (pathPrefix == "/")
+            pathPrefix = "";
+        relPath = path[pathPrefix.Length..];
         var result = results[max];
         domain = result.Item2;
         return result.Item1;
