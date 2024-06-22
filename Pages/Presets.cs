@@ -1,4 +1,4 @@
-﻿using uwap.WebFramework.Accounts;
+using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
 
 namespace uwap.WebFramework.Elements;
@@ -16,8 +16,8 @@ public static class Presets
     /// <summary>
     /// Sends an important email to the given user using the given subject and text. A different address may be specified.
     /// </summary>
-    public static MailSendResult WarningMail(User user, string subject, string text, string? useThisAddress = null)
-        => Handler.WarningMail(user, subject, text, useThisAddress);
+    public static MailSendResult WarningMail(Request req, User user, string subject, string text, string? useThisAddress = null)
+        => Handler.WarningMail(req, user, subject, text, useThisAddress);
 
     /// <summary>
     /// Creates a new Page (not IPage!) for the request with the given title and returns the new Page and its list of elements for easy access.

@@ -1,4 +1,4 @@
-﻿using MimeKit;
+using MimeKit;
 using System.Web;
 using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
@@ -21,7 +21,7 @@ public class PresetsHandler
     /// If SupportEmail and MailManager.ServerDomain are both null, null is returned here, too.<br/>
     /// If only SupportEmail is null and MailManager.ServerDomain isn't null, support@[MailManager.ServerDomain] is returned.<br/>
     /// </summary>
-    protected virtual string? GetSupportEmail()
+    protected virtual string? GetSupportEmail(Request req)
         => (SupportEmail == null && MailManager.ServerDomain == null) ? null : (SupportEmail ?? ("support@" + MailManager.ServerDomain));
 
     /// <summary>
@@ -29,7 +29,7 @@ public class PresetsHandler
     /// </summary>
     public virtual MailSendResult WarningMail(User user, string subject, string text, string? useThisAddress = null)
     {
-        string? address = GetSupportEmail();
+        string? address = GetSupportEmail(req);
         if (address == null)
             return new([], null, null);
         return MailManager.Out.Send(
@@ -89,7 +89,7 @@ public class PresetsHandler
     /// </summary>
     public virtual void AddSupportButton(Page page)
     {
-        string address = GetSupportEmail() ?? throw new Exception("No support email was found.");
+        string address = GetSupportEmail(req) ?? throw new Exception("No support email was found.");
         page.Elements.Add(new ButtonElement("Contact support", address, "mailto:" + address, newTab: true));
     }
 
