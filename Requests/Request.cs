@@ -237,6 +237,15 @@ public class Request(LayerRequestData data)
             throw new BadMethodSignal();
     }
 
+    /// <summary>
+    /// Throws a BadMethodSignal (status 405) if the HTTP method is something other than POST.
+    /// </summary>
+    public void ForcePOST()
+    {
+        if (Method != "POST")
+            throw new BadMethodSignal();
+    }
+
     #endregion
 
     #region Interface
