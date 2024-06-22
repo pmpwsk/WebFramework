@@ -87,7 +87,7 @@ public class PresetsHandler
     /// <summary>
     /// Adds a button to contact customer support to the page.
     /// </summary>
-    public virtual void AddSupportButton(Page page)
+    public virtual void AddSupportButton(Request req, Page page)
     {
         string address = GetSupportEmail(req) ?? throw new Exception("No support email was found.");
         page.Elements.Add(new ButtonElement("Contact support", address, "mailto:" + address, newTab: true));

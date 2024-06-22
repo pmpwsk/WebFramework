@@ -94,8 +94,8 @@ public static class Presets
     /// <summary>
     /// Adds a button to contact customer support to the page.
     /// </summary>
-    public static void AddSupportButton(this Page page)
-        => Handler.AddSupportButton(page);
+    public static void AddSupportButton(this Page page, Request req)
+        => Handler.AddSupportButton(req, page);
 
     /// <summary>
     /// The default error script.
