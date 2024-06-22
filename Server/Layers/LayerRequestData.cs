@@ -56,6 +56,12 @@ public class LayerRequestData(HttpContext context)
         => Context.Domain();
 
     /// <summary>
+    /// The HTTP method.
+    /// </summary>
+    public string Method
+        => Context.Request.Method.ToUpper();
+
+    /// <summary>
     /// The list of domains associated with this request.
     /// </summary>
     public List<string> Domains = [context.Domain()];
