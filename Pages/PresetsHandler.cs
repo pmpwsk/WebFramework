@@ -76,6 +76,13 @@ public class PresetsHandler
                 => new Button("Banned", "#", "right"),
             _ => new Button("Logout", "/account/logout" + req.CurrentRedirectQuery, "right"),
         };
+    private bool AccountPathMatches(Request req, string relPath, bool allowPrefix = false)
+    {
+        string wantedPath = UsersPluginPath(req) + relPath;
+        string testPath = wantedPath.StartsWith("http") ? req.Context.ProtoHostPath() : req.FullPath;
+        return wantedPath == testPath || (allowPrefix && testPath.StartsWith(wantedPath + '/'));
+    }
+
 
     /// <summary>
     /// Populates the navigation bar of the given page using information from the given request.
