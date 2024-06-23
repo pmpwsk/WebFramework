@@ -1,4 +1,4 @@
-using MimeKit;
+﻿using MimeKit;
 using System.Web;
 using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
@@ -67,14 +67,14 @@ public class PresetsHandler
     => req.LoginState switch
         {
             LoginState.None
-                => new Button("Login", ((IEnumerable<string>)["/", "/account/login", "/account/register"]).Contains(req.Path) || req.Path.StartsWith("/account/recovery")
-                    ? ("/account/login" + req.CurrentRedirectQuery)
-                    : "/account/login?redirect=" + HttpUtility.UrlEncode(req.Path + req.Context.Request.QueryString), "right"),
+                => new Button("Login", AccountPathMatches(req, "/login") || AccountPathMatches(req, "/register") || AccountPathMatches(req, "/recovery", true)
+                    ? ($"{UsersPluginPath(req)}/login" + req.CurrentRedirectQuery)
+                    : $"{UsersPluginPath(req)}/login?redirect=" + HttpUtility.UrlEncode(req.Context.ProtoHostPathQuery()), "right"),
             LoginState.LoggedIn
-                => new Button("Account", "/account/", "right"),
+                => new Button("Account", $"{UsersPluginPath(req)}/", "right"),
             LoginState.Banned
                 => new Button("Banned", "#", "right"),
-            _ => new Button("Logout", "/account/logout" + req.CurrentRedirectQuery, "right"),
+            _ => new Button("Logout", $"{UsersPluginPath(req)}/logout" + req.CurrentRedirectQuery, "right"),
         };
     private bool AccountPathMatches(Request req, string relPath, bool allowPrefix = false)
     {
