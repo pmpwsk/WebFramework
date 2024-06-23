@@ -1,4 +1,4 @@
-﻿using MimeKit;
+using MimeKit;
 using System.Web;
 using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
@@ -121,4 +121,12 @@ public class PresetsHandler
             new TextBox("Enter the current code...", twoFactorText, "code", TextBoxRole.NoSpellcheck, "Continue()", styles: twoFactorStyle)
         }));
     }
+
+    /// <summary>
+    /// Adjusts the default functions for AccountButton, LoginPath, TwoFactorPath, MailVerifyPath and PathAllowedWhileLogginIn to point to UsersPlugin at this location.<br/>
+    /// If a domain is provided, it should be preceded by the protocol (https://).<br/>
+    /// Default: /account<br/>
+    /// </summary>
+    public virtual string UsersPluginPath(Request request)
+        => "/account";
 }
