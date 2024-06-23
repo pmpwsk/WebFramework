@@ -2,6 +2,7 @@ using System.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using uwap.WebFramework.Accounts;
+using uwap.WebFramework.Elements;
 
 namespace uwap.WebFramework;
 
@@ -256,7 +257,7 @@ public class Request(LayerRequestData data)
     public void RedirectToLogin()
     {
         State = RequestState.Finished;
-        Redirect(Server.Config.Accounts.LoginPath + "?redirect=" + HttpUtility.UrlEncode(Context.PathQuery()));
+        Redirect(Presets.LoginPath(this) + "?redirect=" + HttpUtility.UrlEncode(Context.ProtoHostPathQuery()));
     }
 
     /// <summary>
