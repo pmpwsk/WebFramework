@@ -142,5 +142,5 @@ public class PresetsHandler
     /// Default: [UsersPluginPath]/login
     /// </summary>
     public virtual string LoginPath(Request req)
-        => $"{UsersPluginPath}/login";
+        => $"{UsersPluginPath(req)}/login";
 }
