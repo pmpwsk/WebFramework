@@ -129,4 +129,11 @@ public class PresetsHandler
     /// </summary>
     public virtual string UsersPluginPath(Request request)
         => "/account";
+
+    /// <summary>
+    /// The path of the login page.<br/>
+    /// Default: [UsersPluginPath]/login
+    /// </summary>
+    public virtual string LoginPath(Request req)
+        => $"{UsersPluginPath}/login";
 }
