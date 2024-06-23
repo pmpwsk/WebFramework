@@ -264,7 +264,7 @@ public class Request(LayerRequestData data)
     /// Returns a query string (including '?') with the current 'redirect' parameter or an empty string if no such parameter was provided.
     /// </summary>
     public string CurrentRedirectQuery
-        => Query.ContainsKey("redirect") ? ("?redirect=" + HttpUtility.UrlEncode(Query["redirect"])) : "";
+        => Query.TryGetValue("redirect", out var redirect) ? ("?redirect=" + HttpUtility.UrlEncode(redirect)) : "";
 
     #endregion
 
