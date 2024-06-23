@@ -1,4 +1,4 @@
-﻿using uwap.WebFramework.Accounts;
+using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
 
 namespace uwap.WebFramework.Elements;
@@ -186,4 +186,11 @@ public static class Presets
             return false;
         }
     }
+
+    /// <summary>
+    /// The path of the login page.<br/>
+    /// Default: [Handler.UsersPluginPath]/login
+    /// </summary>
+    public static string LoginPath(Request req)
+        => Handler.LoginPath(req);
 }
