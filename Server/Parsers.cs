@@ -495,4 +495,52 @@ public static class Parsers
             return $"{version.Major}.{version.Minor}.{version.Build}";
         return $"{version.Major}.{version.Minor}";
     }
+
+    /// <summary>
+    /// Formats the given path (possibly a relative path or including a domain) into a full path with a list of possible domains to match and returns the extracted query string, if present.<br/>
+    /// This method is used to format paths in a way that the timestamps for referenced files can be found, even if the references include a domain or are relative paths.
+    /// </summary>
+    public static void FormatPath(HttpContext context, string pathIn, List<string> domainsIn, out string pathOut, out List<string> domainsOut, out string? queryString)
+    {
+        queryString = pathIn.SplitAtFirst('?', out pathIn, out queryString) ? '?' + queryString : null;
+        if (pathIn.StartsWith('/'))
+        {
+            domainsOut = domainsIn;
+            pathOut = pathIn;
+        }
+        else if (pathIn.StartsWith("http://"))
+        {
+            string domainFromPath = pathIn[7..].Before('/');
+            domainsOut = Domains(domainFromPath);
+            pathOut = pathIn[(7+domainFromPath.Length)..];
+        }
+        else if (pathIn.StartsWith("https://"))
+        {
+            string domainFromPath = pathIn[8..].Before('/');
+            domainsOut = Domains(domainFromPath);
+            pathOut = pathIn[(8+domainFromPath.Length)..];
+        }
+        else
+        {
+            domainsOut = domainsIn;
+            List<string> segments = [.. context.Path().Split('/')];
+            if (segments.Count > 1)
+                segments.RemoveAt(segments.Count - 1);
+            foreach (string segment in pathIn.Split('/'))
+                switch (segment)
+                {
+                    case ".":
+                        continue;
+                    case "..":
+                        if (segments.Count == 0 || (segments.Count == 1 && segments.First() == ""))
+                            segments.Add(segment);
+                        else segments.RemoveAt(segments.Count - 1);
+                        break;
+                    default:
+                        segments.Add(segment);
+                        break;
+                }
+            pathOut = string.Join('/', segments);
+        }
+    }
 }
