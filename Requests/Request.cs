@@ -143,35 +143,10 @@ public class Request(LayerRequestData data)
 
     /// <summary>
     /// The URL that is specified in the 'redirect' parameter, or "/" if no such parameter has been provided.
-    /// Not allowed (returns "/"): URLs that are not domain-internal (not starting with '/'), URLs starting with "/api/"
+    /// Not allowed (returns "/"): URLs that don't start with /, https:// or http://.
     /// </summary>
     public string RedirectUrl
-    {
-        get
-        {
-            string? url = Query.TryGet("redirect");
-            if (url == null || url.Contains("/api/"))
-                return "/";
-            if (url.StartsWith('/'))
-                return url;
-
-            string? domain = null;
-            if (url.StartsWith("https://"))
-                domain = url.Remove(0, 8);
-            else if (url.StartsWith("http://"))
-                domain = url.Remove(0, 7);
-
-            if (domain == null)
-                return "/";
-            int slash = domain.IndexOf('/');
-            if (slash == -1)
-                return "/";
-            domain = domain.Remove(slash);
-            if (domain == Domain || AccountManager.GetWildcardDomain(domain) == AccountManager.GetWildcardDomain(Domain))
-                return url;
-            return "/";
-        }
-    }
+        => Query.TryGetValue("redirect", out var url) && url.StartsWithAny("/", "https://", "http://") ? url : "/";
 
     #endregion
 
