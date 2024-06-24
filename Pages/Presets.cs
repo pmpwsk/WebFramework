@@ -133,7 +133,7 @@ public static class Presets
     /// The default redirect script.
     /// </summary>
     public static IScript RedirectScript
-        => new CustomScript("function Redirect() {\r\n    try {\r\n        let query = new URLSearchParams(window.location.search);\r\n        if (query.has(\"redirect\")) {\r\n            let redirect = query.get(\"redirect\");\r\n            if (redirect.startsWith(\"/\")) {\r\n                if (redirect.startsWith(\"/api/\")) {\r\n                    window.location.assign(\"/\");\r\n                } else {\r\n                    window.location.assign(redirect);\r\n                }\r\n            } else {\r\n                window.location.assign(\"/\");\r\n            }\r\n        } else {\r\n            window.location.assign(\"/\");\r\n        }\r\n    } catch {\r\n        window.location.assign(\"/\");\r\n    }\r\n}");
+        => new CustomScript("function Redirect() {\n\ttry {\n\t\tlet query = new URLSearchParams(window.location.search);\n\t\tif (query.has(\"redirect\"))\n\t\t{\n\t\t\tlet redirect = query.get(\"redirect\");\n\t\t\tif (redirect.startsWith(\"/\") || redirect.startsWith(\"https://\") || redirect.startsWith(\"http://\"))\n\t\t\t\twindow.location.assign(redirect);\n\t\t\telse window.location.assign(\"/\");\n\t\t}\n\t\telse window.location.assign(\"/\");\n\t} catch {\n\t\twindow.location.assign(\"/\");\n\t}\n}");
 
     /// <summary>
     /// The default error element.
