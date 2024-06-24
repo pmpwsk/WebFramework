@@ -161,7 +161,7 @@ public static partial class Server
                 break;
             case "redirect":
             case "r":
-                if (arguments != "" && !arguments.Contains("/api/"))
+                if (arguments != "" && arguments.StartsWithAny("/", "https://", "https://"))
                 {
                     req.Redirect(arguments);
                     return;
