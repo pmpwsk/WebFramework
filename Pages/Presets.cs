@@ -27,7 +27,7 @@ public static class Presets
         Page page = Handler.CreatePage(req, title);
         page.Favicon = Handler.Favicon(req);
         page.Styles = Handler.Styles(req, out var fontUrl);
-        if (Handler.PreloadFont)
+        if (fontUrl != null && Handler.PreloadFont)
             page.Preloads.Add(new Preload(fontUrl, "font"));
         Navigation(req, page);
         req.Page = page;
@@ -60,7 +60,7 @@ public static class Presets
     /// <summary>
     /// Returns a list of styles that should be used for the given request as well as the URL of the used font in order to preload this if desired.
     /// </summary>
-    public static List<IStyle> Styles(Request req, out string fontUrl)
+    public static List<IStyle> Styles(Request req, out string? fontUrl)
         => Handler.Styles(req, out fontUrl);
 
     /// <summary>
