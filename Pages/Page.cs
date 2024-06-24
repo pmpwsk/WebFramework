@@ -184,16 +184,17 @@ public class Page : IPage
                 else mime = "";
             }
 
-            if (Server.Cache.TryGetValueAny(out var faviconA, req.Domains.Select(d => d + Favicon).ToArray()))
-                yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}?t={faviconA.GetModifiedUtc().Ticks}\">";
+            Parsers.FormatPath(req.Context, Favicon, req.Domains, out var faviconPath, out var faviconDomains, out var faviconQuery);
+            if (Server.Cache.TryGetValueAny(out var faviconA, faviconDomains.Select(d => d + faviconPath).ToArray()) && faviconA.IsPublic)
+                yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}{Parsers.QueryStringSuffix(faviconQuery, $"t={faviconA.GetModifiedUtc().Ticks}")}\">";
             else
             {
-                IPlugin? plugin = PluginManager.GetPlugin(req.Context, req.Domains, Favicon, out string relPath, out _, out _);
+                IPlugin? plugin = PluginManager.GetPlugin(req.Context, faviconDomains, faviconPath, out string relPath, out _, out _);
                 if (plugin != null)
                 {
                     string? timestamp = plugin.GetFileVersion(relPath);
                     if (timestamp != null)
-                        yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}?t={timestamp}\">";
+                        yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}{Parsers.QueryStringSuffix(faviconQuery, $"t={timestamp}")}\">";
                     else yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}\">";
                 }
                 else yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}\">";
