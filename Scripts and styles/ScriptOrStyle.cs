@@ -56,13 +56,20 @@ public abstract class ScriptOrStyle
     /// </summary>
     public IEnumerable<string> Export(Request req)
     {
-        int queryIndex = Url.IndexOf('?');
-        string urlWithoutQuery = queryIndex > -1 ? Url.Remove(queryIndex) : Url;
-
-        var entry = FindEntry(req.Domains, urlWithoutQuery);
-        if (entry == null)
+        Parsers.FormatPath(req.Context, Url, req.Domains, out var path, out var domains, out var query);
+        if (Server.Cache.TryGetValueAny(out var entry, domains.Select(d => d + path).ToArray()))
+            if (entry.IsPublic && !Flatten)
+                yield return BuildReference(Url + Parsers.QueryStringSuffix(query, $"t={entry.GetModifiedUtc().Ticks}"));
+            else
+            {
+                yield return $"<{Tag}>";
+                foreach (string line in entry.EnumerateTextLines())
+                    yield return "\t" + line;
+                yield return $"</{Tag}>";
+            }
+        else
         {
-            IPlugin? plugin = PluginManager.GetPlugin(req.Context, req.Domains, urlWithoutQuery, out string relPath, out string pathPrefix, out string domain);
+            IPlugin? plugin = PluginManager.GetPlugin(req.Context, domains, path, out string relPath, out string pathPrefix, out string domain);
             if (plugin != null)
             {
                 string? timestamp = plugin.GetFileVersion(relPath);
@@ -75,59 +82,11 @@ public abstract class ScriptOrStyle
                             yield return '\t' + line;
                         yield return $"</{Tag}>";
                     }
-                    else yield return BuildReference(Url + (queryIndex > -1 ? "&" : "?") + "t=" + timestamp);
+                    else yield return BuildReference(Url + Parsers.QueryStringSuffix(query, $"t={timestamp}"));
                 }
                 else yield return BuildReference(Url);
             }
             else yield return BuildReference(Url);
         }
-        else if (entry.IsPublic && !Flatten)
-            yield return BuildReference(Url + (queryIndex > -1 ? "&" : "?") + "t=" + entry.GetModifiedUtc().Ticks);
-        else
-        {
-            yield return $"<{Tag}>";
-            foreach (string line in entry.EnumerateTextLines())
-                yield return "\t" + line;
-            yield return $"</{Tag}>";
-        }
-    }
-
-    /// <summary>
-    /// Finds the cache entry for the script or style, or returns null if it couldn't be found.
-    /// </summary>
-    /// <param name="domains">List of accepted domains.</param>
-    private static Server.CacheEntry? FindEntry(List<string> domains, string urlWithoutQuery)
-    {
-        Server.CacheEntry? entry;
-        if (urlWithoutQuery.StartsWith("http"))
-        {
-            string? u = urlWithoutQuery.Remove(0, 4);
-            u = u.StartsWith("://") ? u.Remove(0, 3) : (u.StartsWith("s://") ? u.Remove(0, 4) : null);
-
-            if (u != null)
-            {
-                int firstSlash = u.IndexOf('/');
-                if (firstSlash != -1)
-                {
-                    string afterSlash = u.Remove(0, firstSlash);
-                    if (afterSlash.StartsWith('/'))
-                        afterSlash = afterSlash.Remove(0, 1);
-                    foreach (string domain in domains)
-                        if (Server.Cache.TryGetValue(domain + "/" + afterSlash, out entry))
-                            return entry;
-                    if (Server.Cache.TryGetValue(afterSlash, out entry))
-                        return entry;
-                }
-            }
-        }
-        else if (urlWithoutQuery.StartsWith('/'))
-        {
-            foreach (string domain in domains)
-                if (Server.Cache.TryGetValue(domain + urlWithoutQuery, out entry))
-                    return entry;
-        }
-        else if ((!urlWithoutQuery.Contains('/')) && Server.Cache.TryGetValue(urlWithoutQuery, out entry))
-            return entry;
-        return null;
     }
 }
