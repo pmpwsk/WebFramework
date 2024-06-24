@@ -247,6 +247,40 @@ public class Request(LayerRequestData data)
             throw new BadMethodSignal();
     }
 
+    /// <summary>
+    /// Throws a RedirectToLoginSignal if LoggedIn is false.
+    /// </summary>
+    public void ForceLogin()
+    {
+        if (!LoggedIn)
+            throw new RedirectToLoginSignal(this);
+    }
+
+    /// <summary>
+    /// Creates a new Page (not IPage!) for the request with the given title, adds the favicon, navigation and style(s) from the preset, sets Page to the new page and returns it.
+    /// </summary>
+    public Page CreatePage(string title)
+    {
+        return Presets.CreatePage(this, title);
+    }
+    
+    /// <summary>
+    /// Creates a new Page (not IPage!) for the request with the given title, adds the favicon, navigation and style(s) from the preset, sets Page to the new page and returns as an out parameter.
+    /// </summary>
+    public void CreatePage(string title, out Page page)
+    {
+        page = Presets.CreatePage(this, title);
+    }
+
+    /// <summary>
+    /// Creates a new Page (not IPage!) for the request with the given title, adds the favicon, navigation and style(s) from the preset, sets Page to the new page and returns it and its list of elements as an out parameter for easy access.
+    /// </summary>
+    public void CreatePage(string title, out Page page, out List<IPageElement> e)
+    {
+        page = Presets.CreatePage(this, title);
+        e = page.Elements;
+    }
+
     #endregion
 
     #region Interface
@@ -354,6 +388,7 @@ public class Request(LayerRequestData data)
                 string extension = new FileInfo(path).Extension;
                 if (Server.Config.MimeTypes.TryGetValue(extension, out string? type))
                     Context.Response.ContentType = type;
+                Context.Response.ContentLength = new FileInfo(path).Length;
                 await Context.Response.SendFileAsync(path);
                 State = RequestState.Finished;
                 break;
@@ -376,6 +411,7 @@ public class Request(LayerRequestData data)
             case RequestState.Open:
                 if (extension != null && Server.Config.MimeTypes.TryGetValue(extension, out string? type))
                     Context.Response.ContentType = type;
+                Context.Response.ContentLength = bytes.Length;
                 await Context.Response.BodyWriter.WriteAsync(bytes);
                 State = RequestState.Finished;
                 break;
@@ -404,6 +440,7 @@ public class Request(LayerRequestData data)
                         Context.Response.ContentType = type;
                 }
                 Context.Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{filename}\"");
+                Context.Response.ContentLength = new FileInfo(path).Length;
                 await Context.Response.SendFileAsync(path);
                 State = RequestState.Finished;
                 break;
@@ -431,6 +468,7 @@ public class Request(LayerRequestData data)
                         Context.Response.ContentType = type;
                 }
                 Context.Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{filename}\"");
+                Context.Response.ContentLength = bytes.Length;
                 await Context.Response.BodyWriter.WriteAsync(bytes);
                 State = RequestState.Finished;
                 break;
