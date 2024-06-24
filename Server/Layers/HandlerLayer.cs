@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using uwap.WebFramework.Plugins;
 
 namespace uwap.WebFramework;
@@ -19,22 +19,17 @@ public static partial class Server
                     data.Context.Response.Headers.Append("Cache-Control", "no-cache, private");
 
                     IPlugin? plugin = PluginManager.GetPlugin(data.Context, data.Domains, data.Path, out string relPath, out string pathPrefix, out _);
-                    if (plugin != null)
+
+                    //file
+                    if (data.Method == "GET" && plugin != null)
                     {
                         byte[]? file = plugin.GetFile(relPath, pathPrefix, data.Domain);
                         string? timestamp = plugin.GetFileVersion(relPath);
                         if (file != null && timestamp != null)
                         {
-                            //check method
-                            if (data.Method != "GET")
-                            {
-                                await new Request(data) { Status = 405 }.Finish();
-                                break;
-                            }
-
                             //headers
                             if (AddFileHeaders(data.Context, Parsers.Extension(relPath), timestamp))
-                                break;
+                                return true;
 
                             //send file
                             Request fileRequest = new(data) { CorsDomain = Config.FileCorsDomain };
@@ -51,13 +46,14 @@ public static partial class Server
                         }
                     }
 
+                    //handler
                     Request req = new(data);
                     try
                     {
-                        if (ParsePage(req, data.Domains)) { }
-                        else
+                        if (data.Method == "GET" && ParsePage(req, data.Domains))
                         {
-                            if (plugin != null)
+                        }
+                        else if (plugin != null)
                             {
                                 if (relPath == "")
                                     req.Redirect(req.FullPath + '/');
@@ -71,7 +67,6 @@ public static partial class Server
                             else if (RequestReceived != null)
                                 await RequestReceived.Invoke(req);
                             else req.Status = 501;
-                        }
                     }
                     catch (RedirectSignal redirect)
                     {

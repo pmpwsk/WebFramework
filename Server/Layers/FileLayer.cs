@@ -9,6 +9,9 @@ public static partial class Server
         /// </summary>
         public static async Task<bool> FileLayer(LayerRequestData data)
         {
+            if (data.Method != "GET")
+                return false;
+
             foreach (string key in data.Domains.SelectMany(d => (IEnumerable<string>)[ $"{d}{data.Path}", $"{d}{data.Path}.html" ]))
             {
                 try
@@ -23,13 +26,6 @@ public static partial class Server
                     //don't handle if the file isn't present in the cache and no longer exists
                     if (entry.File == null && !File.Exists($"../Public/{key}"))
                         continue;
-
-                    //check method
-                    if (data.Method != "GET")
-                    {
-                        await new Request(data) { Status = 405 }.Finish();
-                        return true;
-                    }
 
                     //headers
                     if (AddFileHeaders(data.Context, entry.Extension, entry.GetModifiedUtc().Ticks.ToString()))
