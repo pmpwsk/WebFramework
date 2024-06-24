@@ -127,7 +127,7 @@ public static class Presets
     /// The default error script.
     /// </summary>
     public static IScript ErrorScript
-        => new CustomScript("let error = document.querySelector(\"#error\");\r\n\r\nfunction ShowError(message) {\r\n    error.firstElementChild.innerText = message;\r\n    error.style.display = \"block\";\r\n}\r\n\r\nfunction HideError() {\r\n    error.style.display = \"none\";\r\n}");
+        => new CustomScript("let error = document.querySelector(\"#error\");\n\nfunction ShowError(message) {\n\terror.firstElementChild.innerText = message;\n\terror.style.display = \"block\";\n}\n\nfunction HideError() {\n\terror.style.display = \"none\";\n}");
     
     /// <summary>
     /// The default redirect script.
