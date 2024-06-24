@@ -1,4 +1,4 @@
-using MimeKit;
+﻿using MimeKit;
 using System.Web;
 using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
@@ -107,9 +107,13 @@ public class PresetsHandler
 
     /// <summary>
     /// Returns a list of styles that should be used for the given request as well as the URL of the used font in order to preload this if desired.<br/>
-    /// Default implementation throws an exception because there are no default themes.
+    /// Default: empty list
     /// </summary>
     public virtual List<IStyle> Styles(Request req, out string? fontUrl)
+    {
+        fontUrl = null;
+        return [];
+    }
 
     /// <summary>
     /// Adds a button to contact customer support to the page.
