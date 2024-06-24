@@ -19,44 +19,6 @@ public static class PluginManager
     /// </summary>
     public static IPlugin? GetPlugin(HttpContext context, IEnumerable<string> domains, string path, out string relPath, out string pathPrefix, out string domain)
     {
-        if (path.StartsWith('/'))
-        {
-        }
-        else if (path.StartsWith("http://"))
-        {
-            string domainFromPath = path[7..].Before('/').Before('?');
-            domains = Parsers.Domains(domainFromPath);
-            path = path[(7+domainFromPath.Length)..].Before('?');
-        }
-        else if (path.StartsWith("https://"))
-        {
-            string domainFromPath = path[8..].Before('/').Before('?');
-            domains = Parsers.Domains(domainFromPath);
-            path = path[(8+domainFromPath.Length)..].Before('?');
-        }
-        else
-        {
-            List<string> segments = [.. context.Path().Split('/')];
-            if (segments.Count > 1)
-                segments.RemoveAt(segments.Count - 1);
-            foreach (string segment in path.Split('/'))
-                switch (segment)
-                {
-                    case ".":
-                        continue;
-                    case "..":
-                        if (segments.Count == 0 || (segments.Count == 1 && segments.First() == ""))
-                            segments.Add(segment);
-                        else segments.RemoveAt(segments.Count - 1);
-                        break;
-                    default:
-                        segments.Add(segment);
-                        break;
-                }
-            segments[^1] = path;
-            path = string.Join('/', segments);
-        }
-        
         Dictionary<int, Tuple<IPlugin,string>> results = [];
         foreach (var d in domains)
             Plugins.GetPlugins(results, 0, (d + path).Split('/'), d);
