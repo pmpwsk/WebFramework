@@ -18,7 +18,7 @@ public static partial class Server
                 case "POST":
                     data.Context.Response.Headers.Append("Cache-Control", "no-cache, private");
 
-                    IPlugin? plugin = PluginManager.GetPlugin(data.Domains, data.Path, out string relPath, out string pathPrefix, out _);
+                    IPlugin? plugin = PluginManager.GetPlugin(data.Context, data.Domains, data.Path, out string relPath, out string pathPrefix, out _);
                     if (plugin != null)
                     {
                         byte[]? file = plugin.GetFile(relPath, pathPrefix, data.Domain);

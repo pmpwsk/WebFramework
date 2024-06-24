@@ -188,7 +188,7 @@ public class Page : IPage
                 yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}?t={faviconA.GetModifiedUtc().Ticks}\">";
             else
             {
-                IPlugin? plugin = PluginManager.GetPlugin(req.Domains, Favicon, out string relPath, out _, out _);
+                IPlugin? plugin = PluginManager.GetPlugin(req.Context, req.Domains, Favicon, out string relPath, out _, out _);
                 if (plugin != null)
                 {
                     string? timestamp = plugin.GetFileVersion(relPath);

@@ -62,7 +62,7 @@ public abstract class ScriptOrStyle
         var entry = FindEntry(req.Domains, urlWithoutQuery);
         if (entry == null)
         {
-            IPlugin? plugin = PluginManager.GetPlugin(req.Domains, urlWithoutQuery, out string relPath, out string pathPrefix, out string domain);
+            IPlugin? plugin = PluginManager.GetPlugin(req.Context, req.Domains, urlWithoutQuery, out string relPath, out string pathPrefix, out string domain);
             if (plugin != null)
             {
                 string? timestamp = plugin.GetFileVersion(relPath);
