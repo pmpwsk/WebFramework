@@ -34,7 +34,28 @@ public static class PluginManager
             domains = Parsers.Domains(domainFromPath);
             path = path[(8+domainFromPath.Length)..].Before('?');
         }
-        else path = (context.Path().EndsWith('/') ? context.Path() : (context.Path().SplitAtLast('/', out var p1, out var p2) ? p1 : context.Path()) + '/') + path;
+        else
+        {
+            List<string> segments = [.. context.Path().Split('/')];
+            if (segments.Count > 1)
+                segments.RemoveAt(segments.Count - 1);
+            foreach (string segment in path.Split('/'))
+                switch (segment)
+                {
+                    case ".":
+                        continue;
+                    case "..":
+                        if (segments.Count == 0 || (segments.Count == 1 && segments.First() == ""))
+                            segments.Add(segment);
+                        else segments.RemoveAt(segments.Count - 1);
+                        break;
+                    default:
+                        segments.Add(segment);
+                        break;
+                }
+            segments[^1] = path;
+            path = string.Join('/', segments);
+        }
         
         Dictionary<int, Tuple<IPlugin,string>> results = [];
         foreach (var d in domains)
