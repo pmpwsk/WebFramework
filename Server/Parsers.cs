@@ -543,4 +543,10 @@ public static class Parsers
             pathOut = string.Join('/', segments);
         }
     }
+
+    /// <summary>
+    /// Returns ?[pair] if query is null or an empty string, otherwise &[pair].
+    /// </summary>
+    public static string QueryStringSuffix(string? query, string pairToAdd)
+        => (query == null || query == "" ? '?' : '&') + pairToAdd;
 }
