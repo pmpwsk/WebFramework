@@ -64,23 +64,34 @@ public class PresetsHandler
     /// Returns an account navbar button (to log in or access the logged in account).
     /// </summary>
     public virtual IButton AccountButton(Request req)
-    => req.LoginState switch
+    {
+        string usersPluginPath = UsersPluginPath(req);
+        return req.LoginState switch
         {
-            LoginState.None
-                => new Button("Login", AccountPathMatches(req, "/login") || AccountPathMatches(req, "/register") || AccountPathMatches(req, "/recovery", true)
-                    ? ($"{UsersPluginPath(req)}/login" + req.CurrentRedirectQuery)
-                    : $"{UsersPluginPath(req)}/login?redirect=" + HttpUtility.UrlEncode(req.Context.ProtoHostPathQuery()), "right"),
             LoginState.LoggedIn
-                => new Button("Account", $"{UsersPluginPath(req)}/", "right"),
+                => new Button("Account", $"{usersPluginPath}/", "right"),
             LoginState.Banned
                 => new Button("Banned", "#", "right"),
-            _ => new Button("Logout", $"{UsersPluginPath(req)}/logout" + req.CurrentRedirectQuery, "right"),
+            LoginState.Needs2FA
+                => new Button("Logout", AccountPathMatches("/2fa")
+                    ? $"{usersPluginPath}/logout{req.CurrentRedirectQuery}"
+                    : $"{usersPluginPath}/2fa{req.CurrentRedirectQuery}", "right"),
+            LoginState.NeedsMailVerification
+                => new Button("Logout", AccountPathMatches("/verify")
+                    ? $"{usersPluginPath}/logout{req.CurrentRedirectQuery}"
+                    : $"{usersPluginPath}/verify{req.CurrentRedirectQuery}", "right"),
+            LoginState.None or _
+                => new Button("Login", AccountPathMatches("/login") || AccountPathMatches("/register") || AccountPathMatches("/recovery", true)
+                    ? $"{usersPluginPath}/login{req.CurrentRedirectQuery}"
+                    : $"{usersPluginPath}/login?redirect={HttpUtility.UrlEncode(req.Context.ProtoHostPathQuery())}", "right")
         };
-    private bool AccountPathMatches(Request req, string relPath, bool allowPrefix = false)
-    {
-        string wantedPath = UsersPluginPath(req) + relPath;
-        string testPath = wantedPath.StartsWith("http") ? req.Context.ProtoHostPath() : req.FullPath;
-        return wantedPath == testPath || (allowPrefix && testPath.StartsWith(wantedPath + '/'));
+
+        bool AccountPathMatches(string relPath, bool allowPrefix = false)
+        {
+            string wantedPath = usersPluginPath + relPath;
+            string testPath = wantedPath.StartsWith("http") ? req.Context.ProtoHostPath() : req.FullPath;
+            return wantedPath == testPath || (allowPrefix && testPath.StartsWith(wantedPath + '/'));
+        }
     }
 
 
