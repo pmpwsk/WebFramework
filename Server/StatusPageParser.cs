@@ -6,7 +6,7 @@ public static partial class Server
 {
     internal static IEnumerable<string> ParseStatusPageAndReturnExport(Request req, CacheEntry cacheEntry, string message)
     {
-        Presets.CreatePage(req, cacheEntry.Key.After('/').RemoveLast(5).CapitalizeFirstLetter(), out Page page, out _);
+        Presets.CreatePage(req, cacheEntry.Key.After('/').RemoveLast(5).CapitalizeFirstLetter(), out Page page);
         ParseIntoPage(req, page, cacheEntry.EnumerateTextLines());
         if (page.Description == "")
             page.Description = null;
