@@ -1,4 +1,4 @@
-using uwap.WebFramework.Accounts;
+﻿using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
 
 namespace uwap.WebFramework.Elements;
@@ -140,6 +140,13 @@ public static class Presets
     /// </summary>
     public static IScript RedirectQueryScript
         => new CustomScript("function RedirectQuery() {\n\ttry {\n\t\tlet query = new URLSearchParams(window.location.search);\n\t\tif (query.has(\"redirect\"))\n\t\t{\n\t\t\tlet redirect = query.get(\"redirect\");\n\t\t\tif (redirect.startsWith(\"/\") || redirect.startsWith(\"https://\") || redirect.startsWith(\"http://\"))\n\t\t\t\treturn `?redirect=${encodeURIComponent(redirect)}`;\n\t\t\telse return \"\";\n\t\t}\n\t\telse return \"\";\n\t} catch {\n\t\treturn \"\"\n\t}\n}");
+
+    /// <summary>
+    /// The default script to send simple requests and get either the status code or the response text if the status code is 200, or null if an error occurred.
+    /// </summary>
+    public static IScript SendRequestScript
+        => new CustomScript("async function SendRequest(url, method) {\n\tif (method === undefined)\n\t\tmethod = \"GET\";\n\ttry {\n\t\tvar response = await fetch(url, {method:method});\n\t\tif (response.status === 200)\n\t\t\treturn response.text();\n\t\telse return response.status;\n\t} catch (ex) {\n\t\tconsole.error(ex.message);\n\t\treturn null;\n\t}\n}");
+
     /// <summary>
     /// The default error element.
     /// </summary>
