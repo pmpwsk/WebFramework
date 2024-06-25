@@ -225,10 +225,12 @@ public class Request(LayerRequestData data)
     /// <summary>
     /// Throws a RedirectToLoginSignal if LoggedIn is false.
     /// </summary>
-    public void ForceLogin()
+    public void ForceLogin(bool redirect = true)
     {
         if (!LoggedIn)
-            throw new RedirectToLoginSignal(this);
+            if (redirect)
+                throw new RedirectToLoginSignal(this);
+            else throw new ForbiddenSignal();
     }
 
     /// <summary>
