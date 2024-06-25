@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using uwap.WebFramework.Accounts;
 
 namespace uwap.WebFramework;
@@ -23,7 +23,7 @@ public static partial class Server
                 data.LoginState = LoginState.None;
             }
 
-            string fullPath = data.Domain + data.Path;
+            string fullPath = data.Context.ProtoHostPath();
             if (limitedToPaths != null && !limitedToPaths.Any(x => x == fullPath || (x.EndsWith('*') && fullPath.StartsWith(x[..^1]))))
             {
                 data.Status = 403;
