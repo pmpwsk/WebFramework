@@ -145,7 +145,7 @@ public static class Presets
     /// The default script to send simple requests and get either the status code or the response text if the status code is 200, or null if an error occurred.
     /// </summary>
     public static IScript SendRequestScript
-        => new CustomScript("async function SendRequest(url, method) {\n\tif (method === undefined)\n\t\tmethod = \"GET\";\n\ttry {\n\t\tvar response = await fetch(url, {method:method});\n\t\tif (response.status === 200)\n\t\t\treturn response.text();\n\t\telse return response.status;\n\t} catch (ex) {\n\t\tconsole.error(ex.message);\n\t\treturn null;\n\t}\n}");
+        => new CustomScript("async function SendRequest(url, method, statusOnly) {\n\tif (method === undefined)\n\t\tmethod = \"GET\";\n\tif (statusOnly === undefined)\n\t\tstatusOnly = false;\n\ttry {\n\t\tvar response = await fetch(url, {method:method});\n\t\tif (response.status === 200)\n\t\t\treturn statusOnly ? 200 : response.text();\n\t\telse return response.status;\n\t} catch (ex) {\n\t\tconsole.error(ex.message);\n\t\treturn null;\n\t}\n}");
 
     /// <summary>
     /// The default error element.
