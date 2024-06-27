@@ -1,3 +1,4 @@
+using System.Web;
 using uwap.WebFramework.Elements;
 
 namespace uwap.WebFramework;
@@ -9,4 +10,4 @@ public class RedirectSignal(string location, bool permanent = false) : Exception
     public readonly bool Permanent = permanent;
 }
 
-public class RedirectToLoginSignal(Request req) : RedirectSignal(Presets.LoginPath(req));
+public class RedirectToLoginSignal(Request req) : RedirectSignal($"{Presets.LoginPath(req)}?redirect={HttpUtility.UrlEncode(req.Context.ProtoHostPathQuery())}");
