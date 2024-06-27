@@ -536,6 +536,7 @@ public class Request(LayerRequestData data)
         switch (State)
         {
             case RequestState.Open:
+                Context.Response.ContentType = "text/event-stream";
                 State = RequestState.Event;
                 break;
             case RequestState.Text:
@@ -565,6 +566,7 @@ public class Request(LayerRequestData data)
         switch (State)
         {
             case RequestState.Open:
+                Context.Response.ContentType = "text/event-stream";
                 State = RequestState.Event;
                 break;
             case RequestState.Text:
