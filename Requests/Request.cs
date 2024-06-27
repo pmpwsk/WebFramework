@@ -234,6 +234,20 @@ public class Request(LayerRequestData data)
     }
 
     /// <summary>
+    /// Throws a ForbiddenSignal if IsAdmin is false.
+    /// </summary>
+    public void ForceAdmin(bool redirectIfNotLoggedIn = true)
+    {
+        if (LoggedIn)
+            if (IsAdmin)
+                return;
+            else throw new ForbiddenSignal();
+        else if (redirectIfNotLoggedIn)
+            throw new RedirectToLoginSignal(this);
+        else throw new ForbiddenSignal();
+    }
+
+    /// <summary>
     /// Creates a new Page (not IPage!) for the request with the given title, adds the favicon, navigation and style(s) from the preset, sets Page to the new page and returns it.
     /// </summary>
     public Page CreatePage(string title)
