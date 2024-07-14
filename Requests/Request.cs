@@ -165,12 +165,17 @@ public class Request(LayerRequestData data)
                 break;
             case RequestState.Text:
                 if (!WriteTextImmediately)
-                {
-                    Context.Response.ContentType = "text/plain;charset=utf-8";
-                    await Context.Response.WriteAsync((Status == 500 && Exception != null && IsAdmin)
-                        ? $"{Exception.GetType().FullName??"Exception"}\n{Exception.Message}\n{Exception.StackTrace??"No stacktrace"}"
-                        : TextBuffer);
-                }
+                    if (Status == 500 && Exception != null && IsAdmin)
+                    {
+                        Context.Response.ContentType = "text/plain;charset=utf-8";
+                        await Context.Response.WriteAsync($"{Exception.GetType().FullName??"Exception"}\n{Exception.Message}\n{Exception.StackTrace??"No stacktrace"}");
+                    }
+                    else
+                    {
+                        if (Context.Response.ContentType == null)
+                            Context.Response.ContentType = "text/plain;charset=utf-8";
+                        await Context.Response.WriteAsync(TextBuffer);
+                    }
                 break;
             case RequestState.Open:
                 if (Page != null)
@@ -341,7 +346,8 @@ public class Request(LayerRequestData data)
             case RequestState.Open:
                 if (WriteTextImmediately)
                 {
-                    Context.Response.ContentType = "text/plain;charset=utf-8";
+                    if (Context.Response.ContentType == null)
+                        Context.Response.ContentType = "text/plain;charset=utf-8";
                     await Context.Response.WriteAsync(text);
                 }
                 else TextBuffer += text;
