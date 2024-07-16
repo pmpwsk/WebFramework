@@ -15,7 +15,7 @@ public static class Tables
     /// <summary>
     /// All characters that are allowed as table names and keys.
     /// </summary>
-    public static string KeyChars { get; set; } = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-+.";
+    public static string KeyChars { get; set; } = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-+.=";
 
     /// <summary>
     /// Checks all tables for errors and attempts to fix them.<br/>
