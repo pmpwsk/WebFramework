@@ -98,6 +98,9 @@ public static partial class Server
 
         //configure services according to config
         Config.ConfigureServices?.Invoke(builder.Services);
+        
+        //add lifetime service
+        builder.Services.AddHostedService<LifetimeService>();
 
         //build
         App = builder.Build();
