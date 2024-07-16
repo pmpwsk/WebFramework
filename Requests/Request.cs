@@ -582,11 +582,22 @@ public class Request(LayerRequestData data)
             case RequestState.Finished:
                 throw new Exception("The request has already been finished.");
         }
-        while ((!Context.RequestAborted.IsCancellationRequested) && (cancellationToken == default || !cancellationToken.IsCancellationRequested))
+
+        CancellationTokenSource cts = new();
+        Context.RequestAborted.Register(cts.Cancel);
+        Server.StoppingToken.Register(cts.Cancel);
+        if (cancellationToken != default)
+            cancellationToken.Register(cts.Cancel);
+            
+        try
         {
-            await EventMessage(":keepalive");
-            await Task.Delay(30000, cancellationToken);
+            while (!cts.IsCancellationRequested)
+            {
+                await EventMessage(":keepalive");
+                await Task.Delay(30000, cts.Token);
+            }
         }
+        catch (OperationCanceledException) { }
     }
 
     #endregion
