@@ -598,7 +598,16 @@ public class Request(LayerRequestData data)
             }
         }
         catch (OperationCanceledException) { }
+
+        if (KeepEventAliveCancelled != null)
+            await KeepEventAliveCancelled.Invoke(this);
     }
+
+    /// <summary>
+    /// The function to call when KeepEventAlive was cancelled (because the client has disconnected, the server is shutting down or the provided token was cancelled).<br/>
+    /// Default: null
+    /// </summary>
+    public event Func<Request, Task>? KeepEventAliveCancelled = null;
 
     #endregion
 }
