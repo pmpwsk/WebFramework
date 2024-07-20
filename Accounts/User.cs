@@ -22,7 +22,7 @@ public partial class User : ITableValue
         SetMailAddress(mailAddress, users, false);
         if (password != null)
             Password = new(password);
-        MailToken = Parsers.RandomString(10);
+        MailToken = Parsers.RandomString(10, false, false, true);
     }
 
     /// <summary>
@@ -168,7 +168,7 @@ public partial class User : ITableValue
     public string SetNewMailToken()
     {
         string token;
-        do token = Parsers.RandomString(10);
+        do token = Parsers.RandomString(10, false, false, true);
             while (token == MailToken);
         Lock();
         MailToken = token;
