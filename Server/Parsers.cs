@@ -125,11 +125,32 @@ public static class Parsers
     /// Returns a random string of the given length. Possible characters are lowercase and uppercase letters and digits.
     /// </summary>
     public static string RandomString(int length)
+        => RandomString(length, true, true, true);
+
+    /// <summary>
+    /// Returns a random string of the given length. Possible character sets are lowercase and uppercase letters and digits, they are individually selected.
+    /// </summary>
+    public static string RandomString(int length, bool lowercase, bool uppercase, bool digits)
     {
-        string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        string sets = "";
+        if (lowercase)
+            sets += 'a';
+        if (uppercase)
+            sets += 'A';
+        if (digits)
+            sets += '1';
+        if (sets.Length == 0)
+            throw new Exception("At least one character set needs to be selected!");
+
         StringBuilder result = new();
         while (result.Length < length)
-            result.Append(chars[RandomNumberGenerator.GetInt32(chars.Length)]);
+            result.Append(RandomItem(RandomItem(sets) switch
+            {
+                'a' => "abcdefghijklmnopqrstuvwxyz",
+                'A' => "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                '1' => "0123456789",
+                _ => throw new Exception("Unrecognized character set!")
+            }));
         return result.ToString();
     }
 
