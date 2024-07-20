@@ -93,9 +93,6 @@ public static partial class Server
                 }
             }
         }
-        
-        if (page.Description == "")
-            page.Description = null;
     }
 
     /// <summary>
