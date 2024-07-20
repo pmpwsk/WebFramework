@@ -134,6 +134,12 @@ public static class Parsers
     }
 
     /// <summary>
+    /// Returns a random item from the given array.
+    /// </summary>
+    public static T RandomItem<T>(T[] values)
+        => values[RandomNumberGenerator.GetInt32(values.Length)];
+
+    /// <summary>
     /// Generates a QR code (with or without borders) of the given text and returns a HTML image source for it in base64.
     /// </summary>
     public static string QRImageBase64Src(string text, bool border = true)
