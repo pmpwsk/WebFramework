@@ -186,7 +186,8 @@ public class Request(LayerRequestData data)
                 }
                 else
                 {
-                    Context.Response.ContentType = "text/plain;charset=utf-8";
+                    if (Context.Response.ContentType == null)
+                        Context.Response.ContentType = "text/plain;charset=utf-8";
                     await Context.Response.WriteAsync((Status == 500 && Exception != null && IsAdmin)
                         ? $"{Exception.GetType().FullName??"Exception"}\n{Exception.Message}\n{Exception.StackTrace??"No stacktrace"}"
                         : Parsers.StatusMessage(Status));
