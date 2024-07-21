@@ -11,7 +11,7 @@ public abstract class Plugin : IPlugin
 {
     //documentation is inherited from IPlugin
     public virtual Task Handle(Request req)
-        => Task.CompletedTask;
+        => throw new NotImplementedSignal();
 
     //documentation is inherited from IPlugin
     public virtual Task Work()
