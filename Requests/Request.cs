@@ -165,7 +165,7 @@ public class Request(LayerRequestData data)
                 break;
             case RequestState.Text:
                 if (!WriteTextImmediately)
-                    if (Status == 500 && Exception != null && IsAdmin)
+                    if (Status == 500 && Exception != null && (IsAdmin || Server.DebugMode))
                     {
                         Context.Response.ContentType = "text/plain;charset=utf-8";
                         await Context.Response.WriteAsync($"{Exception.GetType().FullName??"Exception"}\n{Exception.Message}\n{Exception.StackTrace??"No stacktrace"}");
@@ -188,7 +188,7 @@ public class Request(LayerRequestData data)
                 {
                     if (Context.Response.ContentType == null)
                         Context.Response.ContentType = "text/plain;charset=utf-8";
-                    await Context.Response.WriteAsync((Status == 500 && Exception != null && IsAdmin)
+                    await Context.Response.WriteAsync((Status == 500 && Exception != null && (IsAdmin || Server.DebugMode))
                         ? $"{Exception.GetType().FullName??"Exception"}\n{Exception.Message}\n{Exception.StackTrace??"No stacktrace"}"
                         : Parsers.StatusMessage(Status));
                 }
