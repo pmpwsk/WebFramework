@@ -215,7 +215,9 @@ public class TableEntry<T>(string table, string key, T value, byte[] json) : ITa
     /// </summary>
     public void SetValue(T value)
     {
+        Value.ContainingEntry = null;
         Value = value;
+        value.ContainingEntry = this;
         Serialize();
     }
 
