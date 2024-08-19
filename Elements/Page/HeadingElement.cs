@@ -74,7 +74,8 @@ public class HeadingElement : IContainerElement
     {
         yield return Opener;
 
-        if (Title != null) yield return $"\t<h1>{Title}</h1>";
+        if (Title != null)
+            yield return $"\t<h1>{Title.HtmlSafe(Unsafe)}</h1>";
         
         foreach(IContent content in Contents)
             foreach (string line in content.Export())

@@ -7,7 +7,7 @@ namespace uwap.WebFramework.Elements;
 public class Style(string url, bool flatten = false) : ScriptOrStyle(url, flatten), IStyle
 {
     //documentation inherited from ScriptOrStyle
-    protected override string BuildReference(string url) => $"<link rel=\"stylesheet\" type=\"text/css\" media=\"screen\" href=\"{url}\">";
+    protected override string BuildReference(string url) => $"<link rel=\"stylesheet\" type=\"text/css\" media=\"screen\" href=\"{url.HtmlValueSafe()}\">";
 
     //documentation inherited from ScriptOrStyle
     protected override string Tag => "style";

@@ -27,6 +27,6 @@ public class Paragraph : IContent
     //documentation inherited from IContent
     public override IEnumerable<string> Export()
     {
-        yield return Opener + (Text??"") + Closer;
+        yield return Opener + (Text??"").HtmlSafe(Unsafe) + Closer;
     }
 }

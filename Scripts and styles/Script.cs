@@ -7,7 +7,7 @@ namespace uwap.WebFramework.Elements;
 public class Script(string url, bool flatten = false) : ScriptOrStyle(url, flatten), IScript
 {
     //documentation inherited from ScriptOrStyle
-    protected override string BuildReference(string url) => $"<script src=\"{url}\"></script>";
+    protected override string BuildReference(string url) => $"<script src=\"{url.HtmlValueSafe()}\"></script>";
 
     //documentation inherited from ScriptOrStyle
     protected override string Tag => "script";

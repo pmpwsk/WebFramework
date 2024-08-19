@@ -186,7 +186,7 @@ public class Page : IPage
 
             Parsers.FormatPath(req.Context, Favicon, req.Domains, out var faviconPath, out var faviconDomains, out var faviconQuery);
             if (Server.Cache.TryGetValueAny(out var faviconA, faviconDomains.Select(d => d + faviconPath).ToArray()) && faviconA.IsPublic)
-                yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}{Parsers.QueryStringSuffix(faviconQuery, $"t={faviconA.GetModifiedUtc().Ticks}")}\">";
+                yield return $"\t<link rel=\"icon\"{mime} href=\"{(Favicon + Parsers.QueryStringSuffix(faviconQuery, $"t={faviconA.GetModifiedUtc().Ticks}")).HtmlValueSafe()}\">";
             else
             {
                 IPlugin? plugin = PluginManager.GetPlugin(req.Context, faviconDomains, faviconPath, out string relPath, out _, out _);
@@ -194,10 +194,10 @@ public class Page : IPage
                 {
                     string? timestamp = plugin.GetFileVersion(relPath);
                     if (timestamp != null)
-                        yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}{Parsers.QueryStringSuffix(faviconQuery, $"t={timestamp}")}\">";
-                    else yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}\">";
+                        yield return $"\t<link rel=\"icon\"{mime} href=\"{(Favicon + Parsers.QueryStringSuffix(faviconQuery, $"t={timestamp}")).HtmlValueSafe()}\">";
+                    else yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon.HtmlValueSafe()}\">";
                 }
-                else yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon}\">";
+                else yield return $"\t<link rel=\"icon\"{mime} href=\"{Favicon.HtmlValueSafe()}\">";
             }
         }
 
@@ -215,7 +215,7 @@ public class Page : IPage
             yield return $"\t{line}";
 
         yield return "</head>";
-        yield return $"<body{((error&&checkForErrors)||Onload==null?"":$" onload=\"{Onload}\"")}>";
+        yield return $"<body{((error&&checkForErrors)||Onload==null?"":$" onload=\"{Onload.HtmlValueSafe()}\"")}>";
 
         //navbar
         var nav = (Navigation.Count != 0) ? Navigation : [new Button(req.Domain, "/")];
@@ -280,7 +280,7 @@ public class Page : IPage
             List<IContent> footerContent = [];
             if (copyright != null)
                 footerContent.Add(new Paragraph($"Copyright {DateTime.UtcNow.Year} {copyright} - All other trademarks, screenshots, logos and copyrights are the property of their respective owners."));
-            footerContent.Add(new Paragraph("Powered by <a href=\"https://uwap.org/wf\">uwap.org/wf</a>"));
+            footerContent.Add(new Paragraph("Powered by <a href=\"https://uwap.org/wf\">uwap.org/wf</a>") {Unsafe = true});
                 
             foreach (string line in new ContainerElement(null, footerContent, "footer").Export())
                 yield return "\t\t\t" + line;

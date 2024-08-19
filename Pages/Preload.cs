@@ -57,5 +57,5 @@ public class Preload
     /// Exports the preload as a single line.
     /// </summary>
     public string Export()
-        => $"<link rel=\"preload\" href=\"{Url}\"{(As==null?"":$" as=\"{As}\"")}{(Type==null?"":$" type=\"{Type}\"")}{(Crossorigin?" crossorigin":"")} />";
+        => $"<link rel=\"preload\" href=\"{Url.HtmlValueSafe()}\"{(As==null?"":$" as=\"{As.HtmlValueSafe()}\"")}{(Type==null?"":$" type=\"{Type.HtmlValueSafe()}\"")}{(Crossorigin?" crossorigin":"")} />";
 }

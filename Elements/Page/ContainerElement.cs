@@ -81,8 +81,9 @@ public class ContainerElement : IContainerElement
 
         if (Title != null)
         {
-            if (Large) yield return $"\t<h1>{Title}</h1>";
-            else yield return $"\t<h2>{Title}</h2>";
+            if (Large)
+                yield return $"\t<h1>{Title.HtmlSafe(Unsafe)}</h1>";
+            else yield return $"\t<h2>{Title.HtmlSafe(Unsafe)}</h2>";
         }
 
         if (Buttons.Count != 0)

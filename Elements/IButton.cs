@@ -20,5 +20,5 @@ public abstract class IButton : IElement
     /// The button a line of HTML code.
     /// </summary>
     public string Export()
-        => Opener + (Text??"Button") + Closer;
+        => Opener + (Text??"Button").HtmlSafe(Unsafe) + Closer;
 }

@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace uwap.WebFramework.Elements;
 
 /// <summary>
@@ -36,32 +38,40 @@ public abstract class IElement
     public string? Id;
 
     /// <summary>
+    /// Whether to allow HTML code in attributes of this element.<br/>
+    /// Default: false
+    /// </summary>
+    public bool Unsafe = false;
+
+    /// <summary>
     /// The opener of the element along with all of its properties, but without the last angle bracket.
     /// </summary>
     protected string OpenerWithoutEnd
     {
         get
         {
-            string o = $"<{ElementType}";
+            StringBuilder result = new();
+            result.Append($"<{ElementType}");
 
             if (ElementClass != null)
             {
-                if (Class != null) o += $" class=\"{ElementClass} {Class}\"";
-                else o += $" class=\"{ElementClass}\"";
+                if (Class != null)
+                    result.Append($" class=\"{ElementClass} {Class.HtmlValueSafe()}\"");
+                else result.Append($" class=\"{ElementClass}\"");
             }
-            else if (Class != null) o += $" class=\"{Class}\"";
+            else if (Class != null)
+                result.Append($" class=\"{Class.HtmlValueSafe()}\"");
 
             if (ElementProperties != null)
-                o += $" {ElementProperties}";
+                result.Append($" {ElementProperties}");
 
             if (Style != null)
-                o += $" style=\"{Style}\"";
+                result.Append($" style=\"{Style.HtmlValueSafe()}\"");
 
             if (Id != null)
-                o += $" id=\"{Id}\"";
+                result.Append($" id=\"{Id.HtmlValueSafe()}\"");
             
-            //o += ">";
-            return o;
+            return result.ToString();
         }
     }
 

@@ -24,9 +24,9 @@ public abstract class IButtonElement : IPageElement
         yield return Opener;
         
         if (Title != null)
-            yield return $"\t<h2>{Title}</h2>";
+            yield return $"\t<h2>{Title.HtmlSafe(Unsafe)}</h2>";
         if (Text != null)
-            yield return $"\t<p>{Text}</p>";
+            yield return $"\t<p>{Text.HtmlSafe(Unsafe)}</p>";
 
         yield return Closer;
     }

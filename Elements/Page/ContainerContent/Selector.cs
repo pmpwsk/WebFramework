@@ -71,7 +71,7 @@ public class Selector : IContent
     {
         yield return Opener;
         foreach (var item in Items)
-            yield return "\t" + item.Export();
+            yield return "\t" + item.Export(Unsafe);
         yield return Closer;
     }
 }
@@ -119,6 +119,6 @@ public struct SelectorItem
     /// <summary>
     /// The item as HTML code.
     /// </summary>
-    public readonly string Export()
-        => $"<option{(Selected ? " selected" : "")} value=\"{Value.HtmlValueSafe()}\">{Text}</option>";
+    public readonly string Export(bool parentUnsafe)
+        => $"<option{(Selected ? " selected" : "")} value=\"{Value.HtmlValueSafe()}\">{Text.HtmlSafe(parentUnsafe)}</option>";
 }

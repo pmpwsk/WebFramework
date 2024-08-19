@@ -7,7 +7,7 @@ public static partial class Server
     /// <summary>
     /// Attempts to handle the given request using a .wfpg file in ../Public for any of the domains (in order) and returns true if that was possible. If no matching file was found, false is returned.
     /// </summary>
-    private static bool ParsePage(Request req, List<string> domains)
+    private static bool ParsePage(Request req, List<string> domains, bool allowHTML = true)
     {
         string path = req.Path;
         if (path.EndsWith("/index"))
@@ -19,7 +19,7 @@ public static partial class Server
         {
             if (Cache.TryGetValue(domain + path, out CacheEntry? entry) && entry.IsPublic)
             {
-                ParsePage(req, entry);
+                ParsePage(req, entry, allowHTML);
                 return true;
             }
         }
@@ -29,16 +29,16 @@ public static partial class Server
     /// <summary>
     /// Creates a blank page and parses the .wfpg file in the given cache entry to populate it with data and elements.
     /// </summary>
-    private static void ParsePage(Request req, CacheEntry cacheEntry)
+    private static void ParsePage(Request req, CacheEntry cacheEntry, bool allowHTML = true)
     {
         Presets.CreatePage(req, cacheEntry.Key.After('/').RemoveLast(5).CapitalizeFirstLetter(), out Page page, out _);
-        ParseIntoPage(req, page, cacheEntry.EnumerateTextLines());
+        ParseIntoPage(req, page, cacheEntry.EnumerateTextLines(), allowHTML);
     }
 
     /// <summary>
     /// Parses the .wfpg file in the given cache entry and populates the given page with it.
     /// </summary>
-    public static void ParseIntoPage(Request req, Page page, IEnumerable<string> lines)
+    public static void ParseIntoPage(Request req, Page page, IEnumerable<string> lines, bool allowHTML = true)
     {
         IPageElement? currentContentElement = null;
         IPageElement? currentSidebarElement = null;
@@ -54,11 +54,11 @@ public static partial class Server
             else if (line.StartsWith('#'))
             { }
             else if (line.StartsWith(">>"))
-                ParseCommand(req, page, line.Remove(0, 2).TrimStart());
+                ParseCommand(req, page, line.Remove(0, 2).TrimStart(), allowHTML);
             else if (line.StartsWith("<<"))
             {
                 line = line.Remove(0, 2).TrimStart();
-                IPageElement? newElement = ParseElement(req, page.Sidebar, currentSidebarElement, line, true, page);
+                IPageElement? newElement = ParseElement(req, page.Sidebar, currentSidebarElement, line, true, page, allowHTML);
                 if (newElement != null)
                 {
                     currentSidebarElement = newElement;
@@ -70,22 +70,22 @@ public static partial class Server
                 IButton button;
                 if (target.StartsWith("http://"))
                     if (target == $"http://{req.Domain}" || target.StartsWithAny($"http://{req.Domain}/", $"http://{req.Domain}#", $"http://{req.Domain}?"))
-                        button = new Button(p1, target, p2, newTab: false, noFollow: false);
-                    else button = new Button(p1, target, p2, newTab: true, noFollow: true);
+                        button = new Button(p1, target, p2, newTab: false, noFollow: false) {Unsafe = allowHTML};
+                    else button = new Button(p1, target, p2, newTab: true, noFollow: true) {Unsafe = allowHTML};
                 else if (target.StartsWith("https://"))
                     if (target == $"https://{req.Domain}" || target.StartsWithAny($"https://{req.Domain}/", $"https://{req.Domain}#", $"https://{req.Domain}?"))
-                        button = new Button(p1, target, p2, newTab: false, noFollow: false);
-                    else button = new Button(p1, target, p2, newTab: true, noFollow: true);
+                        button = new Button(p1, target, p2, newTab: false, noFollow: false) {Unsafe = allowHTML};
+                    else button = new Button(p1, target, p2, newTab: true, noFollow: true) {Unsafe = allowHTML};
                 else if (target.StartsWith("js:"))
-                    button = new ButtonJS(p1, target[3..].HtmlValueSafe(), p2);
+                    button = new ButtonJS(p1, target[3..].HtmlValueSafe(), p2) {Unsafe = allowHTML};
                 else if (target.StartsWith("javascript:"))
-                    button = new ButtonJS(p1, target[11..].HtmlValueSafe(), p2);
-                else button = new Button(p1, target, p2, newTab: false, noFollow: false);
+                    button = new ButtonJS(p1, target[11..].HtmlValueSafe(), p2) {Unsafe = allowHTML};
+                else button = new Button(p1, target, p2, newTab: false, noFollow: false) {Unsafe = allowHTML};
                 page.Navigation.Add(button);
             }
             else
             {
-                IPageElement? newElement = ParseElement(req, page.Elements, currentContentElement, line, false, page);
+                IPageElement? newElement = ParseElement(req, page.Elements, currentContentElement, line, false, page, allowHTML);
                 if (newElement != null)
                 {
                     currentContentElement = newElement;
@@ -98,7 +98,7 @@ public static partial class Server
     /// <summary>
     /// Parses and applies the command to the page.
     /// </summary>
-    private static void ParseCommand(Request req, Page page, string command)
+    private static void ParseCommand(Request req, Page page, string command, bool allowHTML)
     {
         command.SplitAtFirst(' ', out string operation, out string arguments);
         operation = operation.Trim();
@@ -116,7 +116,7 @@ public static partial class Server
             case "import":
             case "i":
                 if (Cache.TryGetValue($"{arguments}.wfpg", out CacheEntry? cacheEntry))
-                    ParseIntoPage(req, page, cacheEntry.EnumerateTextLines());
+                    ParseIntoPage(req, page, cacheEntry.EnumerateTextLines(), allowHTML);
                 break;
             case "script":
                 if (arguments == "")
@@ -174,7 +174,7 @@ public static partial class Server
     /// <summary>
     /// Parses the line and adds the element to the page.
     /// </summary>
-    private static IPageElement? ParseElement(Request req, List<IPageElement> e, IPageElement? currentElement, string line, bool sidebar, Page page)
+    private static IPageElement? ParseElement(Request req, List<IPageElement> e, IPageElement? currentElement, string line, bool sidebar, Page page, bool allowHTML)
     {
         IPageElement? result = null;
         if (currentElement != null && currentElement is ContainerElement container)
@@ -184,25 +184,25 @@ public static partial class Server
                 line = line.Remove(0, 1).Trim();
                 if (container.Contents.Count != 0 && container.Contents.Last() is BulletList bullets)
                     bullets.List.Add(line);
-                else container.Contents.Add(new BulletList(line));
+                else container.Contents.Add(new BulletList(line) {Unsafe = allowHTML});
             }
             else if (ParseSpecialElement(line, out string p1, out string? p2, out string target))
             {
                 if (target.Before('?').EndsWithAny(".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"))
-                    container.Contents.Add(new Image(target, $"max-height: {p1}", title: p2));
+                    container.Contents.Add(new Image(target, $"max-height: {p1}", title: p2) {Unsafe = allowHTML});
                 else if (target.StartsWith("http://"))
                     if (target == $"http://{req.Domain}" || target.StartsWithAny($"http://{req.Domain}/", $"http://{req.Domain}#", $"http://{req.Domain}?"))
-                        container.Buttons.Add(new Button(p1, target, p2, newTab: false, noFollow: false));
-                    else container.Buttons.Add(new Button(p1, target, p2, newTab: true, noFollow: true));
+                        container.Buttons.Add(new Button(p1, target, p2, newTab: false, noFollow: false) {Unsafe = allowHTML});
+                    else container.Buttons.Add(new Button(p1, target, p2, newTab: true, noFollow: true) {Unsafe = allowHTML});
                 else if (target.StartsWith("https://"))
                     if (target == $"https://{req.Domain}" || target.StartsWithAny($"https://{req.Domain}/", $"https://{req.Domain}#", $"https://{req.Domain}?"))
-                        container.Buttons.Add(new Button(p1, target, p2, newTab: false, noFollow: false));
-                    else container.Buttons.Add(new Button(p1, target, p2, newTab: true, noFollow: true));
+                        container.Buttons.Add(new Button(p1, target, p2, newTab: false, noFollow: false) {Unsafe = allowHTML});
+                    else container.Buttons.Add(new Button(p1, target, p2, newTab: true, noFollow: true) {Unsafe = allowHTML});
                 else if (target.StartsWith("js:"))
-                    container.Buttons.Add(new ButtonJS(p1, target[3..].HtmlValueSafe(), p2));
+                    container.Buttons.Add(new ButtonJS(p1, target[3..].HtmlValueSafe(), p2) {Unsafe = allowHTML});
                 else if (target.StartsWith("javascript:"))
-                    container.Buttons.Add(new ButtonJS(p1, target[11..].HtmlValueSafe(), p2));
-                else container.Buttons.Add(new Button(p1, target, p2, newTab: false, noFollow: false));
+                    container.Buttons.Add(new ButtonJS(p1, target[11..].HtmlValueSafe(), p2) {Unsafe = allowHTML});
+                else container.Buttons.Add(new Button(p1, target, p2, newTab: false, noFollow: false) {Unsafe = allowHTML});
             }
             else
             {
@@ -211,7 +211,7 @@ public static partial class Server
                     page.Description = text;
                 if (((text.StartsWith("<br/>") && text != "<br/>") || (text.StartsWith("<br />") && text != "<br />")) && container.Contents.Count > 0 && container.Contents.Last() is Paragraph p)
                     p.Text += text;
-                else container.Contents.Add(new Paragraph(text));
+                else container.Contents.Add(new Paragraph(text) {Unsafe = allowHTML});
             }
         }
         else if (currentElement != null && currentElement is IButtonElement buttonElement && buttonElement.Text == null)
@@ -221,34 +221,34 @@ public static partial class Server
             string? titleLg = sidebar ? null : (p1 == "" ? null : p1);
             string? titleSm = sidebar ? (p1 == "" ? null : p1) : null;
             if (target.Before('?').EndsWithAny(".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"))
-                result = new ContainerElement(null, new Image(target, $"max-height: {p1}", title: p2));
+                result = new ContainerElement(null, new Image(target, $"max-height: {p1}", title: p2) {Unsafe = allowHTML}) {Unsafe = allowHTML};
             else if (target.StartsWith("http://"))
                 if (target == $"http://{req.Domain}" || target.StartsWithAny($"http://{req.Domain}/", $"http://{req.Domain}#", $"http://{req.Domain}?"))
-                    result = new ButtonElement(titleLg, titleSm, target, p2, newTab: false, noFollow: false, id: sidebar ? null : p1.ToId());
-                else result = new ButtonElement(titleLg, titleSm, target, p2, newTab: true, noFollow: true, id: sidebar ? null : p1.ToId());
+                    result = new ButtonElement(titleLg, titleSm, target, p2, newTab: false, noFollow: false, id: sidebar ? null : p1.ToId()) {Unsafe = allowHTML};
+                else result = new ButtonElement(titleLg, titleSm, target, p2, newTab: true, noFollow: true, id: sidebar ? null : p1.ToId()) {Unsafe = allowHTML};
             else if (target.StartsWith("https://"))
                 if (target == $"https://{req.Domain}" || target.StartsWithAny($"https://{req.Domain}/", $"https://{req.Domain}#", $"https://{req.Domain}?"))
-                    result = new ButtonElement(titleLg, titleSm, target, p2, newTab: false, noFollow: false, id: sidebar ? null : p1.ToId());
-                else result = new ButtonElement(titleLg, titleSm, target, p2, newTab: true, noFollow: true, id: sidebar ? null : p1.ToId());
+                    result = new ButtonElement(titleLg, titleSm, target, p2, newTab: false, noFollow: false, id: sidebar ? null : p1.ToId()) {Unsafe = allowHTML};
+                else result = new ButtonElement(titleLg, titleSm, target, p2, newTab: true, noFollow: true, id: sidebar ? null : p1.ToId()) {Unsafe = allowHTML};
             else if (target.StartsWith("js:"))
-                result = new ButtonElementJS(titleLg, titleSm, target[3..].HtmlValueSafe(), p2, id: sidebar ? null : p1.ToId());
+                result = new ButtonElementJS(titleLg, titleSm, target[3..].HtmlValueSafe(), p2, id: sidebar ? null : p1.ToId()) {Unsafe = allowHTML};
             else if (target.StartsWith("javascript:"))
-                result = new ButtonElementJS(titleLg, titleSm, target[11..].HtmlValueSafe(), p2, id: sidebar ? null : p1.ToId());
-            else result = new ButtonElement(titleLg, titleSm, target, p2, newTab: false, noFollow: false, id: sidebar ? null : p1.ToId());
+                result = new ButtonElementJS(titleLg, titleSm, target[11..].HtmlValueSafe(), p2, id: sidebar ? null : p1.ToId()) {Unsafe = allowHTML};
+            else result = new ButtonElement(titleLg, titleSm, target, p2, newTab: false, noFollow: false, id: sidebar ? null : p1.ToId()) {Unsafe = allowHTML};
         }
         else if (e.Count == 0)
         {
             string? text = ParseTitle(line.Trim(), out string? classes, out string? id);
             if (sidebar)
-                result = new ContainerElement(text, "", classes, id: sidebar ? null : id);
-            else result = new LargeContainerElement(text, "", classes, id: sidebar ? null : id);
+                result = new ContainerElement(text, "", classes, id: sidebar ? null : id) {Unsafe = allowHTML};
+            else result = new LargeContainerElement(text, "", classes, id: sidebar ? null : id) {Unsafe = allowHTML};
         }
         else
         {
             string? text = ParseTitle(line.Trim(), out string? classes, out string? id);
             if (sidebar)
-                result = new ContainerElement(null, text ?? "", classes, id: sidebar ? null : id);
-            else result = new ContainerElement(text, "", classes, id: sidebar ? null : id);
+                result = new ContainerElement(null, text ?? "", classes, id: sidebar ? null : id) {Unsafe = allowHTML};
+            else result = new ContainerElement(text, "", classes, id: sidebar ? null : id) {Unsafe = allowHTML};
         }
         return result;
     }

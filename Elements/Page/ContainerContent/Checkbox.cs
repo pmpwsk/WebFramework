@@ -7,7 +7,7 @@ public class Checkbox : IContent
 {
     //not needed
     protected override string ElementType => "";
-
+    
     /// <summary>
     /// The text for the checkbox.
     /// </summary>
@@ -36,6 +36,7 @@ public class Checkbox : IContent
     //documentation inherited from IContent
     public override IEnumerable<string> Export()
     {
-        yield return $"<div class=\"checkbox\"><input type=\"checkbox\" id=\"{Id}\" name=\"{Id}\"{(Checked ? " checked" : "")}{(OnChange == null ? null : $" onchange=\"{OnChange.HtmlValueSafe()}\"")} /><label for=\"{Id}\">{Text}</label></div>";
+        string id = (Id??"").HtmlValueSafe();
+        yield return $"<div class=\"checkbox\"><input type=\"checkbox\" id=\"{id}\" name=\"{id}\"{(Checked ? " checked" : "")}{(OnChange == null ? null : $" onchange=\"{OnChange.HtmlValueSafe()}\"")} /><label for=\"{id}\">{Text.HtmlSafe(Unsafe)}</label></div>";
     }
 }

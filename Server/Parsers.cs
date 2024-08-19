@@ -231,6 +231,12 @@ public static class Parsers
     }
 
     /// <summary>
+    /// Replaces < with &lt; and > with &gt; if doNotActuallyDoIt is false, otherwise does nothing.
+    /// </summary>
+    public static string HtmlSafe(this string source, bool doNotActuallyDoIt)
+        => doNotActuallyDoIt ? source : source.HtmlSafe();
+
+    /// <summary>
     /// Replaces \n with &#13;&#10; and " with &quot;.
     /// </summary>
     public static string HtmlValueSafe(this string source)

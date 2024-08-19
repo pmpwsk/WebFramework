@@ -6,7 +6,7 @@ namespace uwap.WebFramework.Elements;
 public class Button : IButton
 {
     //documentation inherited from IElement
-    protected override string? ElementProperties => $"href=\"{Link}\"" + (NewTab?" target=\"_blank\"":"") + (NoFollow?" rel=\"nofollow\"":"");
+    protected override string? ElementProperties => $"href=\"{Link.HtmlValueSafe()}\"" + (NewTab?" target=\"_blank\"":"") + (NoFollow?" rel=\"nofollow\"":"");
 
     /// <summary>
     /// The target URL.

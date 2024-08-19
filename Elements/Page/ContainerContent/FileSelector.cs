@@ -5,8 +5,11 @@ namespace uwap.WebFramework.Elements;
 /// </summary>
 public class FileSelector : IContent
 {
-    //not needed
-    protected override string ElementType => "";
+    //documentation inherited from IElement
+    protected override string ElementType => "input";
+
+    //documentation inherited from IElement
+    protected override string? ElementProperties => $"type=\"file\"{(AllowMultiple ? " multiple" : "")}{(OnChange == null ? "" : $" onchange=\"{OnChange.HtmlValueSafe()}\"")}";
 
     /// <summary>
     /// Whether to allow the selection of multiple files.
@@ -30,6 +33,6 @@ public class FileSelector : IContent
     //documentation inherited from IContent
     public override IEnumerable<string> Export()
     {
-        yield return $"<input type=\"file\" id=\"{Id}\"{(AllowMultiple ? " multiple" : "")}{(OnChange == null ? null : $" onchange=\"{OnChange.HtmlValueSafe()}\"")}>";
+        yield return CodeWithoutExplicitCloser;
     }
 }
