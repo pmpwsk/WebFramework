@@ -53,9 +53,9 @@ public static partial class MailManager
 
         /// <summary>
         /// The maximum amount of time to wait before giving up on a mail sending attempt (in milliseconds).<br/>
-        /// Default: 5000
+        /// Default: 10000
         /// </summary>
-        public static int Timeout { get; set; } = 5000;
+        public static int Timeout { get; set; } = 10000;
 
         /// <summary>
         /// Generates a mail message using the given information, signs it (if possible) and sends it to the appropriate server.
