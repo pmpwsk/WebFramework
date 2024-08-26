@@ -23,29 +23,43 @@ public static class IFormFileExtensions
         catch (NotSupportedException) { }
         catch { throw; }
 
-        using Stream output = File.Create(path);
-        byte[] buffer = new byte[32768];
-        long totalBytes = 0;
-        int lastBytes;
-
-        while (totalBytes <= limitBytes)
+        try
         {
-            lastBytes = input.Read(buffer, 0, (int)Math.Min(buffer.Length, limitBytes - totalBytes));
-            if (lastBytes <= 0)
-                break;
-            totalBytes += lastBytes;
-            if (totalBytes <= limitBytes)
-                output.Write(buffer, 0, lastBytes);
+            using Stream output = File.Create(path);
+            byte[] buffer = new byte[32768];
+            long totalBytes = 0;
+            int lastBytes;
+
+            while (totalBytes <= limitBytes)
+            {
+                lastBytes = input.Read(buffer, 0, (int)Math.Min(buffer.Length, limitBytes - totalBytes));
+                if (lastBytes <= 0)
+                    break;
+                totalBytes += lastBytes;
+                if (totalBytes <= limitBytes)
+                    output.Write(buffer, 0, lastBytes);
+            }
+
+            if (totalBytes > limitBytes)
+            {
+                output.Close();
+                File.Delete(path);
+                return false;
+            }
+
+            return true;
+        }
+        catch
+        {
+            try
+            {
+                File.Delete(path);
+            }
+            catch { }
+
+            throw;
         }
 
-        if (totalBytes > limitBytes)
-        {
-            output.Close();
-            File.Delete(path);
-            return false;
-        }
-
-        return true;
     }
 
     /// <summary>
