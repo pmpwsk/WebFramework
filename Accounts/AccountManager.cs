@@ -84,6 +84,7 @@ public static partial class AccountManager
             FailedAuth[key] = new FailedAuthEntry();
         }
     }
+
     /// <summary>
     /// Checks whether the IP of the given context is currently banned from making login attempts.
     /// </summary>
