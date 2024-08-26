@@ -1,3 +1,5 @@
+using System.Net;
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Http;
 using Settings = uwap.WebFramework.Server.Config.Accounts;
 
@@ -51,17 +53,31 @@ public static partial class AccountManager
     /// </summary>
     public static void ReportFailedAuth(HttpContext context)
     {
-        if (!Settings.FailedAttempts.EnableBanning) return;
+        if (!Settings.FailedAttempts.EnableBanning)
+            return;
 
-        string? ip = context.IP();
-        if (ip == null) return;
-        string key = Convert.ToHexString(ip.ToSha256());
+        string? ipString = context.IP(); //necessary for ::ffff:
+        if (ipString == null)
+            return;
+
+        if (!IPAddress.TryParse(ipString, out var ipAddress))
+            return;
+        byte[] ipBytes = ipAddress.GetAddressBytes();
+
+        if (ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+            for (int i = 8; i < ipBytes.Length; i++)
+                ipBytes[i] = 0;
+
+        string key = Convert.ToHexString(SHA256.HashData(ipBytes));
         if (FailedAuth.TryGetValue(key, out var fa) && (DateTime.UtcNow-fa.LastAttempt)<Settings.FailedAttempts.BanDuration)
         {
+            if (fa.FailedAttempts >= Settings.FailedAttempts.Limit)
+                return;
+                
             fa.FailedAttempts++;
             fa.LastAttempt = DateTime.UtcNow;
             if (Settings.FailedAttempts.LogBans && fa.FailedAttempts >= Settings.FailedAttempts.Limit)
-                Console.WriteLine($"Banned IP \"{ip}\" for too many failed authentication attempts.");
+                Console.WriteLine($"Banned IP \"{new IPAddress(ipBytes)}\" for too many failed authentication attempts.");
         }
         else
         {
