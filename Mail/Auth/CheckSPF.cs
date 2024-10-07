@@ -50,9 +50,10 @@ public static partial class MailAuth
                     case "a":
                     case "+a":
                     case "?a":
-                        if (MatchAorAAAA(domain, ip))
+                        string d = field.Value ?? domain;
+                        if (MatchAorAAAA(d, ip))
                         {
-                            passedDomain = domain;
+                            passedDomain = d;
                             return MailAuthVerdictSPF.Pass;
                         }
                         break;
