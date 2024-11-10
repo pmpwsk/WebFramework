@@ -48,7 +48,7 @@ public class CustomPage(string title) : IPage
             title += " | " + titleExtension;
         yield return $"\t<title>{title}</title>";
         //viewport settings + charset
-        yield return $"\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />";
+        yield return $"\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, interactive-widget=resizes-content\" />";
         yield return "\t<meta charset=\"utf-8\">";
         //styles
         foreach (IStyle style in Styles)
