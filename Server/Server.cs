@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
 using uwap.WebFramework.Mail;
 
 namespace uwap.WebFramework;
@@ -132,6 +133,9 @@ public static partial class Server
                 return c2.Certificate;
             else return null;
         };
+        
+        if (Config.EnableClientCertificates)
+            httpsOptions.ClientCertificateMode = ClientCertificateMode.AllowCertificate;
     });
 
     /// <summary>

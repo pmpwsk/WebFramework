@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using System.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
@@ -147,6 +148,12 @@ public class Request(LayerRequestData data)
     /// </summary>
     public string RedirectUrl
         => Query.TryGetValue("redirect", out var url) && url.StartsWithAny("/", "https://", "http://") ? url : "/";
+    
+    /// <summary>
+    /// The client certificate or <c>null</c> if no client certificate was received.<br/>
+    /// <c>Server.Config.EnableClientCertificates</c> needs to be <c>true</c> for this to work, otherwise <c>null</c> is returned in all cases.
+    /// </summary>
+    public X509Certificate2? ClientCertificate => Context.Connection.ClientCertificate;
 
     #endregion
 

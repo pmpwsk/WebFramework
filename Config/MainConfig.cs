@@ -208,5 +208,12 @@ public static partial class Server
         /// The function that should be called to configure the ASP.NET services.
         /// </summary>
         public static Action<IServiceCollection>? ConfigureServices {get; set;} = null;
+        
+        /// <summary>
+        /// Whether to request client certificates for incoming connections.<br/>
+        /// This is required for shared databases.<br/>
+        /// Default: true
+        /// </summary>
+        public static bool EnableClientCertificates { get; set; } = true;
     }
 }

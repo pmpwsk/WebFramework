@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Http;
 using uwap.WebFramework.Accounts;
 
 namespace uwap.WebFramework;
@@ -92,4 +93,10 @@ public class LayerRequestData(HttpContext context)
     /// </summary>
     public bool IsAdmin()
         => LoginState == LoginState.LoggedIn && User != null && User.AccessLevel == ushort.MaxValue;
+    
+    /// <summary>
+    /// The client certificate or <c>null</c> if no client certificate was received.<br/>
+    /// <c>Server.Config.EnableClientCertificates</c> needs to be <c>true</c> for this to work, otherwise <c>null</c> is returned in all cases.
+    /// </summary>
+    public X509Certificate2? ClientCertificate => Context.Connection.ClientCertificate;
 }
