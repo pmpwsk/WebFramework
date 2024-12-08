@@ -70,6 +70,21 @@ public static partial class Server
                 _HttpsPort = value;
             }
         }
+        
+        private static int? _ClientCertificatePort = null;
+        /// <summary>
+        /// The port to be used for HTTPS asking for client certificates or null to disable this feature.<br/>
+        /// Default: null
+        /// </summary>
+        public static int? ClientCertificatePort
+        {
+            get => _ClientCertificatePort;
+            set
+            {
+                Complain();
+                _ClientCertificatePort = value;
+            }
+        }
 
         private static int _WorkerInterval = 15;
         /// <summary>
@@ -210,10 +225,11 @@ public static partial class Server
         public static Action<IServiceCollection>? ConfigureServices {get; set;} = null;
         
         /// <summary>
-        /// Whether to request client certificates for incoming connections.<br/>
-        /// This is required for shared databases.<br/>
-        /// Default: true
+        /// Whether to allow requesting client certificates after the TLS handshake.<br/>
+        /// This isn't supported by most clients but would allow client certificate usage on the main HTTPS port.<br/>
+        /// Shared WebFramework databases are able to work on the main HTTPS port with this setting enabled, but that comes with a performance penalty.<br/>
+        /// Default: false
         /// </summary>
-        public static bool EnableClientCertificates { get; set; } = true;
+        public static bool EnableDelayedClientCertificates { get; set; } = false;
     }
 }

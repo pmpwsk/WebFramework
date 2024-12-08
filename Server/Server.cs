@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -79,11 +81,19 @@ public static partial class Server
                     kestrelOptions.ListenLocalhost((int)Config.HttpPort);
                 else kestrelOptions.ListenAnyIP((int)Config.HttpPort);
             }
+            
             if (Config.HttpsPort != null)
             {
                 if (local)
-                    kestrelOptions.ListenLocalhost((int)Config.HttpsPort, ConfigureKestrel);
-                else kestrelOptions.ListenAnyIP((int)Config.HttpsPort, ConfigureKestrel);
+                    kestrelOptions.ListenLocalhost((int)Config.HttpsPort, lo => ConfigureKestrel(lo, false));
+                else kestrelOptions.ListenAnyIP((int)Config.HttpsPort, lo => ConfigureKestrel(lo, false));
+            }
+            
+            if (Config.ClientCertificatePort != null)
+            {
+                if (local)
+                    kestrelOptions.ListenLocalhost((int)Config.ClientCertificatePort, lo => ConfigureKestrel(lo, true));
+                else kestrelOptions.ListenAnyIP((int)Config.ClientCertificatePort, lo => ConfigureKestrel(lo, true));
             }
 
             Config.ConfigureKestrel?.Invoke(kestrelOptions);
@@ -123,20 +133,18 @@ public static partial class Server
         App.Run();
     }
 
-    private static void ConfigureKestrel(ListenOptions listenOptions) => listenOptions.UseHttps(httpsOptions =>
+    private static void ConfigureKestrel(ListenOptions listenOptions, bool requestCertificates) => listenOptions.UseHttps(httpsOptions =>
     {
-        httpsOptions.ServerCertificateSelector = (context, domain) =>
-        {
-            if (domain != null && CertificateStore.TryGetValue(domain, out CertificateEntry? c1))
-                return c1.Certificate;
-            else if (CertificateStore.TryGetValue("any", out CertificateEntry? c2))
-                return c2.Certificate;
-            else return null;
-        };
-        
-        if (Config.EnableClientCertificates)
+        httpsOptions.ServerCertificateSelector = ServerCertificateSelector;
+
+        if (requestCertificates)
             httpsOptions.ClientCertificateMode = ClientCertificateMode.AllowCertificate;
+        else if (Config.EnableDelayedClientCertificates)
+            httpsOptions.ClientCertificateMode = ClientCertificateMode.DelayCertificate;
     });
+
+    private static X509Certificate2? ServerCertificateSelector(ConnectionContext? _, string? domain)
+        => domain != null && CertificateStore.TryGetValueAny(out CertificateEntry? c, domain, "any") ? c.Certificate : null;
 
     /// <summary>
     /// Creates a new thread to gracefully stop the server and exit the program while finishing the current thread's request.<br/>

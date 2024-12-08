@@ -9,10 +9,16 @@ public static partial class Server
         /// </summary>
         public static Task<bool> HttpsRedirectLayer(LayerRequestData data)
         {
-            if (Config.HttpsPort != null && !data.Context.Request.IsHttps)
+            if (!data.Context.Request.IsHttps)
             {
-                data.Context.Response.Redirect($"https://{data.Domain}{(Config.HttpsPort == 443 ? "" : $":{Config.HttpsPort}")}{data.Path}{data.Context.Request.QueryString}", true);
-                return Task.FromResult(true);
+                var port = Config.HttpsPort ?? Config.ClientCertificatePort;
+                if (port != null)
+                {
+                    data.Context.Response.Redirect(
+                        $"https://{data.Domain}{(port == 443 ? "" : $":{port}")}{data.Path}{data.Context.Request.QueryString}",
+                        true);
+                    return Task.FromResult(true);
+                }
             }
 
             return Task.FromResult(false);

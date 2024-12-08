@@ -151,9 +151,16 @@ public class Request(LayerRequestData data)
     
     /// <summary>
     /// The client certificate or <c>null</c> if no client certificate was received.<br/>
-    /// <c>Server.Config.EnableClientCertificates</c> needs to be <c>true</c> for this to work, otherwise <c>null</c> is returned in all cases.
+    /// The request has to have been received on the <c>Server.Config.ClientCertificatePort</c> for this to work, otherwise <c>null</c> is returned in all cases.<br/>
+    /// Note that you should dispose of the resulting certificate object on your own.
     /// </summary>
     public X509Certificate2? ClientCertificate => Context.Connection.ClientCertificate;
+
+    /// <summary>
+    /// Requests a client certificate from the client after the TLS handshake has already been completed and return the certificate or <c>null</c> if no client certificate was received.<br/>
+    /// <c>Server.Config.EnableDelayedClientCertificates</c> needs to be <c>true</c> for this to work, otherwise <c>null</c> is returned in all cases.
+    /// </summary>
+    public async Task<X509Certificate2?> RequestClientCertificate() => await Context.Connection.GetClientCertificateAsync();
 
     #endregion
 
