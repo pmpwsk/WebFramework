@@ -36,9 +36,9 @@ public static partial class Server
         }
 
         /// <summary>
-        /// The "SERVER" response header (not meant to be changed, only in forks of the library).
+        /// The "SERVER" response header.
         /// </summary>
-        internal static readonly string ServerHeader = "uwap.org/wf";
+        public static string ServerHeader { get; set; } = "uwap.org/wf";
 
         private static int? _HttpPort = null;
         /// <summary>
