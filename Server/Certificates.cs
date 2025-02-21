@@ -10,12 +10,12 @@ public static partial class Server
     private static readonly Dictionary<string, CertificateEntry> CertificateStore = [];
 
     /// <summary>
-    /// Loads the certificate file at the given path (using the password, if provided) and assigns it to the given domain.<br/>
+    /// Loads the PKCS12 certificate file at the given path (using the password, if provided) and assigns it to the given domain.<br/>
     /// If another certificate is already assigned to the domain, it will be replaced.
     /// </summary>
     public static void LoadCertificate(string domain, string path, string? password = null)
     {
-        CertificateStore[domain] = new CertificateEntry(password == null ? new X509Certificate2(path) : new(path, password), path, password);
+        CertificateStore[domain] = new CertificateEntry(X509CertificateLoader.LoadPkcs12FromFile(path, password), path, password);
 
         if (domain == MailManager.ServerDomain && MailManager.In.ServerRunning && !MailManager.In.HasCertificate)
             MailManager.In.TryRestart();

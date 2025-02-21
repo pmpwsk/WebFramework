@@ -129,7 +129,7 @@ public static partial class Server
             coveredDomains.Add(domain);
             if (!domains.Contains(domain))
                 File.Delete(path);
-            else if (DateTime.Parse(new X509Certificate2(path).GetExpirationDateString()) < (DateTime.UtcNow + TimeSpan.FromDays(30)))
+            else if (DateTime.Parse(X509CertificateLoader.LoadPkcs12FromFile(path, null).GetExpirationDateString()) < (DateTime.UtcNow + TimeSpan.FromDays(30)))
             {
                 try
                 {
