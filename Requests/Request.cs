@@ -26,6 +26,7 @@ public class Request(LayerRequestData data)
 
     /// <summary>
     /// The relative path for a plugin's request or the full path for other requests.
+    /// The path segments are already URL decoded, except for %2f (slash).
     /// </summary>
     public string Path {get; internal set;} = data.Path;
 
@@ -46,6 +47,7 @@ public class Request(LayerRequestData data)
 
     /// <summary>
     /// The associated query manager.
+    /// The query values are already URL decoded.
     /// </summary>
     public readonly QueryManager Query = data.Query;
 

@@ -20,7 +20,8 @@ public class LayerRequestData(HttpContext context)
     public readonly CookieManager Cookies = new(context);
 
     /// <summary>
-    /// The associated query manager.
+    /// The associated query manager.<br/>
+    /// The query values are already URL decoded.
     /// </summary>
     public readonly QueryManager Query = new(context.Request.Query);
 
@@ -46,6 +47,7 @@ public class LayerRequestData(HttpContext context)
 
     /// <summary>
     /// The requested path.
+    /// The path segments are already URL decoded, except for %2f (slash).
     /// </summary>
     public string Path
         => Context.Request.Path.Value ?? "/";
