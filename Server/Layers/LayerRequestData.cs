@@ -47,7 +47,7 @@ public class LayerRequestData(HttpContext context)
 
     /// <summary>
     /// The requested path.
-    /// The path segments are already URL decoded, except for %2f (slash).
+    /// The path segments are already URL path decoded, except for %2f (slash).
     /// </summary>
     public string Path
         => Context.Request.Path.Value ?? "/";
