@@ -43,4 +43,9 @@ public static partial class Server
     /// Called when the server is being restored from a backup (after everything else has been restored).
     /// </summary>
     public static event RestoreHandler? RestoreAlmostDone = null;
+
+    /// <summary>
+    /// Called when the entire program has been requested to stop.
+    /// </summary>
+    public static event Action? ProgramStopping = null;
 }

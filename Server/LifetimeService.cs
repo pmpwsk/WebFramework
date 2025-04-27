@@ -29,6 +29,8 @@ public static partial class Server
             Console.WriteLine("Stopping...");
             PauseRequests = true;
             StoppingTokenSource.Cancel();
+
+            ProgramStopping?.Invoke();
         }
     }
 }
