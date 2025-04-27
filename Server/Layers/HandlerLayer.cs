@@ -73,7 +73,7 @@ public static partial class Server
                         }
                         else if (RequestReceived != null)
                             await RequestReceived.Invoke(req);
-                        else req.Status = 501;
+                        else return false;
                     }
                     catch (RedirectSignal redirect)
                     {

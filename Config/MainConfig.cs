@@ -231,5 +231,11 @@ public static partial class Server
         /// Default: false
         /// </summary>
         public static bool EnableDelayedClientCertificates { get; set; } = false;
+        
+        /// <summary>
+        /// Whether to let requests through the points where WebFramework does not have any handlers.<br/>
+        /// Default: false
+        /// </summary>
+        public static bool AllowMoreMiddlewaresIfUnhandled { get; set; } = false;
     }
 }

@@ -12,13 +12,10 @@ public static partial class Server
     /// <summary>
     /// Middleware to attach handlers to ASP.NET.
     /// </summary>
-    private class Middleware
+    private class Middleware(RequestDelegate next)
     {
-        /// <summary>
-        /// Required constructor for ASP.NET.
-        /// </summary>
-        public Middleware(RequestDelegate next) { }
-
+        private RequestDelegate Next = next;
+        
         /// <summary>
         /// Invoked by ASP.NET for an incoming request with the given HttpContext.
         /// </summary>
@@ -30,6 +27,15 @@ public static partial class Server
                 foreach (LayerDelegate layer in Config.Layers)
                     if (await layer.Invoke(data))
                         return;
+
+                if (Config.AllowMoreMiddlewaresIfUnhandled)
+                    await Next.Invoke(context);
+                else
+                {
+                    Request req = new(data);
+                    req.Status = 501;
+                    try { await req.Finish(); } catch { }
+                }
             } catch { }
         }
     }
