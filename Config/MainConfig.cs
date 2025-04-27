@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Server.Kestrel.Core;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace uwap.WebFramework;
@@ -223,6 +224,11 @@ public static partial class Server
         /// The function that should be called to configure the ASP.NET services.
         /// </summary>
         public static Action<IServiceCollection>? ConfigureServices {get; set;} = null;
+
+        /// <summary>
+        /// The function that should be called to configure the web app just before starting it.
+        /// </summary>
+        public static Action<WebApplication>? ConfigureWebApp { get; set; } = null;
         
         /// <summary>
         /// Whether to allow requesting client certificates after the TLS handshake.<br/>

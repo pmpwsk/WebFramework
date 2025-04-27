@@ -121,6 +121,9 @@ public static partial class Server
 
         //add own middleware
         App.UseMiddleware<Middleware>();
+        
+        //configure web app according to config
+        Config.ConfigureWebApp?.Invoke(App);
 
         //start worker immediately
         if (Config.WorkerInterval >= 0)
