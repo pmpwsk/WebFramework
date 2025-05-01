@@ -48,4 +48,9 @@ public static partial class Server
     /// Called when the entire program has been requested to stop.
     /// </summary>
     public static event Action? ProgramStopping = null;
+
+    /// <summary>
+    /// Called when the web server has successfully started and is ready to serve requests.
+    /// </summary>
+    public static event Action? ServerReady = null;
 }

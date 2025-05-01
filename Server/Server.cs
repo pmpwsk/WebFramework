@@ -125,13 +125,9 @@ public static partial class Server
         //configure web app according to config
         Config.ConfigureWebApp?.Invoke(App);
 
-        //start worker immediately
-        if (Config.WorkerInterval >= 0)
-            Worker.Change(0, Timeout.Infinite);
-
         //run :)
         if (Config.Log.Startup)
-            Console.WriteLine("Starting server.");
+            Console.WriteLine("Starting server...");
         Running = true;
         App.Run();
     }

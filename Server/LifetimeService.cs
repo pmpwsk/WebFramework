@@ -17,12 +17,24 @@ public static partial class Server
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            HostApplicationLifetime.ApplicationStarted.Register(ApplicationStarted);
             HostApplicationLifetime.ApplicationStopping.Register(ApplicationStopping);
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
             => Task.CompletedTask;
+
+        private void ApplicationStarted()
+        {
+            if (Config.Log.Startup)
+                Console.WriteLine("Ready for requests.");
+            
+            if (Config.WorkerInterval >= 0)
+                Worker.Change(0, Timeout.Infinite);
+
+            ServerReady?.Invoke();
+        }
 
         private void ApplicationStopping()
         {
