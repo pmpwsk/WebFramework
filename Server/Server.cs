@@ -50,12 +50,12 @@ public static partial class Server
     {
         if (Running)
             throw new Exception("Server is already running.");
-        if (Config.HttpPort == null && Config.HttpsPort == null)
+        if (Config.HttpPort == null && Config.HttpsPort == null && Config.ClientCertificatePort == null)
             throw new Exception("At least one port needs to be set.");
         if (new DirectoryInfo(Directory.GetCurrentDirectory()).Parent == null)
             throw new Exception("The working directory must not be a root directory.");
 
-        if (Config.HttpsPort != null)
+        if (Config.HttpsPort != null || Config.ClientCertificatePort != null)
         {
             if (Config.Log.Startup)
                 Console.WriteLine("Loading certificates...");

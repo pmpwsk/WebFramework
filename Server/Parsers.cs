@@ -71,13 +71,17 @@ public static class Parsers
     /// </summary>
     public static string Proto(this HttpContext c)
         => c.Request.IsHttps?"https://":"http://";
+
     /// <summary>
     /// Host (with port if necessary).
     /// </summary>
     public static string Host(this HttpContext c)
-        => c.Request.IsHttps
-            ? (Server.Config.HttpsPort == 443 ? c.Request.Host.Host : $"{c.Request.Host.Host}:{Server.Config.HttpsPort}")
-            : (Server.Config.HttpPort == 80 ? c.Request.Host.Host : $"{c.Request.Host.Host}:{Server.Config.HttpPort}");
+    {
+        if (c.Request.Host.Port == null || c.Request.Host.Port == (c.Request.IsHttps ? 443 : 80))
+            return c.Request.Host.Host;
+        return $"{c.Request.Host.Host}:{c.Request.Host.Port}";
+    }
+    
     /// <summary>
     /// Host without port.
     /// </summary>
@@ -206,7 +210,7 @@ public static class Parsers
         => GetFirstSegment(req.Path, out rest);
 
     /// <summary>
-    /// Replaces < with &lt; and > with &gt;.
+    /// Replaces &lt; with &amp;lt; and &gt; with &amp;gt;.
     /// </summary>
     public static string HtmlSafe(this string source)
     {
@@ -231,7 +235,7 @@ public static class Parsers
     }
 
     /// <summary>
-    /// Replaces < with &lt; and > with &gt; if doNotActuallyDoIt is false, otherwise does nothing.
+    /// Replaces &lt; with &amp;lt; and &gt; with &amp;gt; if doNotActuallyDoIt is false, otherwise does nothing.
     /// </summary>
     public static string HtmlSafe(this string source, bool doNotActuallyDoIt)
         => doNotActuallyDoIt ? source : source.HtmlSafe();
