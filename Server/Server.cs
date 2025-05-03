@@ -143,7 +143,7 @@ public static partial class Server
     });
 
     private static X509Certificate2? ServerCertificateSelector(ConnectionContext? _, string? domain)
-        => domain != null && CertificateStore.TryGetValueAny(out CertificateEntry? c, domain, "any") ? c.Certificate : null;
+        => domain != null ? GetCertificate(domain) : null;
 
     /// <summary>
     /// Creates a new thread to gracefully stop the server and exit the program while finishing the current thread's request.<br/>
