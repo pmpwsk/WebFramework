@@ -54,41 +54,29 @@ public static partial class Server
                     }
                     
                     //handler
-                    Request req = new(data);
-                    try
-                    {
-                        if (data.Method == "GET" && ParsePage(req, data.Domains))
-                        {
-                        }
-                        else if (plugin != null)
-                        {
-                            if (relPath == "")
-                                req.Redirect(req.FullPath + '/');
-                            else
+                    if (await Handle(data, async req =>
                             {
-                                req.Path = relPath;
-                                req.PluginPathPrefix = pathPrefix;
-                                await plugin.Handle(req);
+                                if (data.Method == "GET" && ParsePage(req, data.Domains))
+                                {
+                                }
+                                else if (plugin != null)
+                                {
+                                    if (relPath == "")
+                                        req.Redirect(req.FullPath + '/');
+                                    else
+                                    {
+                                        req.Path = relPath;
+                                        req.PluginPathPrefix = pathPrefix;
+                                        await plugin.Handle(req);
+                                    }
+                                }
+                                else if (!await RequestReceived.InvokeAsync(s => s(req), null, false))
+                                    return false;
+
+                                return true;
                             }
-                        }
-                        else if (RequestReceived != null)
-                            await RequestReceived.Invoke(req);
-                        else return false;
-                    }
-                    catch (RedirectSignal redirect)
-                    {
-                        try { req.Redirect(redirect.Location, redirect.Permanent); } catch { }
-                    }
-                    catch (HttpStatusSignal status)
-                    {
-                        try { req.Status = status.Status; } catch { }
-                    }
-                    catch (Exception ex)
-                    {
-                        req.Exception = ex;
-                        req.Status = 500;
-                    }
-                    try { await req.Finish(); } catch { }
+                        ))
+                        return false;
                     break;
                 default: //method unknown
                     {

@@ -33,18 +33,15 @@ public static partial class Server
             await PluginManager.Backup(id, basedOnIds);
 
             //event
-            try
-            {
-                if (BackupAlmostDone != null)
-                    await BackupAlmostDone(id, basedOnIds);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error firing the backup event: " + ex.Message);
-            }
+            await BackupAlmostDone.InvokeAsync
+            (
+                s => s(id, basedOnIds),
+                ex => Console.WriteLine("Error firing a backup event: " + ex.Message),
+                false
+            );
 
             //finish
-            File.WriteAllText($"{Config.Backup.Directory}{id}/BasedOn.txt", basedOnIds.LastOrDefault() ?? "-");
+            await File.WriteAllTextAsync($"{Config.Backup.Directory}{id}/BasedOn.txt", basedOnIds.LastOrDefault() ?? "-");
         }
         finally
         {

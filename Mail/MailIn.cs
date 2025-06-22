@@ -14,12 +14,13 @@ public static partial class MailManager
         /// The method that decides whether the target of a mail message with the given information is acceptable.<br/>
         /// If there's another reason to not decline the message, the method should throw a SmtpServer.Protocol.SmtpResponseException with one of the static SmtpResponse properties or a custom SmtpResponse.
         /// </summary>
-        public static event MailboxExistsDelegate? MailboxExists = null;
+        public static readonly SubscriberContainer<MailboxExistsDelegate> MailboxExists = new();
 
         /// <summary>
-        /// The method that handles given mail messages (along with the given mail context and authentication result) after they have been accepted by the accepting method.
+        /// The method that handles given mail messages (along with the given mail context and authentication result) after they have been accepted by the accepting method.<br/>
+        /// The first subscriber to this event sets the SMTP response, the other subscribers' return values will be ignored.
         /// </summary>
-        public static event HandleDelegate? HandleMail = null;
+        public static readonly SubscriberContainer<HandleDelegate> HandleMail = new();
 
         /// <summary>
         /// The size limit for incoming mail messages in bytes.<br/>
@@ -67,9 +68,9 @@ public static partial class MailManager
                 throw new Exception("The server is already running.");
             if (ServerDomain == null)
                 throw new Exception("ServerDomain must be set.");
-            if (MailboxExists == null)
+            if (MailboxExists.IsEmpty())
                 throw new Exception("MailboxExists must be set.");
-            if (HandleMail == null)
+            if (HandleMail.IsEmpty())
                 throw new Exception("HandleMail must be set.");
 
             var builder = new SmtpServerOptionsBuilder()

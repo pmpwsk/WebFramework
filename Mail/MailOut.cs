@@ -19,12 +19,12 @@ public static partial class MailManager
         /// <summary>
         /// The method that is called after a mail message was sent (regardless of whether the attempt was successful or not).
         /// </summary>
-        public static event SentDelegate? MailSent;
+        public static readonly SubscriberContainer<SentDelegate> MailSent = new();
 
         /// <summary>
         /// The method that is called to determine whether a mail message should be sent to the given recipient externally (returning true to send externally, false otherwise).
         /// </summary>
-        public static event BeforeSendDelegate? BeforeSend;
+        public static readonly SubscriberContainer<BeforeSendDelegate> BeforeSend = new();
 
         /// <summary>
         /// Whether to attempt to send emails directly.<br/>
@@ -104,12 +104,13 @@ public static partial class MailManager
             foreach (var a in mailGen.To)
             {
                 string id = ServerDomain == null ? MimeUtils.GenerateMessageId() : MimeUtils.GenerateMessageId(ServerDomain);
-                if (BeforeSend == null || BeforeSend.Invoke(mailGen, a, id, out var log))
+                string? log = null;
+                if (BeforeSend.InvokeAndGet(s => s(mailGen, a, id, out log), _ => {}).All(r => r))
                     leftAddresses.Add(a);
                 else
                 {
                     messageIds.Add(id);
-                    internalLog[a] = log;
+                    internalLog[a] = log ?? "[No log]";
                 }
             }
             MailSendResult.Attempt? fromSelf = null;
@@ -211,7 +212,7 @@ public static partial class MailManager
         /// Calls the method that should be called after a message was attempted to be sent.
         /// </summary>
         public static void InvokeMailSent(MimeMessage message, MailSendResult result)
-            => MailSent?.Invoke(message, result);
+            => MailSent.Invoke(s => s(message, result), _ => {});
 
         /// <summary>
         /// Turns the given IP (key) and associated server domain (value, if known) into a string to be used in connection logs.

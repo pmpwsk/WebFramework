@@ -54,7 +54,7 @@ public class Request(LayerRequestData data)
     /// <summary>
     /// The current user or null if no user is logged in.
     /// </summary>
-    public readonly User? _User = data.User;
+    private readonly User? _User = data.User;
 
     /// <summary>
     /// The associated user table.
@@ -188,8 +188,7 @@ public class Request(LayerRequestData data)
                     }
                     else
                     {
-                        if (Context.Response.ContentType == null)
-                            Context.Response.ContentType = "text/plain;charset=utf-8";
+                        Context.Response.ContentType ??= "text/plain;charset=utf-8";
                         await Context.Response.WriteAsync(TextBuffer);
                     }
                 break;
@@ -202,8 +201,7 @@ public class Request(LayerRequestData data)
                 }
                 else
                 {
-                    if (Context.Response.ContentType == null)
-                        Context.Response.ContentType = "text/plain;charset=utf-8";
+                    Context.Response.ContentType ??= "text/plain;charset=utf-8";
                     await Context.Response.WriteAsync((Status == 500 && Exception != null && (IsAdmin || Server.DebugMode))
                         ? $"{Exception.GetType().FullName??"Exception"}\n{Exception.Message}\n{Exception.StackTrace??"No stacktrace"}"
                         : Parsers.StatusMessage(Status));
@@ -363,8 +361,7 @@ public class Request(LayerRequestData data)
             case RequestState.Open:
                 if (WriteTextImmediately)
                 {
-                    if (Context.Response.ContentType == null)
-                        Context.Response.ContentType = "text/plain;charset=utf-8";
+                    Context.Response.ContentType ??= "text/plain;charset=utf-8";
                     await Context.Response.WriteAsync(text);
                 }
                 else TextBuffer += text;
@@ -538,7 +535,6 @@ public class Request(LayerRequestData data)
         finally
         {
             reader.Close();
-            reader.Dispose();
         }
     }
 
@@ -616,15 +612,19 @@ public class Request(LayerRequestData data)
         }
         catch (OperationCanceledException) { }
 
-        if (KeepEventAliveCancelled != null)
-            await KeepEventAliveCancelled.Invoke(this);
+        await KeepEventAliveCancelled.InvokeAsync
+        (
+            s => s(this),
+            _ => {},
+            true
+        );
     }
 
     /// <summary>
     /// The function to call when KeepEventAlive was cancelled (because the client has disconnected, the server is shutting down or the provided token was cancelled).<br/>
     /// Default: null
     /// </summary>
-    public event Func<Request, Task>? KeepEventAliveCancelled = null;
+    public readonly SubscriberContainer<Func<Request, Task>> KeepEventAliveCancelled = new();
 
     #endregion
 }

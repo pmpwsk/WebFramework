@@ -25,7 +25,7 @@ public static partial class Server
         public Task StopAsync(CancellationToken cancellationToken)
             => Task.CompletedTask;
 
-        private void ApplicationStarted()
+        private static void ApplicationStarted()
         {
             if (Config.Log.Startup)
                 Console.WriteLine("Ready for requests.");
@@ -33,16 +33,24 @@ public static partial class Server
             if (Config.WorkerInterval >= 0)
                 Worker.Change(0, Timeout.Infinite);
 
-            ServerReady?.Invoke();
+            ServerReady.Invoke
+            (
+                s => s(),
+                ex => Console.WriteLine("Error firing a server ready event: " + ex.Message)
+            );
         }
 
-        private void ApplicationStopping()
+        private static void ApplicationStopping()
         {
             Console.WriteLine("Stopping...");
             PauseRequests = true;
             StoppingTokenSource.Cancel();
 
-            ProgramStopping?.Invoke();
+            ProgramStopping.Invoke
+            (
+                s => s(),
+                ex => Console.WriteLine("Error firing a program stopping event: " + ex.Message)
+            );
         }
     }
 }

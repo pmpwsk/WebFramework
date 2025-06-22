@@ -5,7 +5,7 @@ namespace uwap.WebFramework;
 /// <summary>
 /// Delegate for asynchronous handlers without arguments.
 /// </summary>
-public delegate Task Handler();
+public delegate Task AsyncAction();
 
 /// <summary>
 /// Delegate for asynchronous request handlers.
@@ -25,32 +25,32 @@ public delegate Task RestoreHandler(ReadOnlyCollection<string> ids);
 public static partial class Server
 {
     /// <summary>
-    /// Called when the worker has finished working. This is meant so custom activities can be set to run afterwards.
+    /// Called when the worker has finished working. This is meant so custom activities can be set to run after each worker tick.
     /// </summary>
-    public static event Handler? WorkerWorked = null;
+    public static readonly SubscriberContainer<AsyncAction> WorkerWorked = new();
 
     /// <summary>
     /// Called when a request has been received.
     /// </summary>
-    public static event RequestHandler? RequestReceived = null;
+    public static readonly SubscriberContainer<RequestHandler> RequestReceived = new();
 
     /// <summary>
     /// Called when the server is being backed up (after everything else has been backed up).
     /// </summary>
-    public static event BackupHandler? BackupAlmostDone = null;
+    public static readonly SubscriberContainer<BackupHandler> BackupAlmostDone = new();
 
     /// <summary>
     /// Called when the server is being restored from a backup (after everything else has been restored).
     /// </summary>
-    public static event RestoreHandler? RestoreAlmostDone = null;
+    public static readonly SubscriberContainer<RestoreHandler> RestoreAlmostDone = new();
 
     /// <summary>
     /// Called when the entire program has been requested to stop.
     /// </summary>
-    public static event Action? ProgramStopping = null;
+    public static readonly SubscriberContainer<Action> ProgramStopping = new();
 
     /// <summary>
     /// Called when the web server has successfully started and is ready to serve requests.
     /// </summary>
-    public static event Action? ServerReady = null;
+    public static readonly SubscriberContainer<Action> ServerReady = new();
 }

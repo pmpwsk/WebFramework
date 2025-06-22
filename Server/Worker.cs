@@ -30,7 +30,7 @@ public static partial class Server
     /// The method for the worker.<br/>
     /// Checks auto certificates and existing certificates, updates the cache, checks the database, deletes expired auth tokens and expired bans, checks accelerator dictionaries for user tables, then calls the worker-finished event.
     /// </summary>
-    private async static void Work(object? state)
+    private static async void Work(object? state)
     {
         WorkerWorking = true;
 
@@ -123,14 +123,12 @@ public static partial class Server
         await PluginManager.Work();
 
         //fire event that worker finished
-        try
-        {
-            if (WorkerWorked != null) await WorkerWorked();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error firing the event after the worker ran: " + ex.Message);
-        }
+        await WorkerWorked.InvokeAsync
+        (
+            s => s(),
+            ex => Console.WriteLine("Error firing an event after the worker ran: " + ex.Message),
+            true
+        );
 
         //set the timer again
         if (WorkAgain)

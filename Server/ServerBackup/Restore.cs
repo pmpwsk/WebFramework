@@ -24,7 +24,7 @@ public static partial class Server
             while (File.Exists($"{Config.Backup.Directory}{lastInChain}/BasedOn.txt"))
             {
                 idsWritable.Insert(0, lastInChain);
-                lastInChain = File.ReadAllText($"{Config.Backup.Directory}{lastInChain}/BasedOn.txt");
+                lastInChain = await File.ReadAllTextAsync($"{Config.Backup.Directory}{lastInChain}/BasedOn.txt");
                 if (lastInChain == "-")
                 {
                     //start of the chain has been reached
@@ -42,14 +42,12 @@ public static partial class Server
             await PluginManager.Restore(ids);
 
             //event
-            try
-            {
-                if (RestoreAlmostDone != null) await RestoreAlmostDone(ids);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error firing the restore event: " + ex.Message);
-            }
+            await RestoreAlmostDone.InvokeAsync
+            (
+                s => s(ids),
+                ex => Console.WriteLine("Error firing a restore event: " + ex.Message),
+                false
+            );
         }
         finally
         {
