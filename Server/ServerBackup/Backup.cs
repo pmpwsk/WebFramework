@@ -27,7 +27,8 @@ public static partial class Server
         try
         {
             //tables
-            Tables.BackupAll(id, basedOnIds);
+            LegacyTables.BackupAll(id, basedOnIds);
+            Tables.BackupAll(id, basedOnIds.LastOrDefault());
 
             //plugins
             await PluginManager.Backup(id, basedOnIds);

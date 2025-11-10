@@ -1,5 +1,4 @@
 using System.Runtime.Serialization.Json;
-using uwap.WebFramework.Accounts;
 
 namespace uwap.Database;
 
@@ -23,45 +22,58 @@ public static class Serialization
     }
 
     /// <summary>
-    /// Deserializes the given JSON as a byte array into an object and returns it.
+    /// Deserializes the given JSON as a byte array into an object and returns it.<br/>
+    /// This method may not be used for table values, use <c>Deserialize(id, json)</c> instead.
     /// </summary>
-    /// <typeparam name="T">The object's type.</typeparam>
-    /// <param name="json"></param>
-    public static T Deserialize<T>(byte[] json)
+    public static T? Deserialize<T>(byte[] json) where T : class
     {
-        if (typeof(T) == typeof(User))
-            throw new Exception("For User objects, DeserializeUser(...) should be used instead.");
+        var obj = DeserializeInternal<T>(json);
 
-        DataContractJsonSerializer serializer = new(typeof(T));
-        using MemoryStream stream = new(json);
-        T obj = (T)(serializer.ReadObject(stream) ?? throw new Exception("Failed to deserialize the provided JSON."));
-        stream.Close();
+        if (obj is AbstractTableValue)
+            throw new Exception("For table values, use Deserialize(id, json) instead.");
         return obj;
     }
-
+    
     /// <summary>
-    /// Deserializes the given JSON as a byte array into a User and returns it.<br/>
-    /// If the serialized object is a User_Old2 object, it will be upgraded and updateDatabase will be true.
+    /// Internal deserialization without type checking or migration.
     /// </summary>
-    /// <param name="updateDatabase">Whether the returned object is different from the originally serialized object (= should be written back to the disk).</param>
-    public static User DeserializeUser(byte[] json, out bool updateDatabase)
+    private static T? DeserializeInternal<T>(byte[] json) where T : class
     {
-        DataContractJsonSerializer serializer = new(typeof(User));
-        using MemoryStream stream = new(json);
-        User result = (User)(serializer.ReadObject(stream) ?? throw new Exception("Failed to deserialize the provided JSON."));
-        stream.Close();
         try
         {
-            if (result.Username == null)
-                throw new Exception("The serialized user object is old and needs to be upgraded.");
-
-            updateDatabase = false;
-            return result;
+            DataContractJsonSerializer serializer = new(typeof(T));
+            using MemoryStream stream = new(json);
+            return (T?)serializer.ReadObject(stream);
         }
         catch
         {
-            updateDatabase = true;
-            return new User(Deserialize<User_Old2>(json));
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Deserializes the given JSON as a byte array into a table value, migrates it to the current version (if necessary) and returns it.
+    /// </summary>
+    public static T? Deserialize<T>(string tableName, string id, byte[] json) where T : AbstractTableValue
+    {
+        try
+        {
+            var obj = DeserializeInternal<T>(json);
+            if (obj != null)
+            {
+                // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+                obj.AssemblyVersion ??= new Version(0, 0, 0, 0);
+                // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+                obj.Files ??= [];
+            
+                obj.AfterDeserialization(tableName, id, json);
+            }
+            
+            return obj;
+        }
+        catch
+        {
+            return null;
         }
     }
 }

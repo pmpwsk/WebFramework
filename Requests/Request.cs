@@ -150,19 +150,12 @@ public class Request(LayerRequestData data)
     /// </summary>
     public string RedirectUrl
         => Query.TryGetValue("redirect", out var url) && url.StartsWithAny("/", "https://", "http://") ? url : "/";
-    
-    /// <summary>
-    /// The client certificate or <c>null</c> if no client certificate was received.<br/>
-    /// The request has to have been received on the <c>Server.Config.ClientCertificatePort</c> for this to work, otherwise <c>null</c> is returned in all cases.<br/>
-    /// Note that you should dispose of the resulting certificate object on your own.
-    /// </summary>
-    public X509Certificate2? ClientCertificate => Context.Connection.ClientCertificate;
 
     /// <summary>
-    /// Requests a client certificate from the client after the TLS handshake has already been completed and return the certificate or <c>null</c> if no client certificate was received.<br/>
-    /// <c>Server.Config.EnableDelayedClientCertificates</c> needs to be <c>true</c> for this to work, otherwise <c>null</c> is returned in all cases.
+    /// Returns the client certificate for the request, either from the initial connection or by requesting it from the client (<c>Server.Config.EnableDelayedClientCertificates</c> needs to be <c>true</c> for second option).<br/>
+    /// If no client certificate was located, null is returned.
     /// </summary>
-    public async Task<X509Certificate2?> RequestClientCertificate() => await Context.Connection.GetClientCertificateAsync();
+    public async Task<X509Certificate2?> GetClientCertificate() => Context.Connection.ClientCertificate ?? await Context.Connection.GetClientCertificateAsync();
 
     #endregion
 
@@ -259,9 +252,10 @@ public class Request(LayerRequestData data)
     public void ForceAdmin(bool redirectIfNotLoggedIn = true)
     {
         if (LoggedIn)
-            if (IsAdmin)
-                return;
-            else throw new ForbiddenSignal();
+        {
+            if (!IsAdmin)
+                throw new ForbiddenSignal();
+        }
         else if (redirectIfNotLoggedIn)
             throw new RedirectToLoginSignal(this);
         else throw new ForbiddenSignal();
@@ -536,6 +530,16 @@ public class Request(LayerRequestData data)
         {
             reader.Close();
         }
+    }
+
+    /// <summary>
+    /// The request body, interpreted as bytes.
+    /// </summary>
+    public async Task<byte[]> GetBodyBytes()
+    {
+        using MemoryStream target = new();
+        await Context.Request.Body.CopyToAsync(target);
+        return target.ToArray();
     }
 
     #endregion

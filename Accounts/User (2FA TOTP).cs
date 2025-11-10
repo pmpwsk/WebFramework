@@ -4,115 +4,29 @@ using System.Runtime.Serialization;
 
 namespace uwap.WebFramework.Accounts;
 
-public class TwoFactorTotp
+[DataContract]
+public class TwoFactorTOTP
 {
-    readonly User User;
+    [DataMember] public bool Verified { get; internal set; }
 
-    internal _TwoFactorTotp Data;
+    [DataMember] public byte[] SecretKey {get; internal set; }
 
-    internal TwoFactorTotp(User user)
-    {
-        if (user._TwoFactor.TOTP == null)
-            throw new Exception("This user doesn't have a TOTP object.");
-
-        User = user;
-        Data = user._TwoFactor.TOTP;
-    }
+    [DataMember] internal List<string> Recovery;
 
     /// <summary>
-    /// Whether this two-factor authentication object has been verified.<br/>
-    /// If it is not verified, it shouldn't be required to log in.
+    /// The 3 most recently used time steps. This is used so a code isn't used twice within its active duration.
     /// </summary>
-    public bool Verified => Data.Verified;
+    [DataMember] public List<long> UsedTimeSteps { get; internal set; } = [];
 
     /// <summary>
     /// The private/secret key using which two-factor codes are generated.
     /// </summary>
-    public string SecretKey => Base32Encoding.ToString(Data.SecretKey);
+    public string SecretKeyString => Base32Encoding.ToString(SecretKey);
 
     /// <summary>
     /// The list of recovery codes that are still available to use.
     /// </summary>
-    public ReadOnlyCollection<string> Recovery => Data.Recovery.AsReadOnly();
-
-    /// <summary>
-    /// Mark the TOTP 2FA object as verified, enabling it.
-    /// </summary>
-    public void Verify()
-    {
-        if (!Data.Verified)
-        {
-            User.Lock();
-            Data.Verified = true;
-            User.UnlockSave();
-        }
-    }
-
-    /// <summary>
-    /// Replaces the list of recovery codes with a newly generated list.
-    /// </summary>
-    public void GenerateNewRecoveryCodes()
-    {
-        User.Lock();
-        Data.Recovery = _TwoFactorTotp.GenerateRecoveryCodes();
-        User.UnlockSave();
-    }
-
-    /// <summary>
-    /// Checks whether the given code is valid right now and hasn't been used before.
-    /// </summary>
-    /// <param name="request">The current request (used to handle failed attempts and tokens).</param>
-    /// <param name="tolerateRecovery">Whether to tolerate the usage of a recovery code.</param>
-    public bool Validate(string code, Request? req, bool tolerateRecovery)
-    {
-        //banned?
-        if (req != null && AccountManager.IsBanned(req.Context))
-            return false;
-
-        //recovery code?
-        if (tolerateRecovery && Data.Recovery.Contains(code))
-        {
-            User.Lock();
-            Data.Recovery.Remove(code);
-            User.UnlockSave();
-            return true;
-        }
-
-        //valid and unused?
-        if (new Totp(Data.SecretKey).VerifyTotp(code, out long timeStepMatched, new VerificationWindow(1, 1)) && !Data.UsedTimeSteps.Contains(timeStepMatched))
-        {
-            User.Lock();
-
-            //add to used time steps (and remove the oldest one if the list is full)
-            Data.UsedTimeSteps.Add(timeStepMatched);
-            if (Data.UsedTimeSteps.Count > 3)
-                Data.UsedTimeSteps.Remove(Data.UsedTimeSteps.Min());
-
-            //does an auth token even exist? (this should be the case, but you never know)
-            if (req != null && req.Cookies.TryGetValue("AuthToken", out var combinedToken))
-            {
-                //get and decode the auth token
-                string id = combinedToken.Remove(12);
-                string authToken = combinedToken.Remove(0, 12);
-                if (User.Id == id && User.Auth.TryGetValue(authToken, out var data))
-                {
-                    //renew
-                    if (Server.Config.Log.AuthTokenRenewed)
-                        Console.WriteLine($"Renewed a token after 2FA for user {User.Id}.");
-                    AccountManager.AddAuthTokenCookie(User.Id + User.Auth.Renew(authToken, data), req.Context, false);
-                }
-            }
-            User.UnlockSave();
-            return true;
-        }
-        else
-        {
-            //invalid, report as a failed attempt
-            if (req != null)
-                AccountManager.ReportFailedAuth(req.Context);
-            return false;
-        }
-    }
+    public ReadOnlyCollection<string> RecoveryCodes => Recovery.AsReadOnly();
 
     /// <summary>
     /// Generates a QR code (and converts it to base64) to add the secret key to an authenticator app (works with Google Authenticator) and returns the image source value for HTML.
@@ -122,38 +36,29 @@ public class TwoFactorTotp
     /// <returns></returns>
     public string QRImageBase64Src(string domain, string username)
         => Parsers.QRImageBase64Src($"otpauth://totp/{domain}:{username}?secret={SecretKey}&issuer={domain}");
-}
 
-[DataContract]
-internal class _TwoFactorTotp
-{
-    [DataMember]
-    public bool Verified;
-
-    [DataMember]
-    public byte[] SecretKey;
-
-    [DataMember]
-    public List<string> Recovery;
-
-    /// <summary>
-    /// The 3 most recently used time steps. This is used so a code isn't used twice within its active duration.
-    /// </summary>
-    [DataMember]
-    public List<long> UsedTimeSteps = [];
-
-    public _TwoFactorTotp()
+    public TwoFactorTOTP()
     {
         Verified = false;
         SecretKey = KeyGeneration.GenerateRandomKey(OtpHashMode.Sha1);
         Recovery = GenerateRecoveryCodes();
     }
 
-    internal _TwoFactorTotp(TwoFactorData_Old old)
+    internal TwoFactorTOTP(TwoFactorData_Old old)
     {
         Verified = old.Verified;
         SecretKey = old._SecretKey;
         Recovery = old.RecoveryCodes;
+    }
+    
+    internal void RemoveRecoveryCode(string code)
+        => Recovery.Remove(code);
+    
+    internal void AddUsedTimestamp(long timestamp)
+    {
+        UsedTimeSteps.Add(timestamp);
+        if (UsedTimeSteps.Count > 3)
+            UsedTimeSteps.Remove(UsedTimeSteps.Min());
     }
 
     /// <summary>
@@ -164,12 +69,7 @@ internal class _TwoFactorTotp
     {
         List<string> result = [];
         while (result.Count < 8)
-        {
-            string code;
-            do code = Parsers.RandomString(10);
-                while (result.Contains(code));
-            result.Add(code);
-        }
+            result.Add(Parsers.RandomString(10, code => !result.Contains(code)));
         return result;
     }
 }

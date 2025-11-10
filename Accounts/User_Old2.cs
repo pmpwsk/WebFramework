@@ -7,7 +7,7 @@ namespace uwap.WebFramework.Accounts;
 /// Old version of the User class (only properties!) to allow old objects to still be parsed and upgraded.
 /// </summary>
 [DataContract]
-public class User_Old2 : ITableValue
+public class User_Old2 : ILegacyTableValue
 {
     [DataMember]
     public string Id = "";

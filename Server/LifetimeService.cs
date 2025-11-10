@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
+using uwap.Database;
 
 namespace uwap.WebFramework;
 
@@ -29,6 +30,9 @@ public static partial class Server
         {
             if (Config.Log.Startup)
                 Console.WriteLine("Ready for requests.");
+
+            Tables.MarkSelf().GetAwaiter().GetResult();
+            Tables.StartMonitoringConnections();
             
             if (Config.WorkerInterval >= 0)
                 Worker.Change(0, Timeout.Infinite);
@@ -45,6 +49,8 @@ public static partial class Server
             Console.WriteLine("Stopping...");
             PauseRequests = true;
             StoppingTokenSource.Cancel();
+            
+            Tables.StopMonitoringConnections();
 
             ProgramStopping.Invoke
             (

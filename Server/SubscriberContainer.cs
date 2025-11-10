@@ -1,21 +1,32 @@
-using System.Collections;
-
 namespace uwap.WebFramework;
 
-public delegate Task AsyncDelegateCaller<T>(T subscriber);
+public delegate Task AsyncDelegateCaller<in T>(T subscriber);
 
-public delegate Task<R> AsyncDelegateCallerWithResult<T,R>(T subscriber);
+public delegate Task<R> AsyncDelegateCallerWithResult<in T,R>(T subscriber);
 
-public delegate void DelegateCaller<T>(T subscriber);
+public delegate void DelegateCaller<in T>(T subscriber);
 
-public delegate R DelegateCallerWithResult<T,R>(T subscriber);
+public delegate R DelegateCallerWithResult<in T, out R>(T subscriber);
 
+/// <summary>
+/// Custom container for event subscribers of a certain type, mostly a callback function.
+/// </summary>
 public class SubscriberContainer<T>
 {
+    /// <summary>
+    /// The lock to use when changing the list of subscribers.
+    /// </summary>
     private ReaderWriterLockSlim Lock = new();
     
+    /// <summary>
+    /// The list of subscribed objects.
+    /// </summary>
     private List<T> Subscribers = [];
     
+    /// <summary>
+    /// Adds the given subscriber.
+    /// </summary>
+    /// <param name="subscriber"></param>
     public void Register(T subscriber)
     {
         Lock.EnterWriteLock();
@@ -23,6 +34,10 @@ public class SubscriberContainer<T>
         Lock.ExitWriteLock();
     }
     
+    /// <summary>
+    /// Removes the given subscriber.
+    /// </summary>
+    /// <param name="subscriber"></param>
     public void Unregister(T subscriber)
     {
         Lock.EnterWriteLock();
@@ -30,6 +45,9 @@ public class SubscriberContainer<T>
         Lock.ExitWriteLock();
     }
     
+    /// <summary>
+    /// Removes all subscribers.
+    /// </summary>
     public void Clear()
     {
         Lock.EnterWriteLock();
@@ -37,6 +55,10 @@ public class SubscriberContainer<T>
         Lock.ExitWriteLock();
     }
     
+    /// <summary>
+    /// Calls all subscribers using the given caller function and handles any exceptions using the given exception handler.<br/>
+    /// If <c>parallel</c> is set, the subscribers will be notified at the same time, otherwise they will be called in order.
+    /// </summary>
     public async Task<bool> InvokeAsync(AsyncDelegateCaller<T> caller, Action<Exception>? exceptionHandler, bool parallel)
     {
         var subscribers = ListAll();
@@ -52,6 +74,9 @@ public class SubscriberContainer<T>
         return true;
     }
     
+    /// <summary>
+    /// Calls the given subscriber using the given caller function and handles any exceptions using the given exception handler.
+    /// </summary>
     private static Task InvokeAsync(T subscriber, AsyncDelegateCaller<T> caller, Action<Exception>? exceptionHandler)
     {
         try
@@ -67,6 +92,9 @@ public class SubscriberContainer<T>
         }
     }
     
+    /// <summary>
+    /// Calls all subscribers using the given caller function and handles any exceptions using the given exception handler.
+    /// </summary>
     public bool Invoke(DelegateCaller<T> caller, Action<Exception>? exceptionHandler)
     {
         var subscribers = ListAll();
@@ -79,6 +107,9 @@ public class SubscriberContainer<T>
         return true;
     }
     
+    /// <summary>
+    /// Calls the given subscriber using the given caller function and handles any exceptions using the given exception handler.
+    /// </summary>
     private static void Invoke(T subscriber, DelegateCaller<T> caller, Action<Exception>? exceptionHandler)
     {
         try
@@ -93,6 +124,9 @@ public class SubscriberContainer<T>
         }
     }
     
+    /// <summary>
+    /// Calls all subscribers using the given caller function, collects the results and handles any exceptions using the given exception handler.
+    /// </summary>
     public async Task<List<R>> InvokeAndGetAsync<R>(AsyncDelegateCallerWithResult<T,R> caller, Action<Exception>? exceptionHandler)
     {
         List<R> results = [];
@@ -112,6 +146,9 @@ public class SubscriberContainer<T>
         return results;
     }
     
+    /// <summary>
+    /// Calls all subscribers using the given caller function, collects the results and handles any exceptions using the given exception handler.
+    /// </summary>
     public List<R> InvokeAndGet<R>(DelegateCallerWithResult<T,R> caller, Action<Exception>? exceptionHandler)
     {
         List<R> results = [];
@@ -131,7 +168,9 @@ public class SubscriberContainer<T>
         return results;
     }
     
-
+    /// <summary>
+    /// Lists all subscribers.
+    /// </summary>
     private List<T> ListAll()
     {
         Lock.EnterReadLock();
@@ -140,6 +179,9 @@ public class SubscriberContainer<T>
         return list;
     }
     
+    /// <summary>
+    /// Whether the event has any subscribers.
+    /// </summary>
     public bool IsEmpty()
         => ListAll().Count == 0;
 }

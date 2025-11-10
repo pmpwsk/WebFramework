@@ -36,7 +36,8 @@ public static partial class Server
                 throw new Exception("The chain of backups is corrupt!");
 
             //tables
-            Tables.RestoreAll(ids);
+            LegacyTables.RestoreAll(ids);
+            Tables.RestoreAll(id);
 
             //plugin
             await PluginManager.Restore(ids);

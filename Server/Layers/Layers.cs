@@ -30,7 +30,7 @@ public static partial class Server
             catch (Exception ex)
             {
                 req.Exception = ex;
-                req.Status = 500;
+                try { req.Status = 500; } catch { }
             }
             try { await req.Finish(); } catch { }
             

@@ -69,7 +69,7 @@ public static partial class MailManager
             /// Calls the MailboxExists method and forwards the result.
             /// </summary>
             public override Task<bool> CanDeliverToAsync(ISessionContext context, IMailbox to, IMailbox from, CancellationToken ct)
-                => Task.FromResult(MailboxExists.InvokeAndGet(s => s(context, from, to), ex => {}).Any(r => r));
+                => Task.FromResult(MailboxExists.InvokeAndGet(s => s(context, from, to), _ => {}).Any(r => r));
         }
 
         /// <summary>

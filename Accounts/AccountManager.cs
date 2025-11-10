@@ -35,7 +35,7 @@ public enum LoginState
 /// <summary>
 /// Manages user accounts.
 /// </summary>
-public static partial class AccountManager
+public static class AccountManager
 {
     /// <summary>
     /// The dictionary for failed auth entries for each IP hash that currently has failed attempts.
@@ -46,7 +46,7 @@ public static partial class AccountManager
     /// Returns the user table for the domain of the given context (or "any") or returns null if no matches were found.
     /// </summary>
     public static UserTable? GetUserTable(this HttpContext context)
-        => Settings.UserTables.TryGetValue(context.Request.Host.Host, out var t1) ? t1 : (Settings.UserTables.TryGetValue("any", out var t2) ? t2 : null);
+        => Settings.UserTables.TryGetValue(context.Request.Host.Host, out var t1) ? t1 : Settings.UserTables.GetValueOrDefault("any");
     
     /// <summary>
     /// Reports one failed authentication attempt for the requesting IP of the given context.
@@ -152,7 +152,7 @@ public static partial class AccountManager
     /// Creates a new authentication token for the given user and adds a cookie for it to the given context.
     /// </summary>
     internal static void Login(User user, Request req)
-        => AddAuthTokenCookie(user.Id + user.Auth.AddNew(out bool temporary), req.Context, temporary);
+        => AddAuthTokenCookie(user.Id + req.UserTable.AddNewToken(user.Id, out bool temporary), req.Context, temporary);
 
     /// <summary>
     /// Check whether the given username satisfies the username requirements.
@@ -162,7 +162,7 @@ public static partial class AccountManager
         if (username.Length < 3) return false;
         if ("-._".Contains(username.First()) || "-._".Contains(username.Last())) return false;
         string supportedChars = "abcdefghijklmnopqrstuvwxyz0123456789-._";
-        return !username.Any(x => !supportedChars.Contains(x));
+        return username.All(x => supportedChars.Contains(x));
     }
 
     /// <summary>

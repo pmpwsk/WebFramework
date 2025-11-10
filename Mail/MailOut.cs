@@ -203,7 +203,7 @@ public static partial class MailManager
                 if (File.Exists(dkimPath))
                 {
                     var signer = new DkimSigner(dkimPath, from.Domain, DkimSelector);
-                    signer.Sign(message, new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.To });
+                    signer.Sign(message, [HeaderId.From, HeaderId.Subject, HeaderId.To]);
                 }
             }
         }
@@ -254,8 +254,8 @@ public static partial class MailManager
                     KeyValuePair<MailboxAddress, Dictionary<string, string?>> due;
                     if (connectedServer != null && client.IsConnected)
                     {
-                        var acceptable = serversForAddresses.Where(x => x.Value.ContainsKey(connectedServer));
-                        if (acceptable.Any())
+                        var acceptable = serversForAddresses.Where(x => x.Value.ContainsKey(connectedServer)).ToList();
+                        if (acceptable.Count != 0)
                             due = acceptable.First();
                         else
                         {
@@ -281,7 +281,7 @@ public static partial class MailManager
                                 if (failedServers.Contains(server.Key))
                                     continue;
                                 using var cts = new CancellationTokenSource(Timeout);
-                                string suitableFor = Parsers.EnumerationText(serversForAddresses.Where(x => x.Value.ContainsKey(server.Key)).Select(x => x.Key.Address));
+                                string suitableFor = Parsers.EnumerationText(serversForAddresses.Where(x => x.Value.ContainsKey(server.Key)).Select(x => x.Key.Address).ToList());
                                 try
                                 {
                                     Stopwatch stopwatch = Stopwatch.StartNew();
@@ -322,10 +322,6 @@ public static partial class MailManager
                         {
                             log.Add($"SMTP error: {ex.Message} {ex.StatusCode} {ex.ErrorCode} {ex.HelpLink}");
                         }
-                        catch
-                        {
-                            throw;
-                        }
                     }
                     catch (Exception ex)
                     {
@@ -346,7 +342,6 @@ public static partial class MailManager
                     client.Disconnect(true);
                     log.Add("Disconnected.");
                 }
-                client.Dispose();
                 return new MailSendResult.Attempt(resultType ?? MailSendResult.ResultType.Failed, log);
             }
             catch (Exception ex)
@@ -369,8 +364,8 @@ public static partial class MailManager
                 {
                     if (IPAddress.TryParse(dns, out var ip))
                     {
-                        if ((AllowIPv6 || ip.AddressFamily == AddressFamily.InterNetwork) && !results.ContainsKey(dns)) //InterNetwork means IPv4
-                            results[dns] = null;
+                        if (AllowIPv6 || ip.AddressFamily == AddressFamily.InterNetwork) //InterNetwork means IPv4
+                            results.TryAdd(dns, null);
                     }
                     else
                     {

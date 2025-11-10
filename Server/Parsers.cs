@@ -115,6 +115,12 @@ public static class Parsers
         => $"{c.Request.QueryString.Value}";
 
     /// <summary>
+    /// Returns the MD5 byte array of the given data.
+    /// </summary>
+    public static byte[] ToMD5(this byte[] data)
+        => MD5.HashData(data);
+    
+    /// <summary>
     /// Returns the SHA256 byte array of the UTF8 representation of the given string.
     /// </summary>
     public static byte[] ToSha256(this string source)
@@ -159,6 +165,47 @@ public static class Parsers
     }
 
     /// <summary>
+    /// Returns a random string of the given length. Possible character sets are lowercase and uppercase letters and digits, they are individually selected.
+    /// </summary>
+    public static string RandomString(int length, bool lowercase, bool uppercase, bool digits, Func<string, bool> condition)
+    {
+        string result;
+        do result = RandomString(length, lowercase, uppercase, digits);
+        while (!condition(result));
+        return result;
+    }
+
+    /// <summary>
+    /// Returns a random string of the given length. Possible characters are lowercase and uppercase letters and digits.
+    /// </summary>
+    public static string RandomString(int length, Func<string, bool> condition)
+        => RandomString(length, true, true, true, condition);
+    
+    /// <summary>
+    /// Returns a random string of the given length. Possible character sets are lowercase and uppercase letters and digits, they are individually selected.
+    /// </summary>
+    public static string RandomString(int length, bool lowercase, bool uppercase, bool digits, IEnumerable<string> forbiddenValues)
+        => RandomString(length, lowercase, uppercase, digits, token => !forbiddenValues.Contains(token));
+
+    /// <summary>
+    /// Returns a random string of the given length. Possible characters are lowercase and uppercase letters and digits.
+    /// </summary>
+    public static string RandomString(int length, IEnumerable<string> forbiddenValues)
+        => RandomString(length, true, true, true, forbiddenValues);
+    
+    /// <summary>
+    /// Returns a random string of the given length. Possible character sets are lowercase and uppercase letters and digits, they are individually selected.
+    /// </summary>
+    public static string RandomString(int length, bool lowercase, bool uppercase, bool digits, string? forbiddenValue)
+        => RandomString(length, lowercase, uppercase, digits, token => token != forbiddenValue);
+
+    /// <summary>
+    /// Returns a random string of the given length. Possible characters are lowercase and uppercase letters and digits.
+    /// </summary>
+    public static string RandomString(int length, string? forbiddenValue)
+        => RandomString(length, true, true, true, forbiddenValue);
+
+    /// <summary>
     /// Returns a random item from the given array.
     /// </summary>
     public static T RandomItem<T>(T[] values)
@@ -171,7 +218,7 @@ public static class Parsers
         => characters[RandomNumberGenerator.GetInt32(characters.Length)];
 
     /// <summary>
-    /// Generates a QR code (with or without borders) of the given text and returns a HTML image source for it in base64.
+    /// Generates a QR code (with or without borders) of the given text and returns an HTML image source for it in base64.
     /// </summary>
     public static string QRImageBase64Src(string text, bool border = true)
     {
@@ -297,6 +344,18 @@ public static class Parsers
         result = default;
         return false;
     }
+    
+    /// <summary>
+    /// Adds the value to the given key using the given function or returns the existing value.
+    /// </summary>
+    public static TValue GetValueOrAdd<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, Func<TValue> creator) where TKey : notnull
+    {
+        if (dictionary.TryGetValue(key, out var value))
+            return value;
+        value = creator();
+        dictionary[key] = value;
+        return value;
+    }
 
     /// <summary>
     /// Capitalizes the first letter of the given string.
@@ -309,7 +368,7 @@ public static class Parsers
     /// </summary>
     public static string Before(this string value, string separator)
     {
-        int index = value.IndexOf(separator);
+        int index = value.IndexOf(separator, StringComparison.Ordinal);
         if (index == -1)
             return value;
         return value.Remove(index);
@@ -331,7 +390,7 @@ public static class Parsers
     /// </summary>
     public static string After(this string value, string separator)
     {
-        int index = value.LastIndexOf(separator);
+        int index = value.LastIndexOf(separator, StringComparison.Ordinal);
         if (index == -1)
             return value;
         return value.Remove(0, index + separator.Length);
@@ -393,7 +452,7 @@ public static class Parsers
     /// </summary>
     public static bool SplitAtFirst(this string value, string separator, out string part1, out string part2)
     {
-        int index = value.IndexOf(separator);
+        int index = value.IndexOf(separator, StringComparison.Ordinal);
         if (index == -1)
         {
             part1 = value;
@@ -413,7 +472,7 @@ public static class Parsers
     /// </summary>
     public static bool SplitAtLast(this string value, string separator, out string part1, out string part2)
     {
-        int index = value.LastIndexOf(separator);
+        int index = value.LastIndexOf(separator, StringComparison.Ordinal);
         if (index == -1)
         {
             part1 = value;
@@ -453,7 +512,7 @@ public static class Parsers
     {
         StringBuilder builder = new();
         foreach (char c in value.Replace(' ', '-').ToLower())
-            if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || c == '-')
+            if (c is >= '0' and <= '9' or >= 'a' and <= 'z' or '-')
                 builder.Append(c);
         return builder.ToString();
     }
@@ -475,8 +534,8 @@ public static class Parsers
     /// <summary>
     /// Returns something like this: "[0], [1], [2] and [3]".
     /// </summary>
-    public static string EnumerationText(this IEnumerable<string> values)
-        => values.Count() switch
+    public static string EnumerationText(this ICollection<string> values)
+        => values.Count switch
         {
             0 => "",
             1 => values.First(),
@@ -591,5 +650,42 @@ public static class Parsers
     /// Returns ?[pair] if query is null or an empty string, otherwise &[pair].
     /// </summary>
     public static string QueryStringSuffix(string? query, string pairToAdd)
-        => (query == null || query == "" ? '?' : '&') + pairToAdd;
+        => (string.IsNullOrEmpty(query) ? '?' : '&') + pairToAdd;
+    
+    /// <summary>
+    /// Removes the given second-layer item and removes the first-layer key if its collection is empty after that operation. 
+    /// </summary>
+    public static bool RemoveAndClean<A, B, C>(this Dictionary<A, C> dictionary, A keyA, B keyB) where A : notnull where B : notnull where C : ICollection<B>
+    {
+        if (dictionary.TryGetValue(keyA, out var subDict))
+        {
+            bool changed = subDict.Remove(keyB);
+            if (subDict.Count == 0)
+            {
+                changed = true;
+                dictionary.Remove(keyA);
+            }
+            return changed;
+        }
+        return false;
+    }
+    
+    /// <summary>
+    /// Extracts the non-null items in a nullable enumeration.
+    /// </summary>
+    public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> enumerable)
+        => enumerable.OfType<T>();
+    
+    /// <summary>
+    /// Maps the items using the given selector and returns non-null results.
+    /// </summary>
+    public static IEnumerable<R> SelectWhereNotNull<T, R>(this IEnumerable<T> enumerable, Func<T, R?> selector)
+        => enumerable.Select(selector).WhereNotNull();
+    
+    /// <summary>
+    /// Applies a function to the "this" parameter to provide cleaner in-line code in niche cases, especially with null checks.<br/>
+    /// This allows something like: <c>GetPath()?.Map(p => File.ReadAllBytes(p))</c>
+    /// </summary>
+    public static R Map<T, R>(this T value, Func<T, R> selector)
+        => selector(value);
 }

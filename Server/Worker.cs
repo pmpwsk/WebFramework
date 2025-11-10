@@ -32,119 +32,124 @@ public static partial class Server
     /// </summary>
     private static async void Work(object? state)
     {
-        WorkerWorking = true;
+        try
+        {
+            WorkerWorking = true;
 
-        //renew certificates + delete unused ones
-        if (Config.AutoCertificate.Email != null)
+            //renew certificates + delete unused ones
+            if (Config.AutoCertificate.Email != null)
+                try
+                {
+                    await CheckAutoCertificates();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error renewing certificates: " + ex.Message);
+                }
+
+            //update certificates in store
             try
             {
-                await CheckAutoCertificates();
+                UpdateCertificates();
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error renewing certificates: " + ex.Message);
+                Console.WriteLine("Error updating the certificates: " + ex.Message);
             }
 
-        //update certificates in store
-        try
-        {
-            UpdateCertificates();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error updating the certificates: " + ex.Message);
-        }
-
-        //update file cache
-        try
-        {
-            UpdateCache();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error updating the file cache: " + ex.Message);
-        }
-
-        //check database for errors
-        try
-        {
-            Tables.CheckAll();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error checking the database for errors: " + ex.Message);
-        }
-
-        //account stuff
-        if (Config.Accounts.Enabled)
-        {
-            try //delete expired tokens
-            {
-                foreach (var table in Config.Accounts.UserTables.Values.Distinct())
-                    foreach (var kv in table)
-                        kv.Value.Auth.DeleteExpired();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error deleting expired auth tokens: " + ex.Message);
-            }
-
+            //update file cache
             try
             {
-                AccountManager.DeleteExpiredBans();
+                UpdateCache();
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error deleting expired bans: " + ex.Message);
+                Console.WriteLine("Error updating the file cache: " + ex.Message);
             }
 
+            //check database for errors
             try
             {
-                foreach (var userTable in Config.Accounts.UserTables.Values.Distinct())
-                    userTable.FixAccessories();
+                LegacyTables.CheckAll();
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error checking and fixing accelerating dictionaries for registered user tables: " + ex.Message);
+                Console.WriteLine("Error checking the database for errors: " + ex.Message);
             }
-        }
+            try
+            {
+                Tables.CheckAndFixAll();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error checking the database for errors: " + ex.Message);
+            }
 
-        //backup
-        try
-        {
-            await Backup(false, false);
+            //account stuff
+            if (Config.Accounts.Enabled)
+            {
+                try //delete expired tokens
+                {
+                    foreach (var table in Config.Accounts.UserTables.Values.Distinct())
+                        foreach (var user in table.ListAll())
+                            table.DeleteExpiredTokens(user);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error deleting expired auth tokens: " + ex.Message);
+                }
+
+                try
+                {
+                    AccountManager.DeleteExpiredBans();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error deleting expired bans: " + ex.Message);
+                }
+            }
+
+            //backup
+            try
+            {
+                await Backup(false, false);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error running a backup: " + ex.Message);
+            }
+
+            //call plugins
+            await PluginManager.Work();
+
+            //fire event that worker finished
+            await WorkerWorked.InvokeAsync
+            (
+                s => s(),
+                ex => Console.WriteLine("Error firing an event after the worker ran: " + ex.Message),
+                true
+            );
+
+            //set the timer again
+            if (WorkAgain)
+            {
+                WorkAgain = false;
+                Worker.Change(0, Timeout.Infinite);
+            }
+            else
+            {
+                if (Config.WorkerInterval > 0)
+                {
+                    WorkerNextTick = DateTime.UtcNow + TimeSpan.FromMinutes(Config.WorkerInterval);
+                    Worker.Change(Config.WorkerInterval*60000, Timeout.Infinite);
+                }
+                else WorkerNextTick = DateTime.MaxValue;
+                WorkerWorking = false;
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Error running a backup: " + ex.Message);
-        }
-
-        //call plugins
-        await PluginManager.Work();
-
-        //fire event that worker finished
-        await WorkerWorked.InvokeAsync
-        (
-            s => s(),
-            ex => Console.WriteLine("Error firing an event after the worker ran: " + ex.Message),
-            true
-        );
-
-        //set the timer again
-        if (WorkAgain)
-        {
-            WorkAgain = false;
-            Worker.Change(0, Timeout.Infinite);
-        }
-        else
-        {
-            if (Config.WorkerInterval > 0)
-            {
-                WorkerNextTick = DateTime.UtcNow + TimeSpan.FromMinutes(Config.WorkerInterval);
-                Worker.Change(Config.WorkerInterval*60000, Timeout.Infinite);
-            }
-            else WorkerNextTick = DateTime.MaxValue;
-            WorkerWorking = false;
+            Console.WriteLine("Error escaped the worker: " + ex.Message);
         }
     }
 

@@ -2,16 +2,15 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
-using uwap.Database;
 
 namespace uwap.WebFramework.Accounts;
 
-public partial class User : ITableValue
+public partial class User
 {
     /// <summary>
     /// The user's settings dictionary.
     /// </summary>
-    [DataMember] private Dictionary<string, string> _Settings = [];
+    [DataMember] internal Dictionary<string, string> _Settings = [];
 
     /// <summary>
     /// The settings manager object that is associated with this user or null if none have been created yet.
@@ -32,41 +31,18 @@ public partial class User : ITableValue
         /// The user this object is associated with.
         /// </summary>
         readonly User User = user;
-
+        
         /// <summary>
-        /// Gets or sets the setting with the given key.
+        /// Returns the setting value with the given key.
         /// </summary>
-        public string this[string key]
-        {
-            get => User._Settings[key];
-            set
-            {
-                User.Lock();
-                User._Settings[key] = value;
-                User.UnlockSave();
-            }
-        }
+        public string Get(string key)
+            => User._Settings[key];
 
         /// <summary>
         /// Checks whether a setting with the given key exists.
         /// </summary>
         public bool ContainsKey(string key)
             => User._Settings.ContainsKey(key);
-
-        /// <summary>
-        /// Deletes the setting with the given key if it exists and returns true if it did.
-        /// </summary>
-        public bool Delete(string key)
-        {
-            User.Lock();
-            if (User._Settings.Remove(key))
-            {
-                User.UnlockSave();
-                return true;
-            }
-            User.UnlockIgnore();
-            return false;
-        }
 
         /// <summary>
         /// Lists all keys for settings the user set.
@@ -78,7 +54,7 @@ public partial class User : ITableValue
         /// Returns the value of the setting with the given key or null if no such setting exists.
         /// </summary>
         public string? TryGet(string key)
-            => User._Settings.TryGetValue(key, out string? value) ? value : null;
+            => User._Settings.GetValueOrDefault(key);
 
         /// <summary>
         /// Checks whether a setting with the given key exists and returns the value of it using the out-parameter.

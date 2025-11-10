@@ -50,6 +50,8 @@ public static partial class Server
                                 fileRequest.Status = 500;
                                 try { await fileRequest.Finish(); } catch { }
                             }
+                            
+                            return true;
                         }
                     }
                     
@@ -76,7 +78,7 @@ public static partial class Server
                                 return true;
                             }
                         ))
-                        return false;
+                        return true;
                     break;
                 default: //method unknown
                     {

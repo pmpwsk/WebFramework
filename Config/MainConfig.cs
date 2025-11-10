@@ -19,6 +19,7 @@ public static partial class Server
         public static List<LayerDelegate> Layers { get; set; } =
         [
             Server.Layers.InitLayer,
+            Server.Layers.DatabaseLayer,
             Server.Layers.LetsEncryptLayer,
             Server.Layers.HttpsRedirectLayer,
             Server.Layers.RedirectLayer,

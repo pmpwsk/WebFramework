@@ -175,9 +175,9 @@ public static class Presets
         if (req.Query.ContainsKey("password") && req.Query.ContainsKey("code"))
         {
             string password = req.Query["password"], code = req.Query["code"];
-            if (user.ValidatePassword(password, null))
+            if (req.UserTable.ValidatePassword(user.Id, password, null))
             {
-                if (user.TwoFactor.TOTPEnabled(out var totp) && !totp.Validate(code, req, true))
+                if (user.TwoFactor.TOTPEnabled() && !req.UserTable.ValidateTOTP(user.Id, code, req, true))
                 {
                     AccountManager.ReportFailedAuth(req.Context);
                     await req.Write("no");
