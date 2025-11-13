@@ -6,7 +6,7 @@ public static partial class Server
 {
     public static partial class Layers
     {
-        private const string DatabaseLayerPrefix = "/.wf/db";
+        private const string DatabaseLayerPrefix = "/wf/db";
         
         public static async Task<bool> DatabaseLayer(LayerRequestData data)
             => data.Path.StartsWith(DatabaseLayerPrefix + '/')

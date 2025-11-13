@@ -305,7 +305,7 @@ public class ClusterNode(string host, List<string>? tableNames, List<ICertificat
     {
         if (path != "/node-id")
             path = $"{path}{(path.Contains('?') ? '&' : '?')}host={HttpUtility.UrlEncode(Tables.Self.Host)}";
-        return $"https://{Host}/.wf/db{path}";
+        return $"https://{Host}/wf/db{path}";
     }
     
     /// <summary>
