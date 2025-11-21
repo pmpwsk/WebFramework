@@ -1,4 +1,4 @@
-namespace uwap.WebFramework.Elements;
+namespace uwap.WebFramework.Tools;
 
 /// <summary>
 /// Contains versions of a specific piece of text for different locales.
