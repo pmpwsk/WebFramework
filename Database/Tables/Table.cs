@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
-using uwap.WebFramework;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 public delegate void TransactionNullableDelegate<T>(ref T? value) where T : AbstractTableValue;
 

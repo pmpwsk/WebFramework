@@ -1,7 +1,7 @@
 using System.Runtime.Serialization;
-using uwap.WebFramework;
+using uwap.WebFramework.Tools;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 public delegate void ValueChangedHandler<in T>(T? oldValue, T? newValue);
 

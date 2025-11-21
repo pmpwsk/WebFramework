@@ -1,4 +1,4 @@
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// A database file action to change the file ID of a file.

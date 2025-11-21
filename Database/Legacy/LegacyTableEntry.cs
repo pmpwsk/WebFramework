@@ -1,8 +1,7 @@
 using System.Runtime.Serialization;
 using Microsoft.AspNetCore.Http;
-using uwap.WebFramework;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Contains one value for a table along with additional data about it (table, key, serialization, locking information).

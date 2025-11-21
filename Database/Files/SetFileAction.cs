@@ -1,4 +1,4 @@
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 public delegate void SetFileDelegate(string targetFilePath);
 

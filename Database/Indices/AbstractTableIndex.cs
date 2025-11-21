@@ -1,4 +1,4 @@
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Abstract table index to find entries by a value located using the given selector.

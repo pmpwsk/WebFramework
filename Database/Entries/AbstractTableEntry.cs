@@ -1,7 +1,7 @@
 using System.Runtime.Serialization;
-using uwap.WebFramework;
+using uwap.WebFramework.Tools;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Contains the table entry functionality that doesn't require knowledge of the stored type.

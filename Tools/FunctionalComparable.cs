@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Tools;
 
 /// <summary>
 /// A class that allows for simple comparator implementations by enumerating which fields to compare (in order).<br/>

@@ -1,8 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
-using uwap.WebFramework;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 public delegate R GetFromFileDelegate<out R>(string fileId);
 

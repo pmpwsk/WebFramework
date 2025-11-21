@@ -1,6 +1,6 @@
 using System.Runtime.Serialization.Json;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Serializes and deserializes objects to/from JSON for the database.

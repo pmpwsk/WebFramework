@@ -1,5 +1,5 @@
 ﻿using System.Collections.ObjectModel;
-using uwap.Database;
+using uwap.WebFramework.Database;
 using uwap.WebFramework.Plugins;
 
 namespace uwap.WebFramework;

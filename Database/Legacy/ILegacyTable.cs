@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Interface for tables to allow unified error checking (and fixing) and key listing.

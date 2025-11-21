@@ -1,7 +1,6 @@
 using System.Reflection;
-using uwap.WebFramework;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Manages tables and the state of the cluster.

@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Contains the minimal common data every table value has.<br/>

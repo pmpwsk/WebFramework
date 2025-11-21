@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System.Collections.ObjectModel;
 using OtpNet;
-using uwap.Database;
+using uwap.WebFramework.Database;
 
 namespace uwap.WebFramework.Accounts;
 

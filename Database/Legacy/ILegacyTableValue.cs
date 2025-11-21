@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Abstract class for table values to allow unified locking/unlocking.

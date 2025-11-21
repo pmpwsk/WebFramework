@@ -1,6 +1,4 @@
-using uwap.WebFramework;
-
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Contains a byte array, along with an MD5 hash to check its integrity. 

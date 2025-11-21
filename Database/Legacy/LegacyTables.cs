@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Keeps track of all tables that have been imported.

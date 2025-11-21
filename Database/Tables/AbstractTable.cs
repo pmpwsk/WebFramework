@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Contains the table functionality that doesn't require knowledge of the stored type.

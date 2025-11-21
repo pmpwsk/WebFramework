@@ -2,9 +2,8 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
-using uwap.WebFramework;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Contains elements of one type (must be inheriting ITableValue) and makes them accessible by their associated keys.

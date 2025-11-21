@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
-using uwap.Database;
+using uwap.WebFramework.Database;
 
 namespace uwap.WebFramework;
 

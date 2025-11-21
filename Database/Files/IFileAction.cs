@@ -1,4 +1,4 @@
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// A generic database file action to create, change or delete files.

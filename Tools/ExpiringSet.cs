@@ -1,6 +1,6 @@
 using System.Collections;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Tools;
 
 /// <summary>
 /// A data structure that represents a set where each item is automatically removed after a specified time.<br/>

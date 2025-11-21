@@ -1,4 +1,4 @@
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// A database file action to delete the file with the given file ID.

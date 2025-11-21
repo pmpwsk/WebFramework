@@ -1,10 +1,9 @@
 using System.Text;
 using System.Text.Json;
 using System.Web;
-using uwap.WebFramework;
 using uwap.WebFramework.Accounts.Certificates;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Describes a node in a WebFramework database cluster.

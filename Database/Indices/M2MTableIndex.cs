@@ -1,6 +1,4 @@
-using uwap.WebFramework;
-
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Table index to find table entries (multiple per key) by any of their (multiple) keys.

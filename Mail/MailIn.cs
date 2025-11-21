@@ -1,5 +1,6 @@
 ﻿using SmtpServer;
 using System.Net;
+using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework.Mail;
 

@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Table value class that contains a string-string dictionary.

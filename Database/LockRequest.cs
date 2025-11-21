@@ -1,6 +1,6 @@
-using uwap.WebFramework;
+using uwap.WebFramework.Tools;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Describes a lock request in a WebFramework database cluster.

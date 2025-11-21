@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace uwap.Database;
+namespace uwap.WebFramework.Database;
 
 /// <summary>
 /// Contains information about a file that's attached to a database entry.

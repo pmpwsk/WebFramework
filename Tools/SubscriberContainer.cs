@@ -1,4 +1,4 @@
-namespace uwap.WebFramework;
+namespace uwap.WebFramework.Tools;
 
 public delegate Task AsyncDelegateCaller<in T>(T subscriber);
 
