@@ -41,16 +41,16 @@ public abstract class CommonElement : WatchedElement
         set => StyleAttribute.Value = value;
     }
 
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ..Attributes
-        ]; //TODO
-
     public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
         => [
             ..base.WatchedAttributes,
             ClassAttribute,
             StyleAttribute
+        ];
+
+    public override IEnumerable<(string Name, string? Value)> RenderedAttributes
+        => [
+            ..base.RenderedAttributes,
+            ..Attributes
         ];
 }

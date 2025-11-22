@@ -41,7 +41,7 @@ public abstract class WatchedElement : AbstractElement, IWatchedParent
             return [ SystemId ];
     }
 
-    public sealed override IEnumerable<(string Name, string? Value)> RenderedAttributes
+    public override IEnumerable<(string Name, string? Value)> RenderedAttributes
         => [
             ("data-wf-id", SystemId),
             ..base.RenderedAttributes,
