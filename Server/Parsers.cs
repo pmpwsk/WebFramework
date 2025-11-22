@@ -265,8 +265,13 @@ public static class Parsers
         foreach (char c in source)
             switch (c)
             {
+                case '\r':
+                    break;
                 case '\n':
-                    text.Append("&#13;&#10;");
+                    text.Append("&#10;");
+                    break;
+                case '\t':
+                    text.Append("&#9;");
                     break;
                 case '<':
                     text.Append("&lt;");
@@ -296,8 +301,13 @@ public static class Parsers
         foreach (char c in source)
             switch (c)
             {
+                case '\r':
+                    break;
                 case '\n':
-                    text.Append("&#13;&#10;");
+                    text.Append("&#10;");
+                    break;
+                case '\t':
+                    text.Append("&#9;");
                     break;
                 case '"':
                     text.Append("&quot;");
@@ -334,15 +344,20 @@ public static class Parsers
     /// </summary>
     public static bool TryGetValueAny<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, [MaybeNullWhen(false)] out TValue result, IEnumerable<TKey> keys) where TKey : notnull
     {
+        result = GetValueAny(dictionary, keys);
+        return result != null;
+    }
+
+    /// <summary>
+    /// Attempts to get the value for one of the given keys in the given dictionary in the order they are provided in.
+    /// </summary>
+    public static TValue? GetValueAny<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, IEnumerable<TKey> keys) where TKey : notnull
+    {
         foreach (TKey key in keys)
             if (dictionary.TryGetValue(key, out var value))
-            {
-                result = value;
-                return true;
-            }
-
-        result = default;
-        return false;
+                return value;
+        
+        return default;
     }
     
     /// <summary>
@@ -520,7 +535,7 @@ public static class Parsers
     /// <summary>
     /// Returns the file extension of the given path including the preceding dot or an empty string if no file extension was found.
     /// </summary>
-    public static string Extension(this string path)
+    public static string Extension(string path)
     {
         int slash = path.LastIndexOfAny(['/', '\\']);
         if (slash != -1)

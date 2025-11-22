@@ -20,10 +20,12 @@ public static partial class Server
         [
             Server.Layers.InitLayer,
             Server.Layers.DatabaseLayer,
+            Server.Layers.DynamicPageLayer,
             Server.Layers.LetsEncryptLayer,
             Server.Layers.HttpsRedirectLayer,
             Server.Layers.RedirectLayer,
             Server.Layers.FileLayer,
+            Server.Layers.SystemFilesLayer,
             Server.Layers.AuthLayer,
             Server.Layers.HandlerLayer
         ];
@@ -244,5 +246,11 @@ public static partial class Server
         /// Default: false
         /// </summary>
         public static bool AllowMoreMiddlewaresIfUnhandled { get; set; } = false;
+        
+        /// <summary>
+        /// The duration after which change watchers for pages expire, causing their page to be reloaded when the connection is re-gained.<br/>
+        /// Default: 30 seconds
+        /// </summary>
+        public static TimeSpan WatcherExpiration { get; set; } = TimeSpan.FromSeconds(30);
     }
 }

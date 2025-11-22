@@ -1,0 +1,829 @@
+/* Font faces */
+
+@font-face {
+    font-family: 'custom-roboto';
+    font-style: normal;
+    font-weight: 400;
+    font-display: block;
+    src: url('fonts/roboto.woff2') format('woff2'), url('fonts/roboto.woff') format('woff'), url('fonts/roboto.ttf') format('truetype'), url('fonts/roboto.otf') format('otf'), url('fonts/roboto.eot') format('embedded-opentype'), url('fonts/roboto.svg') format('svg');
+    unicode-range: U+000-5FF;
+    size-adjust: 100%;
+}
+
+@font-face {
+    font-family: 'custom-roboto-mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: block;
+    src: url('fonts/roboto-mono.woff2') format('woff2'), url('fonts/roboto-mono.woff') format('woff'), url('fonts/roboto-mono.ttf') format('truetype'), url('fonts/roboto-mono.otf') format('otf'), url('fonts/roboto-mono.eot') format('embedded-opentype'), url('fonts/roboto-mono.svg') format('svg');
+    unicode-range: U+000-5FF;
+    size-adjust: 87%;
+}
+
+
+
+/* Variables */
+
+:root {
+    --max-width: 100rem;
+    --font-normal: 'custom-roboto';
+    --font-code: 'custom-roboto-mono';
+    --background: rgb(34, 32, 36);
+    --foreground: rgb(230, 230, 230);
+    --background-layer: rgba(68, 64, 72, 0.3);
+    --border: rgba(68, 64, 72, 0.7);
+    --code-background: rgba(34, 32, 36, 0.8);
+    --code-foreground: rgba(238, 224, 252, 0.65);
+    --action-dark: rgb(136, 128, 252);
+    --action: rgb(187, 176, 255);
+    --inset-shadow: rgba(102, 96, 108, 0.6);
+    --outer-shadow: rgba(17, 16, 18, 0.3);
+    --overlay-background: rgba(34, 32, 36, 0.6);
+    --scroll-background: rgb(68, 64, 72);
+    --marker: rgb(153, 144, 162);
+    --action-time: 100ms;
+    --overlay-time: 200ms;
+
+    --n1: -0.0625rem;
+    --n2: -0.125rem;
+    --n3: -0.1875rem;
+    --n4: -0.25rem;
+    --n5: -0.3125rem;
+    --n6: -0.375rem;
+    --n7: -0.4375rem;
+    --n8: -0.5rem;
+    --n9: -0.5625rem;
+    --n10: -0.625rem;
+    --n11: -0.6875rem;
+    --n12: -0.75rem;
+    --n13: -0.8125rem;
+    --n14: -0.875rem;
+    --n15: -0.9375rem;
+    --s1: 0.0625rem;
+    --s2: 0.125rem;
+    --s3: 0.1875rem;
+    --s4: 0.25rem;
+    --s5: 0.3125rem;
+    --s6: 0.375rem;
+    --s7: 0.4375rem;
+    --s8: 0.5rem;
+    --s9: 0.5625rem;
+    --s10: 0.625rem;
+    --s11: 0.6875rem;
+    --s12: 0.75rem;
+    --s13: 0.8125rem;
+    --s14: 0.875rem;
+    --s15: 0.9375rem;
+}
+
+
+
+/* Window size */
+
+html {
+    align-items: center;
+}
+
+
+
+/* Scrolling */
+
+html {
+    scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+}
+
+
+
+/* Background */
+
+body, .wf-top-cover {
+    background: var(--background);
+}
+
+.wf-heading, nav, section, footer, aside, .wf-menu, .wf-button, .wf-checkbox, .wf-upload, .wf-upload::file-selector-button, select, .wf-textbox {
+    background: var(--background-layer);
+}
+
+.wf-heading, .wf-overlay-background {
+    backdrop-filter: blur(var(--s4));
+}
+
+code, pre {
+    background: var(--code-background);
+    box-shadow: var(--s4) 0 0 var(--code-background),
+                var(--n4) 0 0 var(--code-background)
+}
+
+code {
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
+
+.wf-overlay-background {
+    background: var(--overlay-background);
+}
+
+.wf-image.wf-fullscreen {
+    background: black;
+}
+
+
+
+/* Flex */
+
+.wf-col, html, body, main, section, .wf-subsection, footer, aside, .wf-menu, .wf-button.wf-button-is-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.wf-row, .wf-content, nav, .wf-nav-island, .wf-checkbox{
+    display: flex;
+    flex-direction: row;
+}
+
+html, body, main, .wf-content, .wf-subsection, footer, nav, .wf-nav-island, aside, .wf-menu {
+    gap: var(--s8);
+}
+
+.wf-row, .wf-col, .wf-checkbox {
+    gap: var(--s4);
+}
+
+.wf-button.wf-button-is-container {
+    gap: var(--s2);
+}
+
+section {
+    gap: calc(1rem + var(--s4));
+}
+
+section, .wf-subsection, footer, .wf-checkbox {
+    align-items: start;
+}
+
+.wf-dyn-1, body, .wf-content, main, main > div {
+    flex: 1 1 0;
+}
+
+.wf-dyn-2 {
+    flex: 2 2 0;
+}
+
+.wf-dyn-3 {
+    flex: 3 3 0;
+}
+
+.wf-dyn-4 {
+    flex: 4 4 0;
+}
+
+.wf-dyn-5 {
+    flex: 5 5 0;
+}
+
+.wf-grow-1 {
+    flex: 1 0 auto;
+}
+
+.wf-grow-2 {
+    flex: 2 0 auto;
+}
+
+.wf-grow-3 {
+    flex: 3 0 auto;
+}
+
+.wf-grow-4 {
+    flex: 4 0 auto;
+}
+
+.wf-grow-5 {
+    flex: 5 0 auto;
+}
+
+aside, .wf-menu {
+    flex-grow: 0.2;
+    flex-shrink: 1;
+    flex-basis: 0;
+}
+
+nav {
+    justify-content: space-between;
+}
+
+nav, .wf-nav-island {
+    flex-shrink: 0;
+    align-items: center;
+}
+
+aside {
+    align-self: flex-start;
+}
+
+.wf-stretch, .wf-button.wf-button-is-container, aside .wf-button, .wf-menu .wf-button, .wf-textbox{
+    align-self: stretch;
+}
+
+.wf-wrap {
+    flex-wrap: wrap;
+}
+
+
+
+/* z-index */
+
+h2.wf-heading {
+    z-index: 2;
+}
+
+h1.wf-heading {
+    z-index: 3;
+}
+
+.wf-top-cover {
+    z-index: 4;
+}
+
+.wf-overlay-background {
+    z-index: 5;
+}
+
+aside, .wf-menu {
+    z-index: 6;
+}
+
+nav {
+    z-index: 10;
+}
+
+.wf-image.wf-fullscreen {
+    z-index: 100;
+}
+
+
+
+/* Display */
+
+.wf-top-cover, .wf-button, .wf-overlay-background {
+    display: block;
+}
+
+li pre, li .wf-image {
+    display: inline-block;
+}
+
+
+
+/* Position */
+
+nav, h1.wf-heading, h2.wf-heading {
+    position: sticky;
+}
+
+aside, .wf-top-cover, aside > .wf-heading, .wf-menu > .wf-heading, .wf-menu, .wf-overlay-background, .wf-image.wf-fullscreen {
+    position: fixed;
+}
+
+.wf-button, .wf-upload::file-selector-button, h3.wf-heading, .wf-checkbox input {
+    position: relative;
+}
+
+
+
+/* Padding */
+
+html, .wf-content, main, p, div, .wf-image.wf-fullscreen, .wf-checkbox span, .wf-checkbox input {
+    padding: 0;
+}
+
+body {
+    padding: 0 var(--s8);
+}
+
+.wf-image {
+    padding: var(--s6);
+}
+
+section {
+    padding: 0 var(--s12) var(--s8) var(--s12);
+}
+
+footer {
+    padding: var(--s8) var(--s12);
+}
+
+aside, .wf-menu {
+    padding: calc(2rem + var(--s8)) var(--s12) var(--s8) var(--s12);
+}
+
+h1.wf-heading, h2.wf-heading {
+    padding: 0 var(--s8);
+}
+
+.wf-button, .wf-upload::file-selector-button {
+    padding: var(--s5) var(--s8)
+}
+
+select, .wf-textbox, .wf-checkbox, .wf-upload {
+    padding: var(--s7) var(--s8) var(--s5) var(--s8)
+}
+
+ul, ol {
+    padding: 0;
+}
+
+li > ul, li > ol {
+    padding: 0 0 0 calc(1rem + var(--s4));
+}
+
+nav {
+    padding: 0 var(--s3);
+}
+
+h3.wf-heading, pre {
+    padding: var(--s2) var(--s4);
+}
+
+
+
+/* Margin */
+
+html, .wf-content, p, nav, section, footer, div, ul, ol, pre, .wf-checkbox span, .wf-checkbox input, .wf-upload {
+    margin: 0;
+}
+
+main {
+    margin: var(--s8) 0;
+}
+
+body {
+    margin: 0 auto;
+}
+
+h1.wf-heading + * {
+    margin-top: var(--n12);
+}
+
+h1, h2 {
+    margin: 0 0 0 var(--n12);
+}
+
+h3 {
+    margin: 0;
+}
+
+code {
+    margin: 0 var(--s4);
+}
+
+.wf-button:not(nav .wf-button) {
+    margin: 0 0 var(--s2) 0;
+}
+
+.wf-upload::file-selector-button {
+    margin: 0 var(--s8) var(--s2) 0;
+}
+
+li pre, li .wf-image {
+    margin: var(--s2) 0 var(--s2) 0;
+}
+
+
+
+/* Border radius */
+
+nav, section, footer, aside, .wf-menu {
+    border-radius: var(--s11);
+}
+
+.wf-button, .wf-checkbox, .wf-upload, .wf-upload::file-selector-button, select, .wf-textbox {
+    border-radius: var(--s8);
+}
+
+.wf-image, code {
+    border-radius: var(--s4);
+}
+
+h3.wf-heading, pre {
+    border-radius: var(--s5);
+}
+
+h1.wf-heading, aside > h2.wf-heading, .wf-menu > h2.wf-heading {
+    border-radius: var(--s11) 0;
+}
+
+.wf-subsection > h2.wf-heading {
+    border-radius: 0 var(--s11) var(--s11) 0;
+}
+
+
+
+/* Font */
+
+* {
+    color: var(--foreground);
+    font-family: var(--font-normal);
+    font-size: 1rem;
+}
+
+html {
+    font-size: 16px;
+}
+
+h1 {
+    font-size: calc(1rem + var(--s8));
+    line-height: calc(2rem + var(--s4));
+}
+
+h2 {
+    font-size: calc(1rem + var(--s4));
+    line-height: 2rem;
+}
+
+h3 {
+    font-size: calc(1rem + var(--s2));
+}
+
+.wf-upload::file-selector-button {
+    line-height: calc(1rem + var(--s4));
+}
+
+.wf-button, p a, .wf-button:active, p a:active, .wf-button:focus, p a:focus, .wf-button h3, .wf-upload::file-selector-button {
+    text-decoration: none;
+    color: var(--action);
+}
+
+p a:hover {
+    color: var(--action-dark);
+}
+
+code, pre {
+    font-family: var(--font-code);
+    color: var(--code-foreground);
+}
+
+li {
+    text-indent: calc(1rem + var(--s10)) hanging;
+}
+
+p {
+    text-indent: var(--s8) hanging;
+}
+
+li pre {
+    text-indent: 0;
+}
+
+.wf-button {
+    text-align: start;
+}
+
+
+
+/* Overflow */
+
+aside, .wf-menu {
+    overflow: hidden auto;
+}
+
+pre {
+    overflow: auto hidden;
+}
+
+html {
+    overflow-x: hidden;
+}
+
+h1.wf-heading {
+    overflow: hidden;
+}
+
+h1.wf-heading {
+    text-overflow: ellipsis;
+    text-wrap: nowrap;
+}
+
+
+
+/* Size */
+
+h1.wf-heading, h2.wf-heading {
+    width: fit-content;
+}
+
+nav, .wf-nav-island {
+    height: calc(2rem + var(--s3));
+}
+
+.wf-top-cover {
+    height: calc(2rem + var(--s11));
+}
+
+aside, .wf-menu {
+    box-sizing: border-box;
+    width: min(calc(100% - 6rem), 15rem);
+    height: calc(100dvh - 3rem - var(--s11));
+}
+
+html, .wf-subsection, .wf-image.wf-fullscreen, .wf-overlay-background {
+    width: 100%;
+}
+
+html, .wf-image.wf-fullscreen, .wf-overlay-background {
+    height: 100dvh;
+}
+
+aside, main {
+    min-width: 0;
+}
+
+.wf-subsection > *, h1.wf-heading {
+    max-width: 100%;
+}
+
+li pre {
+    max-width: calc(100% - 1rem - var(--s10));
+}
+
+li .wf-image:not(.wf-image.wf-fullscreen) {
+    max-width: calc(100% - 2rem);
+}
+
+.wf-subsection > * {
+    box-sizing: border-box;
+}
+
+body {
+    width: min(var(--max-width), calc(100% - 1rem));
+}
+
+
+
+/* Location */
+
+nav {
+    top: var(--s8);
+}
+
+.wf-checkbox input {
+    top: var(--s2);
+}
+
+h1.wf-heading, aside, aside > h2.wf-heading, .wf-menu, .wf-menu > h2.wf-heading, .wf-overlay-background {
+    top: calc(3rem + var(--s3));
+}
+
+section {
+    scroll-margin-top: calc(3rem + var(--s3));
+}
+
+.wf-subsection > h2.wf-heading {
+    top: calc(5rem + var(--s15));
+}
+
+.wf-subsection {
+    scroll-margin-top: calc(5rem + var(--s14));
+}
+
+h3.wf-heading {
+    left: calc(-1 * var(--s4));
+}
+
+.wf-top-cover {
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+.wf-image.wf-fullscreen, .wf-overlay-background {
+    left: 0;
+    top: 0;
+}
+
+
+
+/* Shadows */
+
+.wf-heading, nav, section, footer, aside, .wf-menu, .wf-image {
+    box-shadow: 0 0 var(--s4) 0 var(--inset-shadow) inset,
+                0 0 var(--s6) var(--s2) var(--outer-shadow),
+                0 9rem 3rem -10rem var(--inset-shadow) inset;
+}
+
+.wf-top-cover {
+    box-shadow: 0 0 var(--s4) var(--s6) var(--background);
+}
+
+.wf-image.wf-fullscreen {
+    box-shadow: none;
+}
+
+
+/* Realistic elements */
+
+.wf-button, .wf-button:focus, .wf-upload::file-selector-button, .wf-upload::file-selector-button:focus {
+    box-shadow: 0 var(--s2) 0 0 var(--action-dark),
+                0 var(--s2) var(--s4) var(--s4) var(--outer-shadow),
+                0 0 0 var(--s1) var(--action) inset,
+                0 calc(8rem + var(--s7)) 3rem -10rem var(--action-dark) inset;
+    top: var(--n2);
+    transition: box-shadow var(--action-time) ease-in-out,
+                top var(--action-time) ease-in-out;
+}
+
+.wf-button:active, .wf-upload:active::file-selector-button, .wf-upload::file-selector-button:active {
+    box-shadow: 0 0 0 0 var(--action-dark),
+                0 var(--s2) var(--s3) var(--s3) var(--outer-shadow),
+                0 0 0 var(--s1) var(--action) inset,
+                0 calc(8rem + var(--s7)) 3rem -10rem var(--action-dark) inset;
+    top: 0;
+    transition: box-shadow var(--action-time) ease-in-out,
+                top var(--action-time) ease-in-out;
+}
+
+select, select:focus, select:active, .wf-checkbox, .wf-checkbox:focus, .wf-checkbox:active, .wf-upload, .wf-upload:focus, .wf-upload:active, .wf-textbox {
+    box-shadow: 0 0 0 var(--s1) var(--border) inset,
+                0 var(--s1) 0 var(--s1) var(--background) inset,
+                0 var(--s1) var(--s4) var(--s1) var(--background) inset,
+                0 calc(7rem + var(--s12)) 3rem -10rem var(--action-dark) inset;
+    transition: box-shadow var(--action-time) ease-in-out;
+}
+
+.wf-textbox:focus, .wf-textbox:active {
+    box-shadow: 0 0 0 var(--s1) var(--marker) inset,
+                0 var(--s1) 0 var(--s1) var(--background) inset,
+                0 var(--s1) var(--s4) var(--s1) var(--background) inset,
+                0 calc(7rem + var(--s12)) 3rem -10rem var(--action-dark) inset;
+    transition: box-shadow var(--action-time) ease-in-out;
+}
+
+
+
+/* Lists */
+
+ul, ol {
+    list-style-position: inside;
+}
+
+li::marker {
+    color: var(--marker);
+}
+
+ul > li::marker {
+    font-size: 1.125rem;
+}
+
+
+
+/* Overlays */
+
+.wf-menu {
+    right: calc(50% - min(var(--max-width), (100% - 1rem)) / 2 - min(calc(100% - 6rem), 15rem) - var(--s8));
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--overlay-time) ease-in-out,
+                right var(--overlay-time) ease-in-out,
+                visibility var(--overlay-time) linear;
+}
+
+.wf-menu.wf-is-open {
+    right: calc(50% - min(var(--max-width), calc(100% - 1rem)) / 2);
+    opacity: 1;
+    visibility: visible;
+    transition: opacity var(--overlay-time) ease-in-out,
+                right var(--overlay-time) ease-in-out,
+                visibility 0ms linear;
+}
+
+.wf-overlay-background {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--overlay-time) ease-in-out,
+                visibility var(--overlay-time) linear;
+}
+
+body:has(aside.wf-is-forced) .wf-overlay-background, body:has(.wf-menu.wf-is-open) .wf-overlay-background {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity var(--overlay-time) ease-in-out,
+                visibility 0ms linear;
+}
+
+@media (min-width: 0) {
+    aside {
+        opacity: 0;
+        left: calc(50% - min(var(--max-width), (100% - 1rem)) / 2 - min(calc(100% - 6rem), 15rem) - 1rem);
+        visibility: hidden;
+        transition: opacity var(--overlay-time) ease-in-out,
+                    left var(--overlay-time) ease-in-out,
+                    visibility var(--overlay-time) linear;
+    }
+
+    aside.wf-is-forced {
+        opacity: 1;
+        left: var(--s8);
+        visibility: visible;
+        transition: opacity var(--overlay-time) ease-in-out,
+                    left var(--overlay-time) ease-in-out,
+                    visibility 0ms linear;
+    }
+}
+
+@media (min-width: 45rem) {
+    .wf-nav-menu-toggle {
+        display: none;
+    }
+    
+    aside {
+        visibility: visible;
+        position: sticky;
+        left: unset;
+        z-index: unset;
+        opacity: unset;
+        width: unset;
+        display: flex;
+        transition: none;
+    }
+
+    body:not(body:has(.wf-menu.wf-is-open)) .wf-overlay-background {
+        visibility: hidden;
+    }
+}
+
+
+
+/* Scrollbar */
+
+::-webkit-scrollbar {
+    width: var(--s11);
+    height: var(--s11);
+}
+
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner {
+    background-color: var(--scroll-background);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--action);
+    border: var(--s3) solid transparent;
+    background-clip: content-box;
+    border-radius: var(--s5);
+
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--action-dark);
+}
+
+@-moz-document url-prefix() {
+    * {
+        scrollbar-color: var(--action) var(--scroll-background);
+    }
+}
+
+
+
+/* Other stuff */
+
+.wf-button, select, .wf-upload {
+    cursor: pointer;
+}
+
+.wf-button, select, .wf-textbox, .wf-upload, .wf-upload::file-selector-button {
+    border: none;
+    outline: none;
+}
+
+.wf-button, select, .wf-checkbox span {
+    user-select: none;
+}
+
+.wf-textbox {
+    resize: none;
+}
+
+.wf-image.wf-fullscreen {
+    object-fit: contain;
+}
+
+footer {
+    opacity: 0.5;
+}
+
+li pre, li .wf-image {
+    vertical-align: top;
+}
+
+.wf-checkbox input {
+    accent-color: var(--action);
+}
+
+
+
+
+
+

@@ -550,7 +550,7 @@ public class Request(LayerRequestData data)
     /// <summary>
     /// Lock that assures that only one thread at a time can send an event message.
     /// </summary>
-    private readonly ReaderWriterLockSlim EventLock = new();
+    private readonly SemaphoreSlim EventLock = new(1, 1);
 
     /// <summary>
     /// Sends the given message to the client as an event.
@@ -572,13 +572,15 @@ public class Request(LayerRequestData data)
         }
         try
         {
-            EventLock.EnterWriteLock();
-            await Context.Response.WriteAsync($"data: {message}\r\r");
-            await Context.Response.Body.FlushAsync();
+            await EventLock.WaitAsync();
+            using CancellationTokenSource cts = new();
+            cts.CancelAfter(TimeSpan.FromSeconds(30));
+            await Context.Response.WriteAsync($"data: {message}\r\r", cts.Token);
+            await Context.Response.Body.FlushAsync(cts.Token);
         }
         finally
         {
-            EventLock.ExitWriteLock();
+            EventLock.Release();
         }
     }
 
@@ -601,7 +603,7 @@ public class Request(LayerRequestData data)
                 throw new Exception("The request has already been finished.");
         }
 
-        CancellationTokenSource cts = new();
+        using CancellationTokenSource cts = new();
         Context.RequestAborted.Register(cts.Cancel);
         Server.StoppingToken.Register(cts.Cancel);
         if (cancellationToken != default)
@@ -615,7 +617,7 @@ public class Request(LayerRequestData data)
                 await Task.Delay(30000, cts.Token);
             }
         }
-        catch (OperationCanceledException) { }
+        catch { }
 
         await KeepEventAliveCancelled.InvokeAsync
         (

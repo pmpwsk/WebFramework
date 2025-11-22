@@ -2,6 +2,7 @@
 using System.Web;
 using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
+using uwap.WebFramework.Responses.DefaultUI;
 
 namespace uwap.WebFramework;
 
@@ -157,4 +158,12 @@ public class PresetsHandler
     /// </summary>
     public virtual string LoginPath(Request req)
         => $"{UsersPluginPath(req)}/login";
+    
+    /// <summary>
+    /// Modifies the given default UI page after its initial construction.
+    /// </summary>
+    public virtual void ModifyPage(Request req, Page page)
+    {
+        page.NavBar.Islands.Add(new([new LinkButton("Home", "/")]));
+    }
 }
