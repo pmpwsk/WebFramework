@@ -35,7 +35,7 @@ public class TwoFactorTOTP
     /// <param name="username">The username to be listed in the authenticator app.</param>
     /// <returns></returns>
     public string QRImageBase64Src(string domain, string username)
-        => Parsers.QRImageBase64Src($"otpauth://totp/{domain}:{username}?secret={SecretKey}&issuer={domain}");
+        => Parsers.QRImageBase64Src($"otpauth://totp/{domain}:{username}?secret={SecretKeyString}&issuer={domain}");
 
     public TwoFactorTOTP()
     {

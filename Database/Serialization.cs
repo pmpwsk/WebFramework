@@ -54,7 +54,7 @@ public static class Serialization
     /// <summary>
     /// Deserializes the given JSON as a byte array into a table value, migrates it to the current version (if necessary) and returns it.
     /// </summary>
-    public static T? Deserialize<T>(string tableName, string id, byte[] json) where T : AbstractTableValue
+    public static T? Deserialize<T>(AbstractTable table, string id, byte[] json) where T : AbstractTableValue
     {
         try
         {
@@ -66,7 +66,7 @@ public static class Serialization
                 // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
                 obj.Files ??= [];
             
-                obj.AfterDeserialization(tableName, id, json);
+                obj.AfterDeserialization(table, id, json);
             }
             
             return obj;

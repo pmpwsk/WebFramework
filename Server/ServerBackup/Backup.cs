@@ -28,13 +28,13 @@ public static partial class Server
         {
             //tables
             LegacyTables.BackupAll(id, basedOnIds);
-            Tables.BackupAll(id, basedOnIds.LastOrDefault());
+            await Tables.BackupAllAsync(id, basedOnIds.LastOrDefault());
 
             //plugins
             await PluginManager.Backup(id, basedOnIds);
 
             //event
-            await BackupAlmostDone.InvokeAsync
+            await BackupAlmostDone.InvokeWithAsyncCaller
             (
                 s => s(id, basedOnIds),
                 ex => Console.WriteLine("Error firing a backup event: " + ex.Message),

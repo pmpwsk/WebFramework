@@ -37,13 +37,13 @@ public static partial class Server
 
             //tables
             LegacyTables.RestoreAll(ids);
-            Tables.RestoreAll(id);
+            await Tables.RestoreAllAsync(id);
 
             //plugin
             await PluginManager.Restore(ids);
 
             //event
-            await RestoreAlmostDone.InvokeAsync
+            await RestoreAlmostDone.InvokeWithAsyncCaller
             (
                 s => s(ids),
                 ex => Console.WriteLine("Error firing a restore event: " + ex.Message),

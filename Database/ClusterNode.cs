@@ -43,9 +43,9 @@ public class ClusterNode(string host, List<string>? tableNames, List<ICertificat
     /// <summary>
     /// Identify this node as "self" if connections to it reach this program instance.
     /// </summary>
-    internal async Task MarkSelf()
+    internal async Task MarkSelfAsync()
     {
-        var id = await GetString("/node-id", TimeSpan.FromSeconds(3));
+        var id = await GetStringAsync("/node-id", TimeSpan.FromSeconds(3));
         if (id == Tables.NodeId)
         {
             IsReachable = false;
@@ -73,7 +73,7 @@ public class ClusterNode(string host, List<string>? tableNames, List<ICertificat
                 await using var stream = await response.Content.ReadAsStreamAsync();
                 using var reader = new StreamReader(stream);
                 
-                OnConnected();
+                await OnConnectedAsync();
                 
                 while (!ShutdownTokenSource.IsCancellationRequested && !reader.EndOfStream)
                 {
@@ -84,7 +84,7 @@ public class ClusterNode(string host, List<string>? tableNames, List<ICertificat
             catch { }
             
             if (IsConnected)
-                await OnDisconnected();
+                await OnDisconnectedAsync();
             await Task.Delay(1000);
         }
     }
@@ -98,16 +98,16 @@ public class ClusterNode(string host, List<string>? tableNames, List<ICertificat
     /// <summary>
     /// Action to call when the node is newly connected after some down-time, pulls updates from the node and marks the node as connected.
     /// </summary>
-    private void OnConnected()
+    private async Task OnConnectedAsync()
     {
         IsConnected = true;
         Console.WriteLine($"Connected to database node: {Host}");
         if (IsReachable)
             foreach (var table in Tables.Dictionary.Values.Where(table => TableNames == null || TableNames.Contains(table.Name)))
             {
-                var state = PullState(table);
+                var state = await PullStateAsync(table);
                 if (state != null)
-                    table.SyncFrom(this, state);
+                    await table.SyncFromAsync(this, state);
             }
     }
     
@@ -115,7 +115,7 @@ public class ClusterNode(string host, List<string>? tableNames, List<ICertificat
     /// Action to call when the node is newly disconnected after some up-time, marks the node as disconnected.
     /// </summary>
     /// <returns></returns>
-    private Task OnDisconnected()
+    private Task OnDisconnectedAsync()
     {
         IsConnected = false;
         Console.WriteLine($"Disconnected from database node: {Host}");
@@ -132,44 +132,38 @@ public class ClusterNode(string host, List<string>? tableNames, List<ICertificat
     /// Sends a lock request while receiving the node's list of existing lock requests.
     /// </summary>
     internal Task<string?> SendLockAsync(AbstractTable table, string id, long timestamp, string randomness)
-        => GetString($"/lock?{TableQuery(table, false)}&id={HttpUtility.UrlEncode(id)}&timestamp={timestamp}&randomness={randomness}", Server.Config.Database.RequestTimeout);
+        => GetStringAsync($"/lock?{TableQuery(table, false)}&id={HttpUtility.UrlEncode(id)}&timestamp={timestamp}&randomness={randomness}", Server.Config.Database.RequestTimeout);
     
     /// <summary>
     /// Requests to cancel a lock request.
     /// </summary>
     internal Task<string?> SendCancelAsync(AbstractTable table, string id, long timestamp, string randomness)
-        => GetString($"/cancel?{TableQuery(table, false)}&id={HttpUtility.UrlEncode(id)}&timestamp={timestamp}&randomness={randomness}", Server.Config.Database.RequestTimeout);
+        => GetStringAsync($"/cancel?{TableQuery(table, false)}&id={HttpUtility.UrlEncode(id)}&timestamp={timestamp}&randomness={randomness}", Server.Config.Database.RequestTimeout);
     
     /// <summary>
     /// Pushes a table entry update along with the transaction's lock request.
     /// </summary>
     internal Task PushChangeAsync(AbstractTable table, string id, long timestamp, string randomness, byte[] serialized)
-        => PostBytes($"/change?{TableQuery(table, false)}&id={HttpUtility.UrlEncode(id)}&timestamp={timestamp}&randomness={randomness}", serialized, Server.Config.Database.RequestTimeout * 4);
+        => PostBytesAsync($"/change?{TableQuery(table, false)}&id={HttpUtility.UrlEncode(id)}&timestamp={timestamp}&randomness={randomness}", serialized, Server.Config.Database.RequestTimeout * 4);
     
     /// <summary>
     /// Pulls the serialized value from an entry.
     /// </summary>
-    internal byte[]? PullEntry(AbstractTable table, string id)
-        => GetBytes($"/entry?{TableQuery(table, true)}&id={HttpUtility.UrlEncode(id)}").GetAwaiter().GetResult();
+    internal Task<byte[]?> PullEntryAsync(AbstractTable table, string id)
+        => GetBytesAsync($"/entry?{TableQuery(table, true)}&id={HttpUtility.UrlEncode(id)}");
     
     /// <summary>
     /// Pulls the file contents of an attached file to the given path and returns whether the operation was successful.
     /// </summary>
-    internal bool PullFile(AbstractTable table, string id, string fileId, string targetFilePath)
-        => Download($"/file?{TableQuery(table, true)}&id={HttpUtility.UrlEncode(id)}&file={HttpUtility.UrlEncode(fileId)}", targetFilePath).GetAwaiter().GetResult();
-    
-    /// <summary>
-    /// Pulls the state of a table.
-    /// </summary>
-    internal Dictionary<string, MinimalTableValue>? PullState(AbstractTable table)
-        => PullStateAsync(table).GetAwaiter().GetResult();
+    internal Task<bool> PullFileAsync(AbstractTable table, string id, string fileId, string targetFilePath)
+        => DownloadAsync($"/file?{TableQuery(table, true)}&id={HttpUtility.UrlEncode(id)}&file={HttpUtility.UrlEncode(fileId)}", targetFilePath);
     
     /// <summary>
     /// Pulls the state of a table asynchronously.
     /// </summary>
-    private async Task<Dictionary<string, MinimalTableValue>?> PullStateAsync(AbstractTable table)
+    internal async Task<Dictionary<string, MinimalTableValue>?> PullStateAsync(AbstractTable table)
     {
-        var serialized = await GetBytes($"/state?{TableQuery(table, true)}");
+        var serialized = await GetBytesAsync($"/state?{TableQuery(table, true)}");
         if (serialized == null)
             return null;
 
@@ -181,7 +175,7 @@ public class ClusterNode(string host, List<string>? tableNames, List<ICertificat
             {
                 var id = kv.GetProperty("Key").GetString() ?? throw new Exception("Key-value pair without key found.");
                 var serializedInfo = Encoding.UTF8.GetBytes(kv.GetProperty("Value").GetRawText());
-                state[id] = Serialization.Deserialize<MinimalTableValue>(table.Name, id, serializedInfo) ?? throw new Exception($"Failed to deserialize entry with ID \"{id}\"");
+                state[id] = Serialization.Deserialize<MinimalTableValue>(table, id, serializedInfo) ?? throw new Exception($"Failed to deserialize entry with ID \"{id}\"");
             }
             return state;
         }
@@ -195,7 +189,7 @@ public class ClusterNode(string host, List<string>? tableNames, List<ICertificat
     /// <summary>
     /// Pulls a string asynchronously.
     /// </summary>
-    private async Task<string?> GetString(string path, TimeSpan? timeout = null)
+    private async Task<string?> GetStringAsync(string path, TimeSpan? timeout = null)
     {
         if (!IsConnected)
             return null;
@@ -223,7 +217,7 @@ public class ClusterNode(string host, List<string>? tableNames, List<ICertificat
     /// <summary>
     /// Sends a post request asynchronously.
     /// </summary>
-    private async Task PostBytes(string path, byte[] body, TimeSpan? timeout = null)
+    private async Task PostBytesAsync(string path, byte[] body, TimeSpan? timeout = null)
     {
         if (!IsConnected)
             return;
@@ -250,7 +244,7 @@ public class ClusterNode(string host, List<string>? tableNames, List<ICertificat
     /// <summary>
     /// Pulls a byte array asynchronously.
     /// </summary>
-    private async Task<byte[]?> GetBytes(string path, TimeSpan? timeout = null)
+    private async Task<byte[]?> GetBytesAsync(string path, TimeSpan? timeout = null)
     {
         if (!IsConnected)
             return null;
@@ -278,7 +272,7 @@ public class ClusterNode(string host, List<string>? tableNames, List<ICertificat
     /// <summary>
     /// Downloads a file to the given path asynchronously.
     /// </summary>
-    private async Task<bool> Download(string path, string targetFilePath)
+    private async Task<bool> DownloadAsync(string path, string targetFilePath)
     {
         if (!IsConnected)
             return false;

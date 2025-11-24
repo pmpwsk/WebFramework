@@ -1,3 +1,5 @@
+using uwap.WebFramework.Tools;
+
 namespace uwap.WebFramework.Database;
 
 /// <summary>
@@ -13,7 +15,7 @@ public abstract class AbstractTableIndex<T, K>(Func<T,K> selector) : ITableIndex
     /// <summary>
     /// The lock to use when updating the index.
     /// </summary>
-    protected ReaderWriterLockSlim Lock = new();
+    protected AsyncReaderWriterLock Lock = new();
     
     /// <summary>
     /// The index connecting entries to their keys for easy deletion.
@@ -30,34 +32,28 @@ public abstract class AbstractTableIndex<T, K>(Func<T,K> selector) : ITableIndex
     /// </summary>
     protected abstract void Remove(K value, string id);
 
-    public void Update(string id, T? value)
+    public async Task UpdateAsync(string id, T? value)
     {
-        Lock.EnterWriteLock();
-        try
+        await using var h = await Lock.WaitWriteAsync();
+        
+        if (value != null)
         {
-            if (value != null)
-            {
-                var key = Selector(value);
-                if (ReverseIndex.TryGetValue(id, out var reverseKey))
-                    if (reverseKey.Equals(key))
-                        return;
-                    else Remove(reverseKey, id);
-                
-                Add(key, id);
-                ReverseIndex[id] = key;
-            }
-            else
-            {
-                if (!ReverseIndex.TryGetValue(id, out var reverseKey))
+            var key = Selector(value);
+            if (ReverseIndex.TryGetValue(id, out var reverseKey))
+                if (reverseKey.Equals(key))
                     return;
-                
-                Remove(reverseKey, id);
-                ReverseIndex.Remove(id);
-            }
+                else Remove(reverseKey, id);
+            
+            Add(key, id);
+            ReverseIndex[id] = key;
         }
-        finally
+        else
         {
-            Lock.ExitWriteLock();
+            if (!ReverseIndex.TryGetValue(id, out var reverseKey))
+                return;
+            
+            Remove(reverseKey, id);
+            ReverseIndex.Remove(id);
         }
     }
 }

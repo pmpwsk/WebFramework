@@ -703,4 +703,10 @@ public static class Parsers
     /// </summary>
     public static R Map<T, R>(this T value, Func<T, R> selector)
         => selector(value);
+    
+    /// <summary>
+    /// Returns the first value in the queue without removing it, or null if the queue is empty.
+    /// </summary>
+    public static T? PeekOrDefault<T>(this Queue<T> queue)
+        => queue.TryPeek(out var value) ? value : default;
 }

@@ -54,4 +54,19 @@ public class TwoFactor
         totp = TOTP;
         return true;
     }
+
+    /// <summary>
+    /// Returns whether TOTP has been generated, and the TOTP object if enabled.
+    /// </summary>
+    public bool TOTPGenerated([MaybeNullWhen(false)] out TwoFactorTOTP totp)
+    {
+        if (TOTP == null)
+        {
+            totp = null;
+            return false;
+        }
+
+        totp = TOTP;
+        return true;
+    }
 }

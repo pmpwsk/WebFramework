@@ -53,9 +53,9 @@ public abstract class AbstractTableValue
     /// <summary>
     /// Action to execute after deserializing the value, to migrate entries to a new version and set the type's current version.
     /// </summary>
-    internal void AfterDeserialization(string tableName, string id, byte[] serialized)
+    internal void AfterDeserialization(AbstractTable table, string id, byte[] serialized)
     {
-        Migrate(tableName, id, serialized);
+        Migrate(table, id, serialized);
         
         AssemblyVersion = Tables.GetTypeVersion(GetType());
     }
@@ -63,17 +63,17 @@ public abstract class AbstractTableValue
     /// <summary>
     /// Migrates the value to the current version, if necessary.
     /// </summary>
-    protected virtual void Migrate(string tableName, string id, byte[] serialized)
+    protected virtual void Migrate(AbstractTable table, string id, byte[] serialized)
     {
     }
     
     /// <summary>
     /// Migrates a file from the legacy database to the new database.
     /// </summary>
-    protected void MigrateLegacyFile(string tableName, string id, string fileId, string path)
+    protected void MigrateLegacyFile(AbstractTable table, string id, string fileId, string path)
     {
         var length = new FileInfo(path).Length;
-        var fileBasePath = $"../Database/{tableName.ToBase64PathSafe()}/Files/{id.ToBase64PathSafe()}";
+        var fileBasePath = $"../Database/{table.Name.ToBase64PathSafe()}/Files/{id.ToBase64PathSafe()}";
         Directory.CreateDirectory(fileBasePath);
         File.Move(path, $"{fileBasePath}/{fileId.ToBase64PathSafe()}");
         Files[fileId] = new(Timestamp, length);

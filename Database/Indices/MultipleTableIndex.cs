@@ -18,17 +18,11 @@ public class MultipleTableIndex<T, K>(Func<T,K> selector) : AbstractTableIndex<T
     /// <summary>
     /// Returns the list of table values that have the given key.
     /// </summary>
-    public IReadOnlyCollection<string> Get(K key)
+    public async Task<IReadOnlyCollection<string>> GetAsync(K key)
     {
-        Lock.EnterReadLock();
-        try
-        {
-            return Index.TryGetValue(key, out var set) ? [..set] : [];
-        }
-        finally
-        {
-            Lock.ExitReadLock();
-        }
+        await using var h = await Lock.WaitReadAsync();
+        
+        return Index.TryGetValue(key, out var set) ? [..set] : [];
     }
     
     protected override void Add(K key, string id)

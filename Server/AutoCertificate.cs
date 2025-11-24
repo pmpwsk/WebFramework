@@ -47,14 +47,14 @@ public static partial class Server
         AcmeContext acme;
         if (File.Exists("../Certificates/Auto/account.pem"))
         {
-            IKey pemKey = KeyFactory.FromPem(File.ReadAllText("../Certificates/Auto/account.pem"));
+            IKey pemKey = KeyFactory.FromPem(await File.ReadAllTextAsync("../Certificates/Auto/account.pem"));
             acme = new AcmeContext(WellKnownServers.LetsEncryptV2, pemKey);
         }
         else
         {
             acme = new AcmeContext(WellKnownServers.LetsEncryptV2);
             await acme.NewAccount(Config.AutoCertificate.Email, true);
-            File.WriteAllText("../Certificates/Auto/account.pem", acme.AccountKey.ToPem());
+            await File.WriteAllTextAsync("../Certificates/Auto/account.pem", acme.AccountKey.ToPem());
         }
 
         //order+authenticate
@@ -76,10 +76,9 @@ public static partial class Server
                 IKey privateKey = KeyFactory.NewKey(KeyAlgorithm.ES256);
                 CertificateChain certificate = await order.Generate(new CsrInfo { CommonName = domain }, privateKey);
 
-                string certPem = certificate.ToPem();
                 PfxBuilder pfxBuilder = certificate.ToPfx(privateKey);
                 byte[] pfx = pfxBuilder.Build(domain, "");
-                File.WriteAllBytes($"../Certificates/Auto/{domain}.pfx", pfx);
+                await File.WriteAllBytesAsync($"../Certificates/Auto/{domain}.pfx", pfx);
                 AutoCertificateTokens.Remove(url);
                 break;
             }
@@ -98,7 +97,7 @@ public static partial class Server
     /// <summary>
     /// Renews expired automatically generated certificates, requests new ones for newly discovered domains and deletes ones for unused domains.
     /// </summary>
-    private async static Task CheckAutoCertificates()
+    private static async Task CheckAutoCertificates()
     {
         HashSet<string> domains = [];
         if (Directory.Exists("../Public"))
@@ -115,7 +114,7 @@ public static partial class Server
             domains.Add(domain);
         foreach (string domain in PluginManager.GetDomains())
             domains.Add(domain);
-        if (MailManager.ServerDomain != null && !domains.Contains(MailManager.ServerDomain))
+        if (MailManager.ServerDomain != null)
             domains.Add(MailManager.ServerDomain);
 
         Directory.CreateDirectory("../Certificates/Auto");
@@ -153,7 +152,7 @@ public static partial class Server
                 await NewAutoCertificate(domain);
                 Console.WriteLine($"Received a certificate for {domain}.");
                 if (domain == MailManager.ServerDomain && MailManager.In.ServerRunning && !MailManager.In.HasCertificate)
-                    MailManager.In.TryRestart();
+                    await MailManager.In.TryRestartAsync();
             }
             catch (Exception ex)
             {

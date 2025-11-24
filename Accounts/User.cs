@@ -67,7 +67,7 @@ public partial class User : AbstractTableValue
     /// </summary>
     [DataMember] public DateTime Signup { get; private set; } = DateTime.UtcNow;
 
-    protected override void Migrate(string tableName, string id, byte[] serialized)
+    protected override void Migrate(AbstractTable table, string id, byte[] serialized)
     {
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (Username != null)

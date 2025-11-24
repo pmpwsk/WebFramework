@@ -63,15 +63,15 @@ public static partial class MailManager
         /// <summary>
         /// Starts the server.
         /// </summary>
-        public static void Start()
+        public static async Task StartAsync()
         {
             if (ServerRunning)
                 throw new Exception("The server is already running.");
             if (ServerDomain == null)
                 throw new Exception("ServerDomain must be set.");
-            if (MailboxExists.IsEmpty())
+            if (await MailboxExists.IsEmptyAsync())
                 throw new Exception("MailboxExists must be set.");
-            if (HandleMail.IsEmpty())
+            if (await HandleMail.IsEmptyAsync())
                 throw new Exception("HandleMail must be set.");
 
             var builder = new SmtpServerOptionsBuilder()
@@ -99,20 +99,22 @@ public static partial class MailManager
             Server = new SmtpServer.SmtpServer(options, serviceProvider);
             ServerTask = Server.StartAsync(CTS.Token);
 
-            if (HasCertificate)
-                Console.WriteLine("Mail server started.");
-            else Console.WriteLine("Mail server started without a certificate, secure connections will not be possible!");
+            Console.WriteLine(
+                HasCertificate
+                    ? "Mail server started."
+                    : "Mail server started without a certificate, secure connections will not be possible!"
+            );
         }
 
         /// <summary>
         /// Attempts to start the server and returns whether that action was successful.<br/>
         /// If an exception was thrown while starting, an appropriate line will be written to the console.
         /// </summary>
-        public static bool TryStart()
+        public static async Task<bool> TryStartAsync()
         {
             try
             {
-                Start();
+                await StartAsync();
                 return true;
             }
             catch (Exception ex)
@@ -125,7 +127,7 @@ public static partial class MailManager
         /// <summary>
         /// Stops the server.
         /// </summary>
-        public static void Stop()
+        public static async Task StopAsync()
         {
             if (Server == null)
                 throw new Exception("The server isn't running.");
@@ -133,14 +135,15 @@ public static partial class MailManager
             try
             {
                 Server.Shutdown();
-                Server.ShutdownTask.Wait(1000);
-                ServerTask?.Wait(1000);
-                CTS.Cancel();
+                await Server.ShutdownTask.WaitAsync(TimeSpan.FromSeconds(1));
+                if (ServerTask != null)
+                    await ServerTask.WaitAsync(TimeSpan.FromSeconds(1));
+                await CTS.CancelAsync();
                 Console.WriteLine("Stopped the mail server.");
             }
             catch (Exception ex)
             {
-                try { CTS.Cancel(); } catch { }
+                try { await CTS.CancelAsync(); } catch { }
                 Console.WriteLine("Error shutting down the mail server gracefully: " + ex.Message);
             }
             finally
@@ -155,22 +158,22 @@ public static partial class MailManager
         /// <summary>
         /// Stops and starts the mail server.
         /// </summary>
-        public static void Restart()
+        public static async Task RestartAsync()
         {
             Console.WriteLine("Restarting the mail server...");
-            Stop();
-            Start();
+            await StopAsync();
+            await StartAsync();
         }
 
         /// <summary>
         /// Stops the server, then attempts to start it again and returns whether that action was successful.<br/>
         /// If an exception was thrown while starting, an appropriate line will be written to the console.
         /// </summary>
-        public static bool TryRestart()
+        public static async Task<bool> TryRestartAsync()
         {
             Console.WriteLine("Restarting the mail server...");
-            Stop();
-            return TryStart();
+            await StopAsync();
+            return await TryStartAsync();
         }
     }
 }

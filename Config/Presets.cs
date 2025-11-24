@@ -17,8 +17,8 @@ public static class Presets
     /// <summary>
     /// Sends an important email to the given user using the given subject and text. A different address may be specified.
     /// </summary>
-    public static MailSendResult WarningMail(Request req, User user, string subject, string text, string? useThisAddress = null)
-        => Handler.WarningMail(req, user, subject, text, useThisAddress);
+    public static Task<MailSendResult> WarningMailAsync(Request req, User user, string subject, string text, string? useThisAddress = null)
+        => Handler.WarningMailAsync(req, user, subject, text, useThisAddress);
 
     /// <summary>
     /// Creates a new Page (not IPage!) for the request with the given title, adds the favicon, navigation and style(s) from the preset, sets req.Page to the new page and returns it.
@@ -176,9 +176,9 @@ public static class Presets
         if (req.Query.ContainsKey("password") && req.Query.ContainsKey("code"))
         {
             string password = req.Query["password"], code = req.Query["code"];
-            if (req.UserTable.ValidatePassword(user.Id, password, null))
+            if (await req.UserTable.ValidatePasswordAsync(user.Id, password, null))
             {
-                if (user.TwoFactor.TOTPEnabled() && !req.UserTable.ValidateTOTP(user.Id, code, req, true))
+                if (user.TwoFactor.TOTPEnabled() && !await req.UserTable.ValidateTOTPAsync(user.Id, code, req, true))
                 {
                     AccountManager.ReportFailedAuth(req.Context);
                     await req.Write("no");

@@ -8,14 +8,16 @@ public delegate void ValueChangedHandler<in T>(T? oldValue, T? newValue);
 /// <summary>
 /// Contains the table entry functionality.
 /// </summary>
-public class TableEntry<T>(string tableName, string id, byte[] serialized)
-    : AbstractTableEntry(tableName, id, serialized)
+public class TableEntry<T>(Table<T> table, string id, byte[] serialized)
+    : AbstractTableEntry(table, id, serialized)
     where T : AbstractTableValue
 {
     /// <summary>
     /// The event that is raised when the entry's value has changed.
     /// </summary>
     public readonly SubscriberContainer<ValueChangedHandler<T>> ValueChanged = new();
+    
+    public override Table<T> Table { get; } = table;
     
     /// <summary>
     /// Returns the entry's deserialized value.
@@ -28,7 +30,7 @@ public class TableEntry<T>(string tableName, string id, byte[] serialized)
             if (EntryInfo.Deleted)
                 return null;
         
-            var value = Serialization.Deserialize<T>(TableName, Id, GetBytes());
+            var value = Serialization.Deserialize<T>(Table, Id, GetBytes());
             if (value != null)
                 value.ContainingEntry = this;
             return value;
@@ -52,12 +54,12 @@ public class TableEntry<T>(string tableName, string id, byte[] serialized)
         if (File.Exists(TrashPath))
             File.Delete(TrashPath);
         SerializedValue = Server.Config.Database.CacheEntries ? new(serialized) : null;
-        EntryInfo = entryInfo ?? Serialization.Deserialize<MinimalTableValue>(TableName, Id, serialized) ?? throw new SerializationException();
+        EntryInfo = entryInfo ?? Serialization.Deserialize<MinimalTableValue>(Table, Id, serialized) ?? throw new SerializationException();
     }
 
     /// <summary>
     /// Notifies event subscribers that the value of the entry was changed.
     /// </summary>
-    public void CallChangedEvent(T? oldValue, T? newValue)
-        => ValueChanged.Invoke(s => s(oldValue, newValue), _ => {});
+    public Task CallChangedEventAsync(T? oldValue, T? newValue)
+        => ValueChanged.InvokeWithSyncCaller(s => s(oldValue, newValue), _ => {});
 }

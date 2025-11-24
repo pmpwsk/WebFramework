@@ -37,11 +37,11 @@ public static partial class Server
             if (Config.WorkerInterval >= 0)
                 Worker.Change(0, Timeout.Infinite);
 
-            ServerReady.Invoke
+            ServerReady.InvokeWithSyncCaller
             (
                 s => s(),
                 ex => Console.WriteLine("Error firing a server ready event: " + ex.Message)
-            );
+            ).GetAwaiter().GetResult();
         }
 
         private static void ApplicationStopping()
@@ -52,11 +52,11 @@ public static partial class Server
             
             Tables.StopMonitoringConnections();
 
-            ProgramStopping.Invoke
+            ProgramStopping.InvokeWithSyncCaller
             (
                 s => s(),
                 ex => Console.WriteLine("Error firing a program stopping event: " + ex.Message)
-            );
+            ).GetAwaiter().GetResult();
         }
     }
 }

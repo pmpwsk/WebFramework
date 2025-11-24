@@ -151,8 +151,11 @@ public static class AccountManager
     /// <summary>
     /// Creates a new authentication token for the given user and adds a cookie for it to the given context.
     /// </summary>
-    internal static void Login(User user, Request req)
-        => AddAuthTokenCookie(user.Id + req.UserTable.AddNewToken(user.Id, out bool temporary), req.Context, temporary);
+    internal static async Task LoginAsync(User user, Request req)
+    {
+        (string token, bool temporary) = await req.UserTable.AddNewTokenAsync(user.Id);
+        AddAuthTokenCookie(user.Id + token, req.Context, temporary);
+    }
 
     /// <summary>
     /// Check whether the given username satisfies the username requirements.

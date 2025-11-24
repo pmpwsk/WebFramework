@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework.Database;
 
@@ -31,7 +32,7 @@ public abstract class AbstractTable(string name)
     /// <summary>
     /// Checks and fixes any issues with the table, like memory or disk corruption.
     /// </summary>
-    internal abstract void CheckAndFix();
+    internal abstract Task CheckAndFixAsync();
     
     /// <summary>
     /// Lists the nodes that are reachable for this table.
@@ -41,7 +42,7 @@ public abstract class AbstractTable(string name)
     /// <summary>
     /// Creates a new locked table entry with the given ID and returns it as an abstract entry.
     /// </summary>
-    internal abstract AbstractTableEntry CreateAndLockBlankAbstractEntry(string id);
+    internal abstract Task<(AbstractTableEntry Entry, AsyncReaderWriterLockHolder Locker)> CreateAndLockBlankAbstractEntryAsync(string id);
     
     /// <summary>
     /// Finds the table entry with the given ID as an abstract entry. 
@@ -56,15 +57,15 @@ public abstract class AbstractTable(string name)
     /// <summary>
     /// Ingests an update from the given node to the given entry ID using the given serialized value.
     /// </summary>
-    internal abstract void UpdateEntry(ClusterNode node, string id, byte[] serialized);
+    internal abstract Task UpdateEntryAsync(ClusterNode node, string id, byte[] serialized);
     
     /// <summary>
     /// Ingests updates from the given node which has the given table state.
     /// </summary>
-    internal abstract void SyncFrom(ClusterNode node, Dictionary<string, MinimalTableValue> state);
+    internal abstract Task SyncFromAsync(ClusterNode node, Dictionary<string, MinimalTableValue> state);
     
     /// <summary>
     /// Deletes the entry with the given ID and returns whether such an entry existed in the first place.
     /// </summary>
-    public abstract bool Delete(string id);
+    public abstract Task<bool> DeleteAsync(string id);
 }

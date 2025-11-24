@@ -72,7 +72,7 @@ public static partial class Server
                                         await plugin.Handle(req);
                                     }
                                 }
-                                else if (!await RequestReceived.InvokeAsync(s => s(req), null, false))
+                                else if (!await RequestReceived.InvokeWithAsyncCaller(s => s(req), null, false))
                                     return false;
 
                                 return true;

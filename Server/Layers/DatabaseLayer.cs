@@ -94,16 +94,16 @@ public static partial class Server
                     req.BodySizeLimit = long.MaxValue;
                     var serialized = await req.GetBodyBytes();
                     
-                    _ = Task.Run(() => //don't make the sender wait
+                    _ = Task.Run(async () => //don't make the sender wait
                     {
                         try
                         {
-                            table.UpdateEntry(node, id, serialized);
+                            await table.UpdateEntryAsync(node, id, serialized);
                         }
                         catch { }
                         
                         if (table.TryGetAbstractEntry(id, out var entry))
-                            LockRequest.Delete(entry, timestamp, randomness);
+                            await LockRequest.DeleteAsync(entry, timestamp, randomness);
                     });
                 } break;
                 
@@ -117,7 +117,7 @@ public static partial class Server
                     if (!table.TryGetAbstractEntry(id, out var entry))
                         throw new NotFoundSignal();
                     
-                    LockRequest.CreateRemote(entry, timestamp, randomness);
+                    await LockRequest.CreateRemoteAsync(entry, timestamp, randomness);
                     await req.Write(string.Join('&', entry.LockRequests.Select(lockReq => $"{lockReq.Timestamp};{lockReq.Randomness}")));
                 } break;
                 
@@ -131,7 +131,7 @@ public static partial class Server
                     if (!table.TryGetAbstractEntry(id, out var entry))
                         throw new NotFoundSignal();
                     
-                    LockRequest.Delete(entry, timestamp, randomness);
+                    await LockRequest.DeleteAsync(entry, timestamp, randomness);
                     await req.Write("ok");
                 } break;
                 

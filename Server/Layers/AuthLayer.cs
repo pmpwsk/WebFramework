@@ -10,13 +10,15 @@ public static partial class Server
         /// <summary>
         /// Gets the user table, checks if a user is logged in (along with token management) and redirects to certain authentication pages if necessary.
         /// </summary>
-        public static Task<bool> AuthLayer(LayerRequestData data)
+        public static async Task<bool> AuthLayer(LayerRequestData data)
         {
-            data.UserTable = Config.Accounts.Enabled ? AccountManager.GetUserTable(data.Context) : null;
+            data.UserTable = Config.Accounts.Enabled ? data.Context.GetUserTable() : null;
 
             ReadOnlyCollection<string>? limitedToPaths = null;
             if (data.UserTable != null)
-                data.LoginState = data.UserTable.Authenticate(data.Context, out data.User, out limitedToPaths);
+            {
+                (data.LoginState, data.User, limitedToPaths) = await data.UserTable.AuthenticateAsync(data.Context);
+            }
             else
             {
                 data.User = null;
@@ -27,10 +29,10 @@ public static partial class Server
             if (limitedToPaths != null && !limitedToPaths.Any(x => x == fullPath || (x.EndsWith('*') && fullPath.StartsWith(x[..^1]))))
             {
                 data.Status = 403;
-                return Task.FromResult(true);
+                return true;
             }
 
-            return Task.FromResult(false);
+            return false;
         }
     }
 }

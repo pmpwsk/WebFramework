@@ -18,7 +18,7 @@ public class PresetsHandler
     protected virtual string? SupportEmail => null;
 
     /// <summary>
-    /// Gets the the support email from SupportEmail but resolves the case of it being null.<br/>
+    /// Gets the support email from SupportEmail but resolves the case of it being null.<br/>
     /// If SupportEmail and MailManager.ServerDomain are both null, null is returned here, too.<br/>
     /// If only SupportEmail is null and MailManager.ServerDomain isn't null, support@[MailManager.ServerDomain] is returned.<br/>
     /// </summary>
@@ -28,17 +28,17 @@ public class PresetsHandler
     /// <summary>
     /// Sends an important email to the given user using the given subject and text. A different address may be specified.
     /// </summary>
-    public virtual MailSendResult WarningMail(Request req, User user, string subject, string text, string? useThisAddress = null)
+    public virtual async Task<MailSendResult> WarningMailAsync(Request req, User user, string subject, string text, string? useThisAddress = null)
     {
         string? address = GetSupportEmail(req);
         if (address == null)
             return new([], null, null);
-        return MailManager.Out.Send(
+        return (await MailManager.Out.SendAsync(
             new MailboxAddress(address, address),
             new MailboxAddress(user.Username, useThisAddress ?? user.MailAddress),
             subject,
             $"Hi, {user.Username}!\n{text}".Replace("\n", "<br />"),
-            true, true);
+            true, true)).Result;
     }
 
     /// <summary>

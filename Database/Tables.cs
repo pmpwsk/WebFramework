@@ -1,4 +1,5 @@
 using System.Reflection;
+using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework.Database;
 
@@ -39,20 +40,20 @@ public static class Tables
     /// <summary>
     /// Checks all tables for issues and attempts to fix any issues.
     /// </summary>
-    public static void CheckAndFixAll()
+    public static async Task CheckAndFixAllAsync()
     {
         foreach (var t in Dictionary)
-            t.Value.CheckAndFix();
+            await t.Value.CheckAndFixAsync();
     }
     
     /// <summary>
     /// Backs up all tables to the given backup ID, based on the previous backup if a previous ID has been set.
     /// </summary>
-    public static void BackupAll(string id, string? previousId)
+    public static async Task BackupAllAsync(string id, string? previousId)
     {
         var stateDir = $"{Server.Config.Backup.Directory}{id}/Database";
         Directory.CreateDirectory(stateDir);
-        var state = previousId != null ? Serialization.Deserialize<BackupState>(File.ReadAllBytes($"{Server.Config.Backup.Directory}{previousId}/Database/State.json")) ?? new() : new();
+        var state = previousId != null ? Serialization.Deserialize<BackupState>(await File.ReadAllBytesAsync($"{Server.Config.Backup.Directory}{previousId}/Database/State.json")) ?? new() : new();
         
         // list tables
         HashSet<string> currentTables = [];
@@ -70,69 +71,64 @@ public static class Tables
             {
                 currentEntries.Add(entry.Id);
                 var entryState = tableState.Entries.GetValueOrDefault(entry.Id);
-                entry.Lock.EnterReadLock();
-                try
+                
+                await using var h = await entry.Lock.WaitReadAsync();
+                
+                if (entryState != null && entryState.Timestamp == entry.EntryInfo.Timestamp)
+                    continue;
+                
+                // entry changed
+                if (!entriesDirCreated)
                 {
-                    if (entryState != null && entryState.Timestamp == entry.EntryInfo.Timestamp)
+                    Directory.CreateDirectory(entriesDir);
+                    entriesDirCreated = true;
+                }
+                if (entryState == null)
+                {
+                    entryState = new(id, entry.EntryInfo.Timestamp);
+                    tableState.Entries[entry.Id] = entryState;
+                }
+                else
+                {
+                    entryState.Timestamp = entry.EntryInfo.Timestamp;
+                    entryState.Origin = id;
+                }
+                File.Copy(entry.Path, $"{entriesDir}/{entry.Id.ToBase64PathSafe()}.json");
+                
+                // list files
+                HashSet<string> currentFiles = [];
+                bool filesDirCreated = false;
+                var filesDir = $"{tableDir}/Files/{entry.Id.ToBase64PathSafe()}";
+                foreach (var fileKV in entry.EntryInfo.Files)
+                {
+                    currentFiles.Add(fileKV.Key);
+                    var fileState = entryState.Files.GetValueOrDefault(fileKV.Key);
+                    if (fileState != null && fileState.Timestamp == fileKV.Value.Timestamp)
                         continue;
                     
-                    // entry changed
-                    if (!entriesDirCreated)
+                    // file changed
+                    if (!filesDirCreated)
                     {
-                        Directory.CreateDirectory(entriesDir);
-                        entriesDirCreated = true;
+                        Directory.CreateDirectory(filesDir);
+                        filesDirCreated = true;
                     }
-                    if (entryState == null)
+                    if (fileState == null)
                     {
-                        entryState = new(id, entry.EntryInfo.Timestamp);
-                        tableState.Entries[entry.Id] = entryState;
+                        fileState = new(id, fileKV.Value.Timestamp);
+                        entryState.Files[fileKV.Key] = fileState;
                     }
                     else
                     {
-                        entryState.Timestamp = entry.EntryInfo.Timestamp;
-                        entryState.Origin = id;
+                        fileState.Timestamp = fileKV.Value.Timestamp;
+                        fileState.Origin = id;
                     }
-                    File.Copy(entry.Path, $"{entriesDir}/{entry.Id.ToBase64PathSafe()}.json");
-                    
-                    // list files
-                    HashSet<string> currentFiles = [];
-                    bool filesDirCreated = false;
-                    var filesDir = $"{tableDir}/Files/{entry.Id.ToBase64PathSafe()}";
-                    foreach (var fileKV in entry.EntryInfo.Files)
-                    {
-                        currentFiles.Add(fileKV.Key);
-                        var fileState = entryState.Files.GetValueOrDefault(fileKV.Key);
-                        if (fileState != null && fileState.Timestamp == fileKV.Value.Timestamp)
-                            continue;
-                        
-                        // file changed
-                        if (!filesDirCreated)
-                        {
-                            Directory.CreateDirectory(filesDir);
-                            filesDirCreated = true;
-                        }
-                        if (fileState == null)
-                        {
-                            fileState = new(id, fileKV.Value.Timestamp);
-                            entryState.Files[fileKV.Key] = fileState;
-                        }
-                        else
-                        {
-                            fileState.Timestamp = fileKV.Value.Timestamp;
-                            fileState.Origin = id;
-                        }
-                        File.Copy(entry.GetFilePath(fileKV.Key), $"{filesDir}/{fileKV.Key.ToBase64PathSafe()}");
-                    }
-                    
-                    // mark missing files as deleted
-                    foreach (var fileId in entryState.Files.Keys)
-                        if (!currentFiles.Contains(fileId))
-                            entryState.Files.Remove(fileId);
+                    File.Copy(entry.GetFilePath(fileKV.Key), $"{filesDir}/{fileKV.Key.ToBase64PathSafe()}");
                 }
-                finally
-                {
-                    entry.Lock.ExitReadLock();
-                }
+                
+                // mark missing files as deleted
+                foreach (var fileId in entryState.Files.Keys)
+                    if (!currentFiles.Contains(fileId))
+                        entryState.Files.Remove(fileId);
             }
             
             // mark missing entries as deleted
@@ -146,15 +142,15 @@ public static class Tables
             if (!currentTables.Contains(tableName))
                 state.Tables.Remove(tableName);
         
-        File.WriteAllBytes($"{stateDir}/State.json", Serialization.Serialize(state));
+        await File.WriteAllBytesAsync($"{stateDir}/State.json", Serialization.Serialize(state));
     }
     
     /// <summary>
     /// Restores all tables from the backup with the given ID.
     /// </summary>
-    public static void RestoreAll(string id)
+    public static async Task RestoreAllAsync(string id)
     {
-        var state = Serialization.Deserialize<BackupState>(File.ReadAllBytes($"{Server.Config.Backup.Directory}{id}/Database/State.json")) ?? throw new Exception("Failed to deserialize backup state");
+        var state = Serialization.Deserialize<BackupState>(await File.ReadAllBytesAsync($"{Server.Config.Backup.Directory}{id}/Database/State.json")) ?? throw new Exception("Failed to deserialize backup state");
         
         // list tables
         foreach (var tableKV in state.Tables)
@@ -188,12 +184,13 @@ public static class Tables
                 // restore table efficiently
                 foreach (var entryKV in tableKV.Value.Entries)
                 {
+                    AsyncReaderWriterLockHolder locker;
                     if (table.TryGetAbstractEntry(entryKV.Key, out var entry))
-                        entry.Lock.EnterWriteLock();
+                        locker = await entry.Lock.WaitWriteAsync();
                     else
-                        entry = table.CreateAndLockBlankAbstractEntry(entryKV.Key);
+                        (entry, locker) = await table.CreateAndLockBlankAbstractEntryAsync(entryKV.Key);
                     
-                    try
+                    await using (locker)
                     {
                         if (entry.EntryInfo.Timestamp == entryKV.Value.Timestamp)
                             continue;
@@ -219,18 +216,14 @@ public static class Tables
                             if (!entryKV.Value.Files.ContainsKey(fileId))
                                 File.Delete($"{filesDir}/{fileId.ToBase64PathSafe()}");
                         
-                        entry.SetBytes(File.ReadAllBytes($"{Server.Config.Backup.Directory}{entryKV.Value.Origin}/Database/{tableKV.Key.ToBase64PathSafe()}/Entries/{entryKV.Key.ToBase64PathSafe()}.json"));
-                    }
-                    finally
-                    {
-                        entry.Lock.ExitWriteLock();
+                        entry.SetBytes(await File.ReadAllBytesAsync($"{Server.Config.Backup.Directory}{entryKV.Value.Origin}/Database/{tableKV.Key.ToBase64PathSafe()}/Entries/{entryKV.Key.ToBase64PathSafe()}.json"));
                     }
                 }
                 
                 // delete remaining entries
                 foreach (var entry in table.ListAbstractEntries())
                     if (!tableKV.Value.Entries.ContainsKey(entry.Id))
-                        table.Delete(entry.Id);
+                        await table.DeleteAsync(entry.Id);
             }
         }
         
@@ -258,7 +251,7 @@ public static class Tables
             return;
         }
 
-        await Task.WhenAll(Server.Config.Database.Cluster.Select(node => node.MarkSelf()));
+        await Task.WhenAll(Server.Config.Database.Cluster.Select(node => node.MarkSelfAsync()));
         
         if (_Self == null)
         {

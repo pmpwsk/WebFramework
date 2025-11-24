@@ -23,7 +23,7 @@ public static partial class MailManager
             {
                 try
                 {
-                    if (HandleMail.IsEmpty())
+                    if (await HandleMail.IsEmptyAsync())
                         return SmtpResponse.MailboxUnavailable;
 
                     await using var stream = new MemoryStream();
@@ -36,7 +36,7 @@ public static partial class MailManager
 
                     var message = await MimeKit.MimeMessage.LoadAsync(stream, cancellationToken);
                     var connectionData = new MailConnectionData(context);
-                    var results = HandleMail.InvokeAndGet(s => s(context, message, connectionData), null);
+                    var results = await HandleMail.InvokeWithAsyncCallerAndGet(s => s(context, message, connectionData), null);
                     return results.Count == 0 ? SmtpResponse.MailboxUnavailable : results.First();
                 }
                 catch (Exception ex)
@@ -68,8 +68,8 @@ public static partial class MailManager
             /// <summary>
             /// Calls the MailboxExists method and forwards the result.
             /// </summary>
-            public override Task<bool> CanDeliverToAsync(ISessionContext context, IMailbox to, IMailbox from, CancellationToken ct)
-                => Task.FromResult(MailboxExists.InvokeAndGet(s => s(context, from, to), _ => {}).Any(r => r));
+            public override async Task<bool> CanDeliverToAsync(ISessionContext context, IMailbox to, IMailbox from, CancellationToken ct)
+                => (await MailboxExists.InvokeWithAsyncCallerAndGet(s => s(context, from, to), _ => {})).Any(r => r);
         }
 
         /// <summary>

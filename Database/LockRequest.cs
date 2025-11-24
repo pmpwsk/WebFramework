@@ -10,59 +10,68 @@ public class LockRequest : FunctionalComparable<LockRequest>
     /// <summary>
     /// Creates, queues and distributes a new lock request for the given entry that will be executed by this program instance.
     /// </summary>
-    public static LockRequest CreateLocal(AbstractTableEntry entry)
-        => Create(entry, DateTime.UtcNow.Ticks, Parsers.RandomString(32), true);
+    public static Task<LockRequest> CreateLocalAsync(AbstractTableEntry entry)
+        => CreateAsync(entry, DateTime.UtcNow.Ticks, Parsers.RandomString(32), true);
     
     /// <summary>
     /// Adds another program instance's lock request with the given metadata to the given entry's lock queue.
     /// </summary>
-    public static LockRequest CreateRemote(AbstractTableEntry entry, long timestamp, string randomness)
-        => Create(entry, timestamp, randomness, false);
+    public static Task<LockRequest> CreateRemoteAsync(AbstractTableEntry entry, long timestamp, string randomness)
+        => CreateAsync(entry, timestamp, randomness, false);
     
     /// <summary>
     /// Creates a new lock request object with the given metadata and distributes the request to other nodes if <c>distribute</c> is set.
     /// </summary>
-    private static LockRequest Create(AbstractTableEntry entry, long timestamp, string randomness, bool distribute)
+    private static async Task<LockRequest> CreateAsync(AbstractTableEntry entry, long timestamp, string randomness, bool distribute)
     {
-        lock(entry.LockRequests)
+        HashSet<(long Timestamp, string Randomness)> others = [];
+        
+        LockRequest? request;
+        using (await entry.LockRequestStateLock.WaitAsync())
         {
-            var request = entry.LockRequests.FirstOrDefault(lockReq => lockReq.Timestamp == timestamp && lockReq.Randomness == randomness);
+            request = entry.LockRequests.FirstOrDefault(lockReq => lockReq.Timestamp == timestamp && lockReq.Randomness == randomness);
             if (request == null)
             {
                 request = new(entry, timestamp, randomness);
                 entry.LockRequests.Add(request);
                 
-                if (distribute && Tables.Dictionary.TryGetValue(entry.TableName, out var table))
+                if (distribute && Tables.Dictionary.TryGetValue(entry.Table.Name, out var table))
                 {
                     var reachable = table.GetReachableNodes();
                     var results = Task.WhenAll(reachable.Select(node => node.SendLockAsync(table, entry.Id, timestamp, randomness))).GetAwaiter().GetResult();
                     foreach (var result in results.OfType<string>())
                         foreach (var pair in result.Split('&'))
                             if (!entry.DeletedLockRequests.Contains(pair) && pair.SplitAtFirst(';', out var otherTimestampString, out var otherRandomness) && long.TryParse(otherTimestampString, out var otherTimestamp))
-                                CreateRemote(entry, otherTimestamp, otherRandomness);
+                                others.Add((otherTimestamp, otherRandomness));
                 }
             }
             
             var first = entry.LockRequests.First();
-            first.SetReady();
-            return request;
+            await first.SetReadyAsync();
         }
+        
+        foreach (var other in others)
+            await CreateRemoteAsync(entry, other.Timestamp, other.Randomness);
+        
+        return request;
     }
     
     /// <summary>
     /// Removes the given lock request from the entry's queue without distributing the information to other nodes.
     /// </summary>
-    public static void Delete(AbstractTableEntry entry, long timestamp, string randomness)
+    public static async Task DeleteAsync(AbstractTableEntry entry, long timestamp, string randomness)
     {
         if (timestamp == 0 && randomness == "none")
             return;
         
-        lock(entry.LockRequests)
+        LockRequest? request;
+        using (await entry.LockRequestStateLock.WaitAsync())
         {
             entry.DeletedLockRequests.Add($"{timestamp};{randomness}");
-            var request = entry.LockRequests.FirstOrDefault(lockReq => lockReq.Timestamp == timestamp && lockReq.Randomness == randomness);
-            request?.SetFinished();
+            request = entry.LockRequests.FirstOrDefault(lockReq => lockReq.Timestamp == timestamp && lockReq.Randomness == randomness);
         }
+        if (request != null)
+            await request.SetFinishedAsync();
     }
     
     /// <summary>
@@ -83,17 +92,12 @@ public class LockRequest : FunctionalComparable<LockRequest>
     /// <summary>
     /// The lock to use when changing the state of the lock request.
     /// </summary>
-    private readonly ReaderWriterLockSlim Lock = new();
+    private readonly AsyncLock Lock = new();
     
     /// <summary>
-    /// The semaphore that can be awaited to wait for readiness.
+    /// The waiter that can be awaited to wait for readiness.
     /// </summary>
-    private readonly SemaphoreSlim Semaphore = new(0, 1);
-    
-    /// <summary>
-    /// Whether the transaction is allowed to run yet.
-    /// </summary>
-    public bool Ready { get; private set; } = false;
+    private readonly ReadyWaiter Waiter = new();
     
     /// <summary>
     /// Whether the transaction has been finished yet.
@@ -113,60 +117,44 @@ public class LockRequest : FunctionalComparable<LockRequest>
     /// <summary>
     /// Waits until the transaction is allowed to run.
     /// </summary>
-    public void WaitUntilReady()
-    {
-        if (!Ready)
-            Semaphore.Wait(Server.Config.Database.LockExpiration * 10);
-    }
+    public Task WaitUntilReady()
+        => Waiter.WaitAsync(Server.Config.Database.LockExpiration * 10);
     
     /// <summary>
     /// Allows the transaction to start.
     /// </summary>
-    public void SetReady()
+    public async Task SetReadyAsync()
     {
-        Lock.EnterWriteLock();
-        try
+        using var h = await Lock.WaitAsync();
+        
+        if (await Waiter.ReadyAsync())
         {
-            if (!Ready)
+            _ = Task.Run(async () =>
             {
-                Semaphore.Release();
-                Ready = true;
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(Server.Config.Database.LockExpiration);
-                    SetFinished();
-                });
-            }
-        }
-        finally
-        {
-            Lock.ExitWriteLock();
+                await Task.Delay(Server.Config.Database.LockExpiration);
+                await SetFinishedAsync();
+            });
         }
     }
     
     /// <summary>
     /// Indicates that the transaction has been completed.
     /// </summary>
-    public void SetFinished()
+    public async Task SetFinishedAsync()
     {
-        Lock.EnterWriteLock();
-        try
+        using var h = await Lock.WaitAsync();
+        
+        if (!Finished)
         {
-            if (!Finished)
-            {
-                Finished = true;
-                lock(Entry.LockRequests)
-                {
-                    Entry.LockRequests.Remove(this);
-                    
-                    var first = Entry.LockRequests.FirstOrDefault();
-                    first?.SetReady();
-                }
-            }
-        }
-        finally
-        {
-            Lock.ExitWriteLock();
+            Finished = true;
+            
+            using var h2 = await Entry.LockRequestStateLock.WaitAsync();
+            
+            Entry.LockRequests.Remove(this);
+            
+            var first = Entry.LockRequests.FirstOrDefault();
+            if (first != null)
+                await first.SetReadyAsync();
         }
     }
 

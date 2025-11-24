@@ -18,17 +18,11 @@ public class UniqueTableIndex<T, K>(Func<T,K> selector) : AbstractTableIndex<T, 
     /// <summary>
     /// Returns the table value that have the given key, or null if no such table value exists.
     /// </summary>
-    public string? Get(K key)
+    public async Task<string?> GetAsync(K key)
     {
-        Lock.EnterReadLock();
-        try
-        {
-            return Index.GetValueOrDefault(key);
-        }
-        finally
-        {
-            Lock.ExitReadLock();
-        }
+        await using var h = await Lock.WaitReadAsync();
+        
+        return Index.GetValueOrDefault(key);
     }
     
     protected override void Add(K key, string id)

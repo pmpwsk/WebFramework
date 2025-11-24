@@ -550,7 +550,7 @@ public class Request(LayerRequestData data)
     /// <summary>
     /// Lock that assures that only one thread at a time can send an event message.
     /// </summary>
-    private readonly SemaphoreSlim EventLock = new(1, 1);
+    private readonly AsyncLock EventLock = new();
 
     /// <summary>
     /// Sends the given message to the client as an event.
@@ -570,18 +570,13 @@ public class Request(LayerRequestData data)
             case RequestState.Finished:
                 throw new Exception("The request has already been finished.");
         }
-        try
-        {
-            await EventLock.WaitAsync();
-            using CancellationTokenSource cts = new();
-            cts.CancelAfter(TimeSpan.FromSeconds(30));
-            await Context.Response.WriteAsync($"data: {message}\r\r", cts.Token);
-            await Context.Response.Body.FlushAsync(cts.Token);
-        }
-        finally
-        {
-            EventLock.Release();
-        }
+
+        using var h = await EventLock.WaitAsync();
+        
+        using CancellationTokenSource cts = new();
+        cts.CancelAfter(TimeSpan.FromSeconds(30));
+        await Context.Response.WriteAsync($"data: {message}\r\r", cts.Token);
+        await Context.Response.Body.FlushAsync(cts.Token);
     }
 
     /// <summary>
@@ -606,7 +601,7 @@ public class Request(LayerRequestData data)
         using CancellationTokenSource cts = new();
         Context.RequestAborted.Register(cts.Cancel);
         Server.StoppingToken.Register(cts.Cancel);
-        if (cancellationToken != default)
+        if (cancellationToken != CancellationToken.None)
             cancellationToken.Register(cts.Cancel);
             
         try
@@ -619,7 +614,7 @@ public class Request(LayerRequestData data)
         }
         catch { }
 
-        await KeepEventAliveCancelled.InvokeAsync
+        await KeepEventAliveCancelled.InvokeWithAsyncCaller
         (
             s => s(this),
             _ => {},
@@ -628,7 +623,7 @@ public class Request(LayerRequestData data)
     }
 
     /// <summary>
-    /// The function to call when KeepEventAlive was cancelled (because the client has disconnected, the server is shutting down or the provided token was cancelled).<br/>
+    /// The function to call when KeepEventAlive was canceled (because the client has disconnected, the server is shutting down or the provided token was cancelled).<br/>
     /// Default: null
     /// </summary>
     public readonly SubscriberContainer<Func<Request, Task>> KeepEventAliveCancelled = new();

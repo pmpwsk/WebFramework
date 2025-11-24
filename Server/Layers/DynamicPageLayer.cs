@@ -42,7 +42,7 @@ public static partial class Server
                     
                     watcher.Expiration.Cancel();
                     watcher.Request = req;
-                    req.KeepEventAliveCancelled.Register(_ =>
+                    await req.KeepEventAliveCancelled.RegisterAsync(_ =>
                     {
                         watcher.Request = null;
                         watcher.Expiration.Start();

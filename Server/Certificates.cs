@@ -13,12 +13,12 @@ public static partial class Server
     /// Loads the PKCS12 certificate file at the given path (using the password, if provided) and assigns it to the given domain.<br/>
     /// If another certificate is already assigned to the domain, it will be replaced.
     /// </summary>
-    public static void LoadCertificate(string domain, string path, string? password = null)
+    public static async Task LoadCertificateAsync(string domain, string path, string? password = null)
     {
         CertificateStore[domain] = new CertificateEntry(X509CertificateLoader.LoadPkcs12FromFile(path, password), path, password);
 
         if (domain == MailManager.ServerDomain && MailManager.In.ServerRunning && !MailManager.In.HasCertificate)
-            MailManager.In.TryRestart();
+            await MailManager.In.TryRestartAsync();
     }
 
     /// <summary>
@@ -30,7 +30,7 @@ public static partial class Server
     /// <summary>
     /// Removes deleted certificates, reloads existing ones and attempts to load new certificates from ../Certificates or ../Certificates/Auto (depending on whether AutoCertificate is enabled) without a password.
     /// </summary>
-    private static void UpdateCertificates()
+    private static async Task UpdateCertificatesAsync()
     {
         //remove certificates with missing files
         foreach (var pair in CertificateStore)
@@ -38,12 +38,12 @@ public static partial class Server
             {
                 CertificateStore.Remove(pair.Key);
                 if (pair.Key == MailManager.ServerDomain && MailManager.In.ServerRunning)
-                    MailManager.In.TryRestart();
+                    await MailManager.In.TryRestartAsync();
             }
 
         //update existing certificates
         foreach (var pair in CertificateStore)
-            LoadCertificate(pair.Key, pair.Value.Path, pair.Value.Password);
+            await LoadCertificateAsync(pair.Key, pair.Value.Path, pair.Value.Password);
 
         //load new certificates without password, if possible
         string directory = Config.AutoCertificate.Email == null ? "../Certificates" : "../Certificates/Auto";
@@ -55,7 +55,7 @@ public static partial class Server
                 if (!CertificateStore.ContainsKey(domain))
                     try
                     {
-                        LoadCertificate(domain, path);
+                        await LoadCertificateAsync(domain, path);
                     } catch { }
             }
     }

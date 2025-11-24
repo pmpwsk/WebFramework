@@ -15,7 +15,7 @@ public static partial class MailManager
     /// <summary>
     /// Manages outbound emails.
     /// </summary>
-    public static partial class Out
+    public static class Out
     {
         /// <summary>
         /// The method that is called after a mail message was sent (regardless of whether the attempt was successful or not).
@@ -59,54 +59,36 @@ public static partial class MailManager
         public static int Timeout { get; set; } = 10000;
 
         /// <summary>
-        /// Generates a mail message using the given information, signs it (if possible) and sends it to the appropriate server.
-        /// </summary>
-        public static MailSendResult Send(MailboxAddress from, MailboxAddress to, string subject, string text, bool isHtml, bool allowBackup = true)
-            => Send(from, [to], subject, text, isHtml, out _, allowBackup);
-
-        /// <summary>
         /// Generates a mail message using the given information, signs it (if possible) and sends it to the appropriate server, and returns the resulting message IDs as a list.
         /// </summary>
-        public static MailSendResult Send(MailboxAddress from, MailboxAddress to, string subject, string text, bool isHtml, out List<string> messageIds, bool allowBackup = true)
-            => Send(from, [to], subject, text, isHtml, out messageIds, allowBackup);
-
-        /// <summary>
-        /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers.
-        /// </summary>
-        public static MailSendResult Send(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string text, bool isHtml, bool allowBackup = true)
-            => Send(from, to, subject, text, isHtml, out _, allowBackup);
+        public static Task<(MailSendResult Result, List<string> MessageIds)> SendAsync(MailboxAddress from, MailboxAddress to, string subject, string text, bool isHtml, bool allowBackup = true)
+            => SendAsync(from, [to], subject, text, isHtml, allowBackup);
 
         /// <summary>
         /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers, and returns the resulting message IDs as a list.
         /// </summary>
-        public static MailSendResult Send(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string text, bool isHtml, out List<string> messageIds, bool allowBackup = true)
-            => Send(isHtml ? new MailGen(from, to, subject, null, text) : new MailGen(from, to, subject, text, null), out messageIds, allowBackup);
+        public static Task<(MailSendResult Result, List<string> MessageIds)> SendAsync(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string text, bool isHtml, bool allowBackup = true)
+            => SendAsync(isHtml ? new MailGen(from, to, subject, null, text) : new MailGen(from, to, subject, text, null), allowBackup);
 
         /// <summary>
         /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers, and returns the resulting message IDs as a list.
         /// </summary>
-        public static MailSendResult Send(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string? textBody, string? htmlBody, out List<string> messageIds, bool allowBackup = true)
-            => Send(new MailGen(from, to, subject, textBody, htmlBody), out messageIds, allowBackup);
-
-        /// <summary>
-        /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers.
-        /// </summary>
-        public static MailSendResult Send(MailGen mailGen, bool allowBackup = true)
-            => Send(mailGen, out _, allowBackup);
+        public static Task<(MailSendResult Result, List<string> MessageIds)> SendAsync(MailboxAddress from, IEnumerable<MailboxAddress> to, string subject, string? textBody, string? htmlBody, bool allowBackup = true)
+            => SendAsync(new MailGen(from, to, subject, textBody, htmlBody), allowBackup);
 
         /// <summary>
         /// Generates a mail message for each of the recipients, signs them (if possible) and sends them to the appropriate servers, and returns the resulting message IDs as a list.
         /// </summary>
-        public static MailSendResult Send(MailGen mailGen, out List<string> messageIds, bool allowBackup = true)
+        public static async Task<(MailSendResult Result, List<string> MessageIds)> SendAsync(MailGen mailGen, bool allowBackup = true)
         {
-            messageIds = [];
+            List<string> messageIds = [];
             List<MailboxAddress> leftAddresses = [];
             Dictionary<MailboxAddress, string> internalLog = [];
             foreach (var a in mailGen.To)
             {
                 string id = ServerDomain == null ? MimeUtils.GenerateMessageId() : MimeUtils.GenerateMessageId(ServerDomain);
                 string? log = null;
-                if (BeforeSend.InvokeAndGet(s => s(mailGen, a, id, out log), _ => {}).All(r => r))
+                if ((await BeforeSend.InvokeWithAsyncCallerAndGet(s => s(mailGen, a, id), _ => {})).All(r => r.SendExternally))
                     leftAddresses.Add(a);
                 else
                 {
@@ -133,9 +115,9 @@ public static partial class MailManager
 
             MailSendResult result = new(internalLog, fromSelf, fromBackup);
 
-            InvokeMailSent(GenerateMessage(mailGen, true, out var messageId2), result);
+            await InvokeMailSentAsync(GenerateMessage(mailGen, true, out var messageId2), result);
             messageIds.Add(messageId2);
-            return result;
+            return (result, messageIds);
         }
 
         /// <summary>
@@ -212,8 +194,8 @@ public static partial class MailManager
         /// <summary>
         /// Calls the method that should be called after a message was attempted to be sent.
         /// </summary>
-        public static void InvokeMailSent(MimeMessage message, MailSendResult result)
-            => MailSent.Invoke(s => s(message, result), _ => {});
+        public static Task InvokeMailSentAsync(MimeMessage message, MailSendResult result)
+            => MailSent.InvokeWithAsyncCaller(s => s(message, result), _ => {}, false);
 
         /// <summary>
         /// Turns the given IP (key) and associated server domain (value, if known) into a string to be used in connection logs.
@@ -282,7 +264,7 @@ public static partial class MailManager
                                 if (failedServers.Contains(server.Key))
                                     continue;
                                 using var cts = new CancellationTokenSource(Timeout);
-                                string suitableFor = Parsers.EnumerationText(serversForAddresses.Where(x => x.Value.ContainsKey(server.Key)).Select(x => x.Key.Address).ToList());
+                                string suitableFor = serversForAddresses.Where(x => x.Value.ContainsKey(server.Key)).Select(x => x.Key.Address).ToList().EnumerationText();
                                 try
                                 {
                                     Stopwatch stopwatch = Stopwatch.StartNew();

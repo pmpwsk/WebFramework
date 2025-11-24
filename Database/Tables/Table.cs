@@ -1,22 +1,23 @@
 using System.Diagnostics.CodeAnalysis;
+using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework.Database;
 
-public delegate void TransactionNullableDelegate<T>(ref T? value) where T : AbstractTableValue;
+public delegate void TransactionNullableDelegate<T>(TransactionData<T?> transaction) where T : AbstractTableValue;
 
-public delegate R TransactionNullableDelegate<T, out R>(ref T? value) where T : AbstractTableValue;
+public delegate R TransactionNullableDelegate<T, out R>(TransactionData<T?> transaction) where T : AbstractTableValue;
 
-public delegate void TransactionNullableWithFilesDelegate<T>(ref T? value, ref List<IFileAction> fileActions) where T : AbstractTableValue;
+public delegate void TransactionDelegate<T>(TransactionData<T> transaction) where T : AbstractTableValue;
 
-public delegate R TransactionNullableWithFilesDelegate<T, out R>(ref T? value, ref List<IFileAction> fileActions) where T : AbstractTableValue;
+public delegate R TransactionDelegate<T, out R>(TransactionData<T> transaction) where T : AbstractTableValue;
 
-public delegate void TransactionDelegate<T>(ref T value) where T : AbstractTableValue;
+public delegate Task AsyncTransactionNullableDelegate<T>(TransactionData<T?> transaction) where T : AbstractTableValue;
 
-public delegate R TransactionDelegate<T, out R>(ref T value) where T : AbstractTableValue;
+public delegate Task<R> AsyncTransactionNullableDelegate<T, R>(TransactionData<T?> transaction) where T : AbstractTableValue;
 
-public delegate void TransactionWithFilesDelegate<T>(ref T value, ref List<IFileAction> fileActions) where T : AbstractTableValue;
+public delegate Task AsyncTransactionDelegate<T>(TransactionData<T> transaction) where T : AbstractTableValue;
 
-public delegate R TransactionWithFilesDelegate<T, out R>(ref T value, ref List<IFileAction> fileActions) where T : AbstractTableValue;
+public delegate Task<R> AsyncTransactionDelegate<T, R>(TransactionData<T> transaction) where T : AbstractTableValue;
 
 /// <summary>
 /// Contains the table functionality.
@@ -31,7 +32,7 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
     /// <summary>
     /// The lock to use when creating new entries.
     /// </summary>
-    private ReaderWriterLockSlim CreationLock = new();
+    private AsyncLock CreationLock = new();
     
     /// <summary>
     /// Returns the list of indices to update.
@@ -51,13 +52,13 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
         : base(name)
     {
         Tables.Dictionary[name] = this;
-        Initialize();
+        Initialize().GetAwaiter().GetResult();
     }
 
     /// <summary>
     /// Loads the table entries for the current table.
     /// </summary>
-    private void Initialize()
+    private async Task Initialize()
     {
         string path = "../Database/" + Name.ToBase64PathSafe();
         string oldPath = "../Database/" + Name;
@@ -113,8 +114,8 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
             foreach (var keyFile in new DirectoryInfo(oldPath).GetFiles("*.json", SearchOption.TopDirectoryOnly))
             {
                 string id = keyFile.Name[..^5];
-                byte[] serialized = File.ReadAllBytes(keyFile.FullName);
-                var value = Serialization.Deserialize<T>(Name, id, serialized);
+                byte[] serialized = await File.ReadAllBytesAsync(keyFile.FullName);
+                var value = Serialization.Deserialize<T>(this, id, serialized);
                 if (value == null)
                 {
                     Console.WriteLine($"Failed to deserialize old database entry \"{Name} / {id}\" for migration.");
@@ -122,7 +123,7 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
                 }
                 serialized = Serialization.Serialize(value);
                 string targetPath = $"{path}/Entries/{id.ToBase64PathSafe()}.json";
-                File.WriteAllBytes(targetPath, serialized);
+                await File.WriteAllBytesAsync(targetPath, serialized);
                 keyFile.Delete();
             }
             
@@ -139,18 +140,18 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
         foreach (var keyFile in new DirectoryInfo(path + "/Entries").GetFiles("*.json", SearchOption.TopDirectoryOnly))
         {
             string id = keyFile.Name[..^5].FromBase64PathSafe();
-            byte[] serialized = File.ReadAllBytes(keyFile.FullName);
-            var entry = new TableEntry<T>(Name, id, serialized);
+            byte[] serialized = await File.ReadAllBytesAsync(keyFile.FullName);
+            var entry = new TableEntry<T>(this, id, serialized);
             Data[id] = entry;
             
-            UpdateIndices(entry);
+            await UpdateIndicesAsync(entry);
         }
     }
 
     internal override Dictionary<string, MinimalTableValue> GetState()
         => Data.ToDictionary(x => x.Key, x => x.Value.EntryInfo);
 
-    internal override void CheckAndFix()
+    internal override async Task CheckAndFixAsync()
     {
         // source nodes
         var nodes = GetReachableNodes();
@@ -162,14 +163,14 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
             {
                 var memory = entry.SerializedValue.Data;
                 var hash = entry.SerializedValue.Hash;
-                var disk = File.ReadAllBytes(entry.Path);
+                var disk = await File.ReadAllBytesAsync(entry.Path);
             
                 if (memory.ToMD5().SequenceEqual(hash))
                 {
                     if (!entry.SerializedValue.Data.SequenceEqual(disk))
                     {
                         // re-write disk
-                        File.WriteAllBytes(entry.Path, memory);
+                        await File.WriteAllBytesAsync(entry.Path, memory);
                         Console.WriteLine($"Fixed corrupt entry on disk: {entry.ReadableName}");
                     }
                 }
@@ -185,37 +186,30 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
                     entry.SerializedValue.Hash = memory.ToMD5();
                     Console.WriteLine($"Fixed corrupt entry hash: {entry.ReadableName}");
                 }
-                else
+                else //pull
                 {
-                    // pull
-                    entry.Lock.EnterWriteLock();
-                    try
+                    await using var h = await entry.Lock.WaitWriteAsync();
+                        
+                    bool unresolved = true;
+                    foreach (var node in nodes)
                     {
-                        bool unresolved = true;
-                        foreach (var node in nodes)
+                        var remoteState = await node.PullEntryAsync(this, entry.Id);
+                        if (remoteState != null)
                         {
-                            var remoteState = node.PullEntry(this, entry.Id);
-                            if (remoteState != null)
-                            {
-                                entry.SetBytes(remoteState);
-                                
-                                if (!DownloadAllFiles(node, entry))
-                                    Console.WriteLine($"Failed to re-download files for corrupt entry: {entry.ReadableName}");
-                                
-                                UpdateIndices(entry);
-                                
-                                Console.WriteLine($"Fixed corrupt entry using remote: {entry.ReadableName}");
-                                unresolved = false;
-                                break;
-                            }
+                            entry.SetBytes(remoteState);
+                            
+                            if (!await DownloadAllFilesAsync(node, entry))
+                                Console.WriteLine($"Failed to re-download files for corrupt entry: {entry.ReadableName}");
+                            
+                            await UpdateIndicesAsync(entry);
+                            
+                            Console.WriteLine($"Fixed corrupt entry using remote: {entry.ReadableName}");
+                            unresolved = false;
+                            break;
                         }
-                        if (unresolved)
-                            Console.WriteLine($"Failed to pull corrupt entry from remotes: {entry.ReadableName}");
                     }
-                    finally
-                    {
-                        entry.Lock.ExitWriteLock();
-                    }
+                    if (unresolved)
+                        Console.WriteLine($"Failed to pull corrupt entry from remotes: {entry.ReadableName}");
                 }
             }
         }
@@ -226,10 +220,10 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
         // sync with other nodes
         foreach (var node in nodes)
         {
-            var state = node.PullState(this);
+            var state = await node.PullStateAsync(this);
             if (state != null)
             {
-                SyncFrom(node, state);
+                await SyncFromAsync(node, state);
                 idsToDelete = idsToDelete.Where(id => !state.TryGetValue(id, out var info) || info.Deleted).ToList();
             }
             else idsToDelete = [];
@@ -240,17 +234,12 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
         {
             if (!Data.TryGetValue(id, out var entry))
                 continue;
-            entry.Lock.EnterWriteLock();
-            try
-            {
-                entry.DeleteFileDirectories();
-                entry.DeleteEntryFiles();
-                Data.Remove(id);
-            }
-            finally
-            {
-                entry.Lock.ExitWriteLock();
-            }
+            
+            await using var h = await entry.Lock.WaitWriteAsync();
+            
+            entry.DeleteFileDirectories();
+            entry.DeleteEntryFiles();
+            Data.Remove(id);
         }
         
         // delete obsolete file directories and files
@@ -260,63 +249,51 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
                 var id = filesDir.Name.FromBase64PathSafe();
                 if (Data.TryGetValue(id, out var entry) && entry.EntryInfo.Files.Count > 0)
                 {
-                    entry.Lock.EnterWriteLock();
-                    try
+                    await using var h = await entry.Lock.WaitWriteAsync();
+                    
+                    foreach (var file in filesDir.GetFiles("*", SearchOption.TopDirectoryOnly))
                     {
-                        foreach (var file in filesDir.GetFiles("*", SearchOption.TopDirectoryOnly))
-                        {
-                            var fileId = file.Name.FromBase64PathSafe();
-                            if (!entry.EntryInfo.Files.ContainsKey(fileId))
-                                file.Delete();
-                        }
-                        continue;
+                        var fileId = file.Name.FromBase64PathSafe();
+                        if (!entry.EntryInfo.Files.ContainsKey(fileId))
+                            file.Delete();
                     }
-                    finally
-                    {
-                        entry.Lock.ExitWriteLock();
-                    }
+                    continue;
                 }
                 
                 filesDir.Delete(true);
             }
     }
     
-    internal override void SyncFrom(ClusterNode node, Dictionary<string, MinimalTableValue> state)
+    internal override async Task SyncFromAsync(ClusterNode node, Dictionary<string, MinimalTableValue> state)
     {
         foreach (var (id, stateInfo) in state)
         {
             // create or update entry
             if (!Data.TryGetValue(id, out var entry) || stateInfo.Timestamp > entry.EntryInfo.Timestamp)
             {
-                var serialized = node.PullEntry(this, id);
+                var serialized = await node.PullEntryAsync(this, id);
                 if (serialized == null)
                     continue;
-                UpdateEntry(node, id, serialized);
+                await UpdateEntryAsync(node, id, serialized);
             }
             
             // download missing files
             if (Data.TryGetValue(id, out entry) && entry.EntryInfo.Files.Keys.Any(fileId => !File.Exists(entry.GetFilePath(fileId))))
             {
-                entry.Lock.EnterWriteLock();
-                try
-                {
-                    Directory.CreateDirectory(entry.FileBasePath);
-                    Directory.CreateDirectory(entry.BufferFileBasePath);
-                    foreach (var fileId in entry.EntryInfo.Files.Keys.Where(fileId => !File.Exists(entry.GetFilePath(fileId))))
-                        if (node.PullFile(this, id, fileId, entry.GetBufferFilePath(fileId)))
-                            File.Move(entry.GetBufferFilePath(fileId), entry.GetFilePath(fileId));
-                }
-                finally
-                {
-                    entry.Lock.ExitWriteLock();
-                }
+                await using var h = await entry.Lock.WaitWriteAsync();
+                
+                Directory.CreateDirectory(entry.FileBasePath);
+                Directory.CreateDirectory(entry.BufferFileBasePath);
+                foreach (var fileId in entry.EntryInfo.Files.Keys.Where(fileId => !File.Exists(entry.GetFilePath(fileId))))
+                    if (await node.PullFileAsync(this, id, fileId, entry.GetBufferFilePath(fileId)))
+                        File.Move(entry.GetBufferFilePath(fileId), entry.GetFilePath(fileId));
             }
         }
     }
     
-    internal override void UpdateEntry(ClusterNode node, string id, byte[] serialized)
+    internal override async Task UpdateEntryAsync(ClusterNode node, string id, byte[] serialized)
     {
-        var remoteInfo = Serialization.Deserialize<MinimalTableValue>(Name, id, serialized);
+        var remoteInfo = Serialization.Deserialize<MinimalTableValue>(this, id, serialized);
         if (remoteInfo == null)
         {
             Console.WriteLine($"Failed to deserialize pulled entry: \"{Name} / {id}\"");
@@ -324,24 +301,25 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
         }
         
         // re-check
+        AsyncReaderWriterLockHolder locker;
         if (Data.TryGetValue(id, out var entry))
         {
             // out of date
-            entry.Lock.EnterWriteLock();
+            locker = await entry.Lock.WaitWriteAsync();
             if (remoteInfo.Timestamp <= entry.EntryInfo.Timestamp)
             {
-                entry.Lock.ExitWriteLock();
+                await locker.DisposeAsync();
                 return;
             }
         }
         else
         {
             // create and lock entry
-            entry = CreateAndLockBlankEntry(id);
+            (entry, locker) = await CreateAndLockBlankEntryAsync(id);
         }
         
         // apply changes to entry and files
-        try
+        await using (locker)
         {
             entry.CreateFileDirectories();
 
@@ -361,7 +339,7 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
                 if (!File.Exists(filePath))
                 {
                     var bufferFilePath = entry.GetBufferFilePath(fileId);
-                    if (node.PullFile(this, entry.Id, fileId, bufferFilePath))
+                    if (await node.PullFileAsync(this, entry.Id, fileId, bufferFilePath))
                         File.Move(bufferFilePath, filePath);
                     var trashFilePath = entry.GetTrashFilePath(fileId);
                     if (File.Exists(trashFilePath))
@@ -373,7 +351,7 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
             var oldValue = entry.Deserialize();
             entry.SetBytes(serialized, remoteInfo);
             var newValue = entry.Deserialize();
-            UpdateIndices(id, newValue);
+            await UpdateIndicesAsync(id, newValue);
         
             // delete trash (only contains removed files)
             if (Directory.Exists(entry.TrashFileBasePath))
@@ -388,18 +366,14 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
                     Directory.Delete(entry.BufferFileBasePath, true);
             }
             
-            entry.CallChangedEvent(oldValue, newValue);
-        }
-        finally
-        {
-            entry.Lock.ExitWriteLock();
+            await entry.CallChangedEventAsync(oldValue, newValue);
         }
     }
     
     /// <summary>
     /// Downloads all attached files for the given table entry from the given node.
     /// </summary>
-    private bool DownloadAllFiles(ClusterNode node, TableEntry<T> entry)
+    private async Task<bool> DownloadAllFilesAsync(ClusterNode node, TableEntry<T> entry)
     {
         if (entry.EntryInfo.Files.Count == 0)
             return true;
@@ -413,7 +387,7 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
         {
             var filePath = entry.GetFilePath(fileId);
             var bufferFilePath = entry.GetBufferFilePath(fileId);
-            if (node.PullFile(this, entry.Id, fileId, bufferFilePath))
+            if (await node.PullFileAsync(this, entry.Id, fileId, bufferFilePath))
                 File.Move(bufferFilePath, filePath);
             else success = false;
         }
@@ -424,38 +398,32 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
     /// <summary>
     /// Updates all table indices using the given entry ID and its value.
     /// </summary>
-    private void UpdateIndices(string id, T? value)
+    private async Task UpdateIndicesAsync(string id, T? value)
     {
         foreach (var index in Indices)
-            index.Update(id, value);
+            await index.UpdateAsync(id, value);
     }
     
     /// <summary>
     /// Updates all table indices using the given entry.
     /// </summary>
-    private void UpdateIndices(TableEntry<T> entry)
-        => UpdateIndices(entry.Id, entry.Deserialize());
+    private Task UpdateIndicesAsync(TableEntry<T> entry)
+        => UpdateIndicesAsync(entry.Id, entry.Deserialize());
     
-    internal override AbstractTableEntry CreateAndLockBlankAbstractEntry(string id)
-        => CreateAndLockBlankEntry(id);
+    internal override async Task<(AbstractTableEntry Entry, AsyncReaderWriterLockHolder Locker)> CreateAndLockBlankAbstractEntryAsync(string id)
+        => await CreateAndLockBlankEntryAsync(id);
     
     /// <summary>
     /// Creates a new locked table entry with the given ID.
     /// </summary>
-    private TableEntry<T> CreateAndLockBlankEntry(string id)
+    private async Task<(TableEntry<T> Entry, AsyncReaderWriterLockHolder Locker)> CreateAndLockBlankEntryAsync(string id)
     {
-        CreationLock.EnterWriteLock();
-        try
-        {
-            var entry = new TableEntry<T>(Name, id, Serialization.Serialize(new MinimalTableValue { Deleted = true, Timestamp = 0 }));
-            entry.Lock.EnterWriteLock();
-            Data[id] = entry;
-            return entry;
-        }
-        finally
-        {
-            CreationLock.ExitWriteLock();
-        }
+        using var h = await CreationLock.WaitAsync();
+        
+        var entry = new TableEntry<T>(this, id, Serialization.Serialize(new MinimalTableValue { Deleted = true, Timestamp = 0 }));
+        var holder = await entry.Lock.WaitWriteAsync();
+        Data[id] = entry;
+        return (entry, holder);
     }
     
     internal override ClusterNode[] GetReachableNodes()
@@ -476,12 +444,6 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
     /// </summary>
     public bool ContainsId(string id)
         => Data.ContainsKey(id);
-    
-    /// <summary>
-    /// Finds the value of the table entry with the given ID.
-    /// </summary>
-    public bool TryGetValue(string id, [MaybeNullWhen(false)] out T value)
-        => (value = GetByIdNullable(id)) != null;
 
     /// <summary>
     /// Finds the entry with the given ID.
@@ -506,34 +468,37 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
     /// <summary>
     /// Enumerates all non-deleted values by the given entry IDs.
     /// </summary>
-    public IEnumerable<T> EnumerateExistingByIds(IEnumerable<string> ids)
-        => ids.SelectWhereNotNull(GetByIdNullable);
+    public async Task<List<T>> ListExistingByIdsAsync(IEnumerable<string> ids)
+    {
+        List<T> result = [];
+        foreach (var id in ids)
+        {
+            var value = await GetByIdNullableAsync(id);
+            if (value != null)
+                result.Add(value);
+        }
+        return result;
+    }
     
     /// <summary>
     /// Returns the value of the entry with the given ID, or throws an exception if no such entry exists.
     /// </summary>
-    public T GetById(string? id)
-        => GetByIdNullable(id) ?? throw new NullReferenceException();
+    public async Task<T> GetByIdAsync(string? id)
+        => await GetByIdNullableAsync(id) ?? throw new DatabaseEntryMissingException();
     
     /// <summary>
     /// Returns the value of the entry with the given ID, or returns null if no such entry exists.
     /// </summary>
-    public T? GetByIdNullable(string? id)
+    public async Task<T?> GetByIdNullableAsync(string? id)
     {
         if (id == null)
             return null;
         
         if (Data.TryGetValue(id, out var entry))
         {
-            entry.Lock.EnterReadLock();
-            try
-            {
-                return entry.Deserialize();
-            }
-            finally
-            {
-                entry.Lock.ExitReadLock();
-            }
+            await using var h =await entry.Lock.WaitReadAsync();
+            
+            return entry.Deserialize();
         }
         else return null;
     }
@@ -541,19 +506,19 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
     /// <summary>
     /// Lists all non-deleted values in the table.
     /// </summary>
-    public List<T> ListAll()
+    public async Task<List<T>> ListAllAsync()
     {
         List<T> result = [];
         foreach (var entry in Data.Values)
         {
-            entry.Lock.EnterReadLock();
+            await using var h = await entry.Lock.WaitReadAsync();
+            
             if (!entry.EntryInfo.Deleted)
             {
                 var value = entry.Deserialize();
                 if (value != null)
                     result.Add(value);
             }
-            entry.Lock.ExitReadLock();
         }
         return result;
     }
@@ -565,130 +530,121 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
     /// Performs a transaction on the entry with the given ID by executing the given action, and returns the new value.<br/>
     /// If no entry with the given ID was found, an exception is thrown.
     /// </summary>
-    public T Transaction(string id, TransactionDelegate<T> action)
-        => TransactionNullableAndGet(id, (ref T? value, ref List<IFileAction> _) =>
+    public Task<T> TransactionAsync(string id, TransactionDelegate<T> action)
+        => AsyncTransactionAsync(id, transaction =>
         {
-            if (value == null)
-                throw new NullReferenceException();
-            
-            action(ref value);
-            return value;
-        }) ?? throw new NullReferenceException();
-    
-    /// <summary>
-    /// Performs a transaction on the entry with the given ID by executing the given action, and returns the new value.<br/>
-    /// If no entry with the given ID was found, an exception is thrown.
-    /// </summary>
-    public T Transaction(string id, TransactionWithFilesDelegate<T> action)
-        => TransactionNullableAndGet(id, (ref T? value, ref List<IFileAction> fileActions) =>
-        {
-            if (value == null)
-                throw new NullReferenceException();
-            
-            action(ref value, ref fileActions);
-            return value;
-        }) ?? throw new NullReferenceException();
-    
-    /// <summary>
-    /// Performs a transaction on the entry with the given ID by executing the given action.<br/>
-    /// If no entry with the given ID was found, nothing happens.
-    /// </summary>
-    public void TransactionIgnoreNull(string id, TransactionDelegate<T> action)
-        => TransactionNullable(id, (ref T? value, ref List<IFileAction> _) =>
-        {
-            if (value != null)
-                action(ref value);
+            action(transaction);
+            return Task.CompletedTask;
         });
     
     /// <summary>
     /// Performs a transaction on the entry with the given ID by executing the given action.<br/>
     /// If no entry with the given ID was found, nothing happens.
     /// </summary>
-    public void TransactionIgnoreNull(string id, TransactionWithFilesDelegate<T> action)
-        => TransactionNullable(id, (ref T? value, ref List<IFileAction> fileActions) =>
+    public Task TransactionIgnoreNullAsync(string id, TransactionDelegate<T> action)
+        => AsyncTransactionIgnoreNullAsync(id, transaction =>
         {
-            if (value != null)
-                action(ref value, ref fileActions);
+            action(transaction);
+            return Task.CompletedTask;
         });
     
     /// <summary>
     /// Performs a transaction on the entry with the given ID by executing the given action and returns the action's result.<br/>
     /// If no entry with the given ID was found, an exception is thrown.
     /// </summary>
-    public R TransactionAndGet<R>(string id, TransactionDelegate<T, R> action)
-        => TransactionNullableAndGet(id, (ref T? value, ref List<IFileAction> _) =>
+    public Task<R> TransactionAndGetAsync<R>(string id, TransactionDelegate<T, R> action)
+        => AsyncTransactionAndGetAsync(id, transaction => Task.FromResult(action(transaction)));
+    
+    /// <summary>
+    /// Performs a transaction on the entry with the given ID by executing the given action, and returns the new value.<br/>
+    /// If no entry with the given ID was found, null is returned.
+    /// </summary>
+    public Task<T?> TransactionNullableAsync(string id, TransactionNullableDelegate<T> action)
+        => AsyncTransactionNullableAsync(id, transaction =>
         {
-            if (value == null)
-                throw new NullReferenceException();
+            action(transaction);
+            return Task.CompletedTask;
+        });
+    
+    /// <summary>
+    /// Performs a transaction on the entry with the given ID by executing the given action and returns the action's result.<br/>
+    /// If no entry with the given ID was found and a value was set in the action, an entry will be created. 
+    /// </summary>
+    public Task<R> TransactionNullableAndGetAsync<R>(string id, TransactionNullableDelegate<T, R> action)
+        => AsyncTransactionNullableAndGetAsync(id, transaction => Task.FromResult(action(transaction)));
+    
+    /// <summary>
+    /// Performs a transaction on the entry with the given ID by executing the given action, and returns the new value.<br/>
+    /// If no entry with the given ID was found, an exception is thrown.
+    /// </summary>
+    public Task<T> AsyncTransactionAsync(string id, AsyncTransactionDelegate<T> action)
+        => AsyncTransactionNullableAndGetAsync(id, async transaction =>
+        {
+            if (transaction.Value == null)
+                throw new DatabaseEntryMissingException();
             
-            return action(ref value);
-        }) ?? throw new NullReferenceException();
+            await action(new(transaction.Value, transaction.FileActions));
+            return transaction.Value;
+        }) ?? throw new DatabaseEntryMissingException();
+    
+    /// <summary>
+    /// Performs a transaction on the entry with the given ID by executing the given action.<br/>
+    /// If no entry with the given ID was found, nothing happens.
+    /// </summary>
+    public Task AsyncTransactionIgnoreNullAsync(string id, AsyncTransactionDelegate<T> action)
+        => AsyncTransactionNullableAsync(id, async transaction =>
+        {
+            if (transaction.Value != null)
+                await action(new(transaction.Value, transaction.FileActions));
+        });
     
     /// <summary>
     /// Performs a transaction on the entry with the given ID by executing the given action and returns the action's result.<br/>
     /// If no entry with the given ID was found, an exception is thrown.
     /// </summary>
-    public R TransactionAndGet<R>(string id, TransactionWithFilesDelegate<T, R> action)
-        => TransactionNullableAndGet(id, (ref T? value, ref List<IFileAction> fileActions) =>
+    public Task<R> AsyncTransactionAndGetAsync<R>(string id, AsyncTransactionDelegate<T, R> action)
+        => AsyncTransactionNullableAndGetAsync(id, transaction =>
         {
-            if (value == null)
-                throw new NullReferenceException();
+            if (transaction.Value == null)
+                throw new DatabaseEntryMissingException();
             
-            return action(ref value, ref fileActions);
-        }) ?? throw new NullReferenceException();
+            return action(new(transaction.Value, transaction.FileActions));
+        }) ?? throw new DatabaseEntryMissingException();
     
     /// <summary>
-    /// Performs a transaction on the entry with the given ID by executing the given action, and returns the new value.<br/>
-    /// If no entry with the given ID was found, null is returned.
+    /// Performs a transaction on the entry with the given ID by executing the given action and returns the action's result.<br/>
+    /// If no entry with the given ID was found and a value was set in the action, an entry will be created. 
     /// </summary>
-    public T? TransactionNullable(string id, TransactionNullableDelegate<T> action)
-        => TransactionNullableAndGet(id, (ref T? value, ref List<IFileAction> _) =>
+    public Task<T?> AsyncTransactionNullableAsync(string id, AsyncTransactionNullableDelegate<T> action)
+        => AsyncTransactionNullableAndGetAsync(id, async transaction =>
         {
-            action(ref value);
-            return value;
-        });
-    
-    /// <summary>
-    /// Performs a transaction on the entry with the given ID by executing the given action, and returns the new value.<br/>
-    /// If no entry with the given ID was found, null is returned.
-    /// </summary>
-    public T? TransactionNullable(string id, TransactionNullableWithFilesDelegate<T> action)
-        => TransactionNullableAndGet(id, (ref T? value, ref List<IFileAction> fileActions) =>
-        {
-            action(ref value, ref fileActions);
-            return value;
+            await action(transaction);
+            return transaction.Value;
         });
     
     /// <summary>
     /// Performs a transaction on the entry with the given ID by executing the given action and returns the action's result.<br/>
     /// If no entry with the given ID was found and a value was set in the action, an entry will be created. 
     /// </summary>
-    public R TransactionNullableAndGet<R>(string id, TransactionNullableDelegate<T, R> action)
-        => TransactionNullableAndGet(id, (ref T? value, ref List<IFileAction> _) => action(ref value));
-    
-    /// <summary>
-    /// Performs a transaction on the entry with the given ID by executing the given action and returns the action's result.<br/>
-    /// If no entry with the given ID was found and a value was set in the action, an entry will be created. 
-    /// </summary>
-    public R TransactionNullableAndGet<R>(string id, TransactionNullableWithFilesDelegate<T, R> action)
+    public async Task<R> AsyncTransactionNullableAndGetAsync<R>(string id, AsyncTransactionNullableDelegate<T, R> action)
     {
         var nodes = GetReachableNodes();
         
         var entry = Data.GetValueOrDefault(id);
         
-        var request = entry == null ? null : LockRequest.CreateLocal(entry);
-        request?.WaitUntilReady();
+        var request = entry == null ? null : await LockRequest.CreateLocalAsync(entry);
+        if (request != null)
+            await request.WaitUntilReady();
         
-        entry?.Lock.EnterWriteLock();
+        var locker = entry == null ? null : await entry.Lock.WaitWriteAsync();
         try
         {
-            var value = entry?.Deserialize();
-            List<IFileAction> fileActions = [];
-
+            TransactionData<T?> transaction = new(entry?.Deserialize());
+            
             R result;
             try
             {
-                result = action(ref value, ref fileActions);
+                result = await action(transaction);
             }
             catch
             {
@@ -697,23 +653,23 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
                     foreach (var node in nodes)
                         _ = node.SendCancelAsync(this, id, request.Timestamp, request.Randomness);
                     
-                    LockRequest.Delete(entry, request.Timestamp, request.Randomness);
+                    await LockRequest.DeleteAsync(entry, request.Timestamp, request.Randomness);
                 }
                 throw;
             }
         
             var timestamp = DateTime.UtcNow.Ticks;
             byte[] serialized;
-            if (value != null)
+            if (transaction.Value != null)
             {
-                foreach (var fileAction in fileActions)
-                    fileAction.Prepare(value);
-                foreach (var fileAction in fileActions)
-                    fileAction.Commit(value, timestamp);
+                foreach (var fileAction in transaction.FileActions)
+                    fileAction.Prepare(transaction.Value);
+                foreach (var fileAction in transaction.FileActions)
+                    fileAction.Commit(transaction.Value, timestamp);
                 
-                value.AssemblyVersion = GetTypeVersion();
-                value.Timestamp = timestamp;
-                serialized = Serialization.Serialize(value);
+                transaction.Value.AssemblyVersion = GetTypeVersion();
+                transaction.Value.Timestamp = timestamp;
+                serialized = Serialization.Serialize(transaction.Value);
             }
             else
             {
@@ -727,34 +683,36 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
                 });
             }
         
-            entry ??= CreateAndLockBlankEntry(id);
+            if (entry == null)
+                (entry, locker) = await CreateAndLockBlankEntryAsync(id);
             
-            if (value != null)
-                value.ContainingEntry = entry;
+            if (transaction.Value != null)
+                transaction.Value.ContainingEntry = entry;
         
             entry.SetBytes(serialized);
             
-            UpdateIndices(id, value);
+            await UpdateIndicesAsync(id, transaction.Value);
             
             foreach (var node in nodes)
                 _ = node.PushChangeAsync(this, id, request?.Timestamp ?? 0, request?.Randomness ?? "none", serialized);
             
             if (request != null)
-                LockRequest.Delete(entry, request.Timestamp, request.Randomness);
+                await LockRequest.DeleteAsync(entry, request.Timestamp, request.Randomness);
             
             return result;
         }
         finally
         {
-            entry?.Lock.ExitWriteLock();
+            if (locker != null)
+                await locker.DisposeAsync();
         }
     }
     
-    public override bool Delete(string id)
-        => Data.ContainsKey(id) && TransactionNullableAndGet(id, (ref T? value) =>
+    public override async Task<bool> DeleteAsync(string id)
+        => Data.ContainsKey(id) && await TransactionNullableAndGetAsync(id, transaction =>
         {
-            bool exists = value != null;
-            value = null;
+            bool exists = transaction.Value != null;
+            transaction.Value = null;
             return exists;
         });
     
@@ -772,10 +730,30 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
     /// <summary>
     /// Creates a new entry with a random non-existing ID (with the given length) and stores the given value in it.
     /// </summary>
-    public T Create(int idLength, T value)
+    public async Task<T> CreateAsync(int idLength, T value)
     {
         var id = GenerateId(idLength);
-        TransactionNullable(id, (ref T? v) => v = value);
+        await TransactionNullableAsync(id, transaction => transaction.Value = value);
         return value;
+    }
+    
+    /// <summary>
+    /// Modifies the given reference value with the current value and holds the transaction open until the returned transaction is disposed.
+    /// </summary>
+    public ModifyTransactionData StartModifying(ref T value)
+    {
+        ModifyTransactionData modify = new();
+        ReadyWaiter waiter = new();
+        T? newValue = null;
+        _ = AsyncTransactionNullableAsync(value.Id, async transaction =>
+        {
+            transaction.FileActions = modify.FileActions;
+            newValue = transaction.Value ?? throw new DatabaseEntryMissingException();
+            await waiter.ReadyAsync();
+            await modify.WaitAsync();
+        });
+        waiter.WaitAsync().GetAwaiter().GetResult();
+        value = newValue ?? throw new DatabaseEntryMissingException();
+        return modify;
     }
 }

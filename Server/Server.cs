@@ -46,7 +46,7 @@ public static partial class Server
     /// Starts the web server.<br/>
     /// If local is true, the server will only listen on local IPs so no requests from other computers will be able to reach it.
     /// </summary>
-    public static void Start(bool local = false)
+    public static async Task StartAsync(bool local = false)
     {
         if (Running)
             throw new Exception("Server is already running.");
@@ -60,7 +60,7 @@ public static partial class Server
             if (Config.Log.Startup)
                 Console.WriteLine("Loading certificates...");
             //try loading certificates from ../Certificates without a password
-            UpdateCertificates();
+            await UpdateCertificatesAsync();
         }
 
         //load cache
@@ -118,6 +118,9 @@ public static partial class Server
 
         //context accessor part 2
         ContextAccessor = App.Services.GetRequiredService<IHttpContextAccessor>();
+        
+        //add websocket support
+        App.UseWebSockets();
 
         //add own middleware
         App.UseMiddleware<Middleware>();
@@ -129,7 +132,7 @@ public static partial class Server
         if (Config.Log.Startup)
             Console.WriteLine("Starting server...");
         Running = true;
-        App.Run();
+        await App.RunAsync();
     }
 
     private static void ConfigureKestrel(ListenOptions listenOptions, bool requestCertificates) => listenOptions.UseHttps(httpsOptions =>
@@ -153,18 +156,18 @@ public static partial class Server
     {
         if (doNotRestart)
             Console.WriteLine("wrapper set AutoRestart=false");
-        new Thread(Exit).Start();
+        _ = ExitAsync();
     }
 
     /// <summary>
     /// Gracefully stops the server and exits the program.
     /// </summary>
-    private static void Exit()
+    private static async Task ExitAsync()
     {
         PauseRequests = true;
         Task.Delay(1000).GetAwaiter().GetResult();
         if (MailManager.In.ServerRunning)
-            MailManager.In.Stop();
+            await MailManager.In.StopAsync();
         App?.StopAsync(TimeSpan.FromSeconds(1)).GetAwaiter().GetResult();
         Environment.Exit(0);
         Environment.FailFast("Failed to exit softly.");

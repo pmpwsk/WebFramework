@@ -1,4 +1,5 @@
-﻿using uwap.WebFramework.Plugins;
+﻿using uwap.WebFramework.Database;
+using uwap.WebFramework.Plugins;
 
 namespace uwap.WebFramework;
 
@@ -55,8 +56,15 @@ public static partial class Server
             Request req = new(data);
             try
             {
-                if (!await handler(req))
-                    return false;
+                try
+                {
+                    if (!await handler(req))
+                        return false;
+                }
+                catch (DatabaseEntryMissingException)
+                {
+                    throw new NotFoundSignal();
+                }
             }
             catch (RedirectSignal redirect)
             {
@@ -68,6 +76,7 @@ public static partial class Server
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"\nException at '{req.Context.ProtoHostPathQuery()}':\n{ex.Message}\n{ex.StackTrace}\n");
                 req.Exception = ex;
                 try { req.Status = 500; } catch { }
             }

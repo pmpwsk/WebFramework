@@ -9,9 +9,9 @@ namespace uwap.WebFramework.Database;
 public abstract class AbstractTableEntry
 {
     /// <summary>
-    /// The name of the table the entry belongs to.
+    /// The table the entry belongs to.
     /// </summary>
-    public readonly string TableName;
+    public abstract AbstractTable Table { get; }
 
     /// <summary>
     /// The ID to reference the entry.
@@ -40,12 +40,17 @@ public abstract class AbstractTableEntry
     /// <summary>
     /// The lock used to lock the entry for reading and writing.
     /// </summary>
-    internal ReaderWriterLockSlim Lock = new();
+    internal AsyncReaderWriterLock Lock = new();
     
     /// <summary>
     /// The ongoing and queued lock requests, sorted by timestamp.
     /// </summary>
     internal SortedSet<LockRequest> LockRequests = [];
+    
+    /// <summary>
+    /// The lock to use when modifying the lock requests.
+    /// </summary>
+    internal AsyncLock LockRequestStateLock = new();
     
     /// <summary>
     /// The lock requests that were recently deleted.<br/>
@@ -56,49 +61,48 @@ public abstract class AbstractTableEntry
     /// <summary>
     /// Creates a new entry for the given table, ID and serialized value.
     /// </summary>
-    protected AbstractTableEntry(string tableName, string id, byte[] serialized)
+    protected AbstractTableEntry(AbstractTable table, string id, byte[] serialized)
     {
-        TableName = tableName;
         Id = id;
         SerializedValue = Server.Config.Database.CacheEntries ? new(serialized) : null;
-        _EntryInfo = Serialization.Deserialize<MinimalTableValue>(tableName, id, serialized) ?? throw new SerializationException();
+        _EntryInfo = Serialization.Deserialize<MinimalTableValue>(table, id, serialized) ?? throw new SerializationException();
         _EntryInfo.ContainingEntry = this;
     }
     
     /// <summary>
     /// The table name and ID, formatted to be easily readable in logs. 
     /// </summary>
-    public string ReadableName => $"\"{TableName} / {Id}\"";
+    public string ReadableName => $"\"{Table.Name} / {Id}\"";
     
     /// <summary>
     /// The path to the serialized value.
     /// </summary>
-    public string Path => $"../Database/{TableName.ToBase64PathSafe()}/Entries/{Id.ToBase64PathSafe()}.json";
+    public string Path => $"../Database/{Table.Name.ToBase64PathSafe()}/Entries/{Id.ToBase64PathSafe()}.json";
     
     /// <summary>
     /// The path to the directory that contains attached files.
     /// </summary>
-    public string FileBasePath => $"../Database/{TableName.ToBase64PathSafe()}/Files/{Id.ToBase64PathSafe()}";
+    public string FileBasePath => $"../Database/{Table.Name.ToBase64PathSafe()}/Files/{Id.ToBase64PathSafe()}";
     
     /// <summary>
     /// The path to the trashed serialized value.
     /// </summary>
-    public string TrashPath => $"../Database/{TableName.ToBase64PathSafe()}/Trash/Entries/{Id.ToBase64PathSafe()}.json";
+    public string TrashPath => $"../Database/{Table.Name.ToBase64PathSafe()}/Trash/Entries/{Id.ToBase64PathSafe()}.json";
     
     /// <summary>
     /// The path to the directory that contains trashed attached files.
     /// </summary>
-    public string TrashFileBasePath => $"../Database/{TableName.ToBase64PathSafe()}/Trash/Files/{Id.ToBase64PathSafe()}";
+    public string TrashFileBasePath => $"../Database/{Table.Name.ToBase64PathSafe()}/Trash/Files/{Id.ToBase64PathSafe()}";
     
     /// <summary>
     /// The path to the buffered serialized value.
     /// </summary>
-    public string BufferPath => $"../Database/{TableName.ToBase64PathSafe()}/Buffer/Entries/{Id.ToBase64PathSafe()}.json";
+    public string BufferPath => $"../Database/{Table.Name.ToBase64PathSafe()}/Buffer/Entries/{Id.ToBase64PathSafe()}.json";
     
     /// <summary>
     /// The path to the directory that contains buffered attached files.
     /// </summary>
-    public string BufferFileBasePath => $"../Database/{TableName.ToBase64PathSafe()}/Buffer/Files/{Id.ToBase64PathSafe()}";
+    public string BufferFileBasePath => $"../Database/{Table.Name.ToBase64PathSafe()}/Buffer/Files/{Id.ToBase64PathSafe()}";
     
     /// <summary>
     /// Returns the path to the attached file with the given file ID.

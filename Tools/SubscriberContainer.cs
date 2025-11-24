@@ -16,7 +16,7 @@ public class SubscriberContainer<T>
     /// <summary>
     /// The lock to use when changing the list of subscribers.
     /// </summary>
-    private ReaderWriterLockSlim Lock = new();
+    private AsyncLock Lock = new();
     
     /// <summary>
     /// The list of subscribed objects.
@@ -26,50 +26,45 @@ public class SubscriberContainer<T>
     /// <summary>
     /// Adds the given subscriber.
     /// </summary>
-    /// <param name="subscriber"></param>
-    public void Register(T subscriber)
+    public async Task RegisterAsync(T subscriber)
     {
-        Lock.EnterWriteLock();
+        using var h = await Lock.WaitAsync();
         Subscribers.Add(subscriber);
-        Lock.ExitWriteLock();
     }
     
     /// <summary>
     /// Removes the given subscriber.
     /// </summary>
-    /// <param name="subscriber"></param>
-    public void Unregister(T subscriber)
+    public async Task UnregisterAsync(T subscriber)
     {
-        Lock.EnterWriteLock();
-        Subscribers.Add(subscriber);
-        Lock.ExitWriteLock();
+        using var h = await Lock.WaitAsync();
+        Subscribers.Remove(subscriber);
     }
     
     /// <summary>
     /// Removes all subscribers.
     /// </summary>
-    public void Clear()
+    public async Task ClearAsync()
     {
-        Lock.EnterWriteLock();
+        using var h = await Lock.WaitAsync();
         Subscribers.Clear();
-        Lock.ExitWriteLock();
     }
     
     /// <summary>
     /// Calls all subscribers using the given caller function and handles any exceptions using the given exception handler.<br/>
     /// If <c>parallel</c> is set, the subscribers will be notified at the same time, otherwise they will be called in order.
     /// </summary>
-    public async Task<bool> InvokeAsync(AsyncDelegateCaller<T> caller, Action<Exception>? exceptionHandler, bool parallel)
+    public async Task<bool> InvokeWithAsyncCaller(AsyncDelegateCaller<T> caller, Action<Exception>? exceptionHandler, bool parallel)
     {
-        var subscribers = ListAll();
+        var subscribers = await ListAllAsync();
         if (subscribers.Count == 0)
             return false;
         
         if (parallel)
-            await Task.WhenAll(subscribers.Select(subscriber => InvokeAsync(subscriber, caller, exceptionHandler)));
+            await Task.WhenAll(subscribers.Select(subscriber => InvokeAsyncCaller(subscriber, caller, exceptionHandler)));
         else
             foreach (var subscriber in subscribers)
-                await InvokeAsync(subscriber, caller, exceptionHandler);
+                await InvokeAsyncCaller(subscriber, caller, exceptionHandler);
         
         return true;
     }
@@ -77,7 +72,7 @@ public class SubscriberContainer<T>
     /// <summary>
     /// Calls the given subscriber using the given caller function and handles any exceptions using the given exception handler.
     /// </summary>
-    private static Task InvokeAsync(T subscriber, AsyncDelegateCaller<T> caller, Action<Exception>? exceptionHandler)
+    private static Task InvokeAsyncCaller(T subscriber, AsyncDelegateCaller<T> caller, Action<Exception>? exceptionHandler)
     {
         try
         {
@@ -95,14 +90,14 @@ public class SubscriberContainer<T>
     /// <summary>
     /// Calls all subscribers using the given caller function and handles any exceptions using the given exception handler.
     /// </summary>
-    public bool Invoke(DelegateCaller<T> caller, Action<Exception>? exceptionHandler)
+    public async Task<bool> InvokeWithSyncCaller(DelegateCaller<T> caller, Action<Exception>? exceptionHandler)
     {
-        var subscribers = ListAll();
+        var subscribers = await ListAllAsync();
         if (subscribers.Count == 0)
             return false;
         
         foreach (var subscriber in subscribers)
-            Invoke(subscriber, caller, exceptionHandler);
+            InvokeSyncCaller(subscriber, caller, exceptionHandler);
         
         return true;
     }
@@ -110,7 +105,7 @@ public class SubscriberContainer<T>
     /// <summary>
     /// Calls the given subscriber using the given caller function and handles any exceptions using the given exception handler.
     /// </summary>
-    private static void Invoke(T subscriber, DelegateCaller<T> caller, Action<Exception>? exceptionHandler)
+    private static void InvokeSyncCaller(T subscriber, DelegateCaller<T> caller, Action<Exception>? exceptionHandler)
     {
         try
         {
@@ -127,10 +122,10 @@ public class SubscriberContainer<T>
     /// <summary>
     /// Calls all subscribers using the given caller function, collects the results and handles any exceptions using the given exception handler.
     /// </summary>
-    public async Task<List<R>> InvokeAndGetAsync<R>(AsyncDelegateCallerWithResult<T,R> caller, Action<Exception>? exceptionHandler)
+    public async Task<List<R>> InvokeWithAsyncCallerAndGet<R>(AsyncDelegateCallerWithResult<T,R> caller, Action<Exception>? exceptionHandler)
     {
         List<R> results = [];
-        var subscribers = ListAll();
+        var subscribers = await ListAllAsync();
         foreach (var subscriber in subscribers)
             try
             {
@@ -149,10 +144,10 @@ public class SubscriberContainer<T>
     /// <summary>
     /// Calls all subscribers using the given caller function, collects the results and handles any exceptions using the given exception handler.
     /// </summary>
-    public List<R> InvokeAndGet<R>(DelegateCallerWithResult<T,R> caller, Action<Exception>? exceptionHandler)
+    public async Task<List<R>> InvokeWithSyncCallerAndGet <R>(DelegateCallerWithResult<T,R> caller, Action<Exception>? exceptionHandler)
     {
         List<R> results = [];
-        var subscribers = ListAll();
+        var subscribers = await ListAllAsync();
         foreach (var subscriber in subscribers)
             try
             {
@@ -171,17 +166,18 @@ public class SubscriberContainer<T>
     /// <summary>
     /// Lists all subscribers.
     /// </summary>
-    private List<T> ListAll()
+    private async Task<List<T>> ListAllAsync()
     {
-        Lock.EnterReadLock();
-        var list = Subscribers.ToList();
-        Lock.ExitReadLock();
-        return list;
+        using var h = await Lock.WaitAsync();
+        return Subscribers.ToList();
     }
     
     /// <summary>
     /// Whether the event has any subscribers.
     /// </summary>
-    public bool IsEmpty()
-        => ListAll().Count == 0;
+    public async Task<bool> IsEmptyAsync()
+    {
+        using var h = await Lock.WaitAsync();
+        return Subscribers.Count == 0;
+    }
 }

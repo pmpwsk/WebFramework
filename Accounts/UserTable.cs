@@ -28,69 +28,57 @@ public class UserTable(string name) : Table<User>(name)
     /// <summary>
     /// Returns the user with the given username or null if none have been found.
     /// </summary>
-    public User? FindByUsername(string username)
-        => GetByIdNullable(UsernameIndex.Get(username));
+    public async Task<User?> FindByUsernameAsync(string username)
+        => await GetByIdNullableAsync(await UsernameIndex.GetAsync(username));
 
     /// <summary>
     /// Returns the user with the given mail address or null if none have been found.
     /// </summary>
-    public User? FindByMailAddress(string mailAddress)
-        => GetByIdNullable(MailAddressIndex.Get(mailAddress));
+    public async Task<User?> FindByMailAddressAsync(string mailAddress)
+        => await GetByIdNullableAsync(await MailAddressIndex.GetAsync(mailAddress));
 
     /// <summary>
     /// Checks and returns the login state of the given context and returns the user using the out-parameter if one has been found.
     /// If the user is fully logged in without additional requirements (2FA, verification), the token will be renewed if it's old enough.
     /// </summary>
-    public LoginState Authenticate(HttpContext context, out User? user, out ReadOnlyCollection<string>? limitedToPaths)
+    public async Task<(LoginState State, User? User, ReadOnlyCollection<string>? LimitedToPaths)> AuthenticateAsync(HttpContext context)
     {
         if (AccountManager.IsBanned(context))
-        {
-            user = null;
-            limitedToPaths = null;
-            return LoginState.Banned;
-        }
+            return (LoginState.Banned, null, null);
 
         if (!context.Request.Cookies.TryGetValue("AuthToken", out var combinedToken))
-        { //no token present
-            user = null;
-            limitedToPaths = null;
-            return LoginState.None;
-        }
+            return (LoginState.None, null, null);
 
         string id = combinedToken.Remove(12);
         string authToken = combinedToken.Remove(0, 12); //the auth token length isn't fixed
-        if (!TryGetValue(id, out user) || !user.Auth.TryGetValue(authToken, out var tokenData))
+        var user = await GetByIdNullableAsync(id);
+        if (user == null || !user.Auth.TryGetValue(authToken, out var tokenData))
         { //user doesn't exist or doesn't contain the token provided
             AccountManager.ReportFailedAuth(context);
             context.Response.Cookies.Delete("AuthToken");
-            user = null;
-            limitedToPaths = null;
-            return LoginState.None;
+            return (LoginState.None, null, null);
         }
         if (tokenData.Expires < DateTime.UtcNow)
         { //token expired <- don't report this because it's probably not brute-force
             context.Response.Cookies.Delete("AuthToken");
-            user = null;
             if (Server.Config.Log.AuthTokenExpired)
                 Console.WriteLine($"User {id} used an expired auth token.");
-            limitedToPaths = null;
-            return LoginState.None;
+            return (LoginState.None, null, null);
         }
 
-        limitedToPaths = tokenData.LimitedToPaths;
         if (tokenData.Needs2FA)
-            return LoginState.Needs2FA;
+            return (LoginState.Needs2FA, user, tokenData.LimitedToPaths);
         else if (user.MailToken != null)
-            return LoginState.NeedsMailVerification;
+            return (LoginState.NeedsMailVerification, user, tokenData.LimitedToPaths);
         else
         {
             if (tokenData.Expires < DateTime.UtcNow + Server.Config.Accounts.TokenExpiration - Server.Config.Accounts.TokenRenewalAfter)
             { //renew token if the renewal is due
-                AccountManager.AddAuthTokenCookie(user.Id + RenewToken(user.Id, authToken, tokenData), context, false);
+                AccountManager.AddAuthTokenCookie(user.Id + await RenewTokenAsync(user.Id, authToken, tokenData), context, false);
                 if (Server.Config.Log.AuthTokenRenewed)
                     Console.WriteLine($"Renewed a token for user {id}.");
             }
-            return LoginState.LoggedIn;
+            return (LoginState.LoggedIn, user, tokenData.LimitedToPaths);
         }
     }
 
@@ -99,7 +87,7 @@ public class UserTable(string name) : Table<User>(name)
     /// </summary>
     /// <param name="context">The context to log out.</param>
     /// <param name="logoutOthers">Whether to log out all other clients or the current client.</param>
-    private void Logout(HttpContext context, bool logoutOthers)
+    private async Task LogoutAsync(HttpContext context, bool logoutOthers)
     {
         if (!context.Request.Cookies.TryGetValue("AuthToken", out var combinedToken))
             return;
@@ -110,45 +98,45 @@ public class UserTable(string name) : Table<User>(name)
         if (!ContainsId(id))
             return;
         if (logoutOthers)
-            DeleteAllTokensExcept(id, authToken);
-        else DeleteToken(id, authToken);
+            await DeleteAllTokensExceptAsync(id, authToken);
+        else await DeleteTokenAsync(id, authToken);
     }
 
     /// <summary>
     /// Logs out the current client.
     /// </summary>
-    public void Logout(HttpContext context)
-        => Logout(context, false);
+    public Task LogoutAsync(HttpContext context)
+        => LogoutAsync(context, false);
 
     /// <summary>
     /// Logs out the current client.
     /// </summary>
     /// <param name="req"></param>
-    public void Logout(Request req)
-        => Logout(req.Context, false);
+    public Task LogoutAsync(Request req)
+        => LogoutAsync(req.Context, false);
 
     /// <summary>
     /// Logs out all other clients.
     /// </summary>
     /// <param name="req"></param>
-    public void LogoutOthers(Request req)
-        => Logout(req.Context, true);
+    public Task LogoutOthersAsync(Request req)
+        => LogoutAsync(req.Context, true);
 
     /// <summary>
     /// Creates and adds a new user using the given data and logs in the given request or throws an Exception if some of the data wasn't acceptable.
     /// </summary>
-    public User Register(string username, string mailAddress, string? password, Request? req)
+    public async Task<User> RegisterAsync(string username, string mailAddress, string? password, Request? req)
     {
-        User user = Register(username, mailAddress, password);
+        User user = await RegisterAsync(username, mailAddress, password);
         if (req != null)
-            AccountManager.Login(user, req);
+            await AccountManager.LoginAsync(user, req);
         return user;
     }
 
     /// <summary>
     /// Creates and adds a new user using the given data or throws an Exception if some of the data wasn't acceptable.
     /// </summary>
-    public User Register(string username, string mailAddress, string? password)
+    public async Task<User> RegisterAsync(string username, string mailAddress, string? password)
     {
         if (!AccountManager.CheckUsernameFormat(username))
             throw new Exception("Invalid username format.");
@@ -157,29 +145,28 @@ public class UserTable(string name) : Table<User>(name)
         if (password != null && !AccountManager.CheckPasswordFormat(password))
             throw new Exception("Invalid password format.");
 
-        if (FindByUsername(username) != null)
+        if (await FindByUsernameAsync(username) != null)
             throw new Exception("Another user with the provided username already exists.");
-        if (FindByMailAddress(mailAddress) != null)
+        if (await FindByMailAddressAsync(mailAddress) != null)
             throw new Exception("Another user with the provided email address already exists.");
         
         User newUser = new(username, mailAddress, password);
         
-        TransactionNullable(Parsers.RandomString(12, id => !ContainsId(id)), (ref User? user) => user = newUser);
-        return newUser;
+        return await CreateAsync(12, newUser);
     }
 
     /// <summary>
     /// Logs in the user using the given data or returns null and reports the attempt if the login attempt failed.
     /// </summary>
-    public User? Login(string username, string password, Request req)
+    public async Task<User?> LoginAsync(string username, string password, Request req)
     {
         if (AccountManager.IsBanned(req.Context))
             return null;
 
-        User? user = Login(username, password);
+        User? user = await LoginAsync(username, password);
 
         if (user == null) AccountManager.ReportFailedAuth(req.Context);
-        else AccountManager.Login(user, req);
+        else await AccountManager.LoginAsync(user, req);
 
         return user;
     }
@@ -187,19 +174,19 @@ public class UserTable(string name) : Table<User>(name)
     /// <summary>
     /// Logs in the user using the given data or returns null if the login attempt failed.
     /// </summary>
-    public User? Login(string username, string password)
+    public async Task<User?> LoginAsync(string username, string password)
     {
         if (!AccountManager.CheckUsernameFormat(username))
             return null;
         //if (!CheckPasswordFormat(password)) return null;
 
-        User? user = FindByUsername(username);
+        User? user = await FindByUsernameAsync(username);
         if (user == null)
         {
             Password2.WasteTime(password);
             return null;
         }
-        else if (ValidatePassword(user.Id, password, null, null))
+        else if (await ValidatePasswordAsync(user.Id, password, null, null))
             return user;
         else return null;
     }
@@ -207,84 +194,84 @@ public class UserTable(string name) : Table<User>(name)
     /// <summary>
     /// Sets the username or throws an exception if it has an invalid format, another user is using it or equals the current one.
     /// </summary>
-    public User SetUsername(string id, string username)
-        => Transaction(id, (ref User user) =>
+    public Task<User> SetUsernameAsync(string id, string username)
+        => AsyncTransactionAsync(id, async t =>
         {
-            var oldUsername = user.Username;
+            var oldUsername = t.Value.Username;
             if (!AccountManager.CheckUsernameFormat(username))
                 throw new Exception("Invalid username format.");
             if (oldUsername == username)
                 throw new Exception("The provided username is the same as the old one.");
-            if (FindByUsername(username) != null)
+            if (await FindByUsernameAsync(username) != null)
                 throw new Exception("Another user with the provided username already exists.");
             
-            user.Username = username;
+            t.Value.Username = username;
         });
     
     /// <summary>
     /// Sets the mail address or throws an exception if its format is invalid or another user is using it or if it equals the current one.
     /// </summary>
-    public User SetMailAddress(string id, string mailAddress)
-        => Transaction(id, (ref User user) =>
+    public Task<User> SetMailAddressAsync(string id, string mailAddress)
+        => AsyncTransactionAsync(id, async t =>
         {
-            var oldAddress = user.MailAddress;
+            var oldAddress = t.Value.MailAddress;
             if (!AccountManager.CheckMailAddressFormat(mailAddress))
                 throw new Exception("Invalid mail address format.");
             if (oldAddress == mailAddress)
                 throw new Exception("The provided mail address is the same as the old one.");
-            if (FindByMailAddress(mailAddress) != null)
+            if (await FindByMailAddressAsync(mailAddress) != null)
                 throw new Exception("Another user with the provided mail address already exists.");
             
-            user.MailAddress = mailAddress;
+            t.Value.MailAddress = mailAddress;
         });
     
     /// <summary>
     /// Sets the password using the default hashing parameters or throws an exception if its format is invalid or if it equals the current one unless it's allowed.
     /// </summary>
-    public User SetPassword(string id, string? password, bool ignoreRules = false, bool allowSame = false)
-        => Transaction(id, (ref User user) =>
+    public Task<User> SetPasswordAsync(string id, string? password, bool ignoreRules = false, bool allowSame = false)
+        => AsyncTransactionAsync(id, async t =>
         {
             if (password == null)
             {
-                user.Password = null;
+                t.Value.Password = null;
             }
             else
             {
                 if (!ignoreRules && !AccountManager.CheckPasswordFormat(password))
                     throw new Exception("Invalid password format.");
-                if (!allowSame && ValidatePassword(id, password, null, user))
+                if (!allowSame && await ValidatePasswordAsync(id, password, null, t.Value))
                     throw new Exception("The provided password is the same as the old one.");
 
-                user.Password = new(password);
+                t.Value.Password = new(password);
             }
         });
     
-    public User SetAccessLevel(string id, ushort accessLevel)
-        => Transaction(id, (ref User user) => user.AccessLevel = accessLevel);
+    public Task<User> SetAccessLevelAsync(string id, ushort accessLevel)
+        => TransactionAsync(id, t => t.Value.AccessLevel = accessLevel);
 
     /// <summary>
     /// Generates, sets and returns a new token for mail verification.
     /// </summary>
-    public User SetNewMailToken(string id)
-        => Transaction(id, (ref User user) => user.MailToken = Parsers.RandomString(10, false, false, true, user.MailToken));
+    public Task<User> SetNewMailTokenAsync(string id)
+        => TransactionAsync(id, t => t.Value.MailToken = Parsers.RandomString(10, false, false, true, t.Value.MailToken));
 
     /// <summary>
     /// Checks whether the given token is the token for mail verification and sets it to null (=verified) if it's the correct one.
     /// </summary>
-    public bool VerifyMail(string id, string token, Request? req)
-        => (req == null || !AccountManager.IsBanned(req.Context)) && TransactionAndGet(id, (ref User user) =>
+    public async Task<bool> VerifyMailAsync(string id, string token, Request? req)
+        => (req == null || !AccountManager.IsBanned(req.Context)) && await TransactionAndGetAsync(id, t =>
         {
-            if (user.MailToken == null)
+            if (t.Value.MailToken == null)
                 throw new Exception("This user's mail address is already verified.");
             
-            if (user.MailToken != token)
+            if (t.Value.MailToken != token)
             {
                 if (req != null)
                     AccountManager.ReportFailedAuth(req.Context);
                 return false;
             }
             
-            user.MailToken = null;
+            t.Value.MailToken = null;
             
             //does an auth token even exist? (this should be the case, but you never know)
             if (req != null && req.Cookies.TryGetValue("AuthToken", out var combinedToken))
@@ -292,12 +279,12 @@ public class UserTable(string name) : Table<User>(name)
                 //get and decode the auth token
                 string tokenId = combinedToken.Remove(12);
                 string authToken = combinedToken.Remove(0, 12);
-                if (user.Id == tokenId && user.Auth.TryGetValue(authToken, out var data))
+                if (t.Value.Id == tokenId && t.Value.Auth.TryGetValue(authToken, out var data))
                 {
                     //renew
                     if (Server.Config.Log.AuthTokenRenewed)
                         Console.WriteLine($"Renewed a token after mail verification for user {tokenId}.");
-                    AccountManager.AddAuthTokenCookie(tokenId + RenewTokenInTransaction(user, authToken, data), req.Context, false);
+                    AccountManager.AddAuthTokenCookie(tokenId + RenewTokenInTransaction(t.Value, authToken, data), req.Context, false);
                 }
             }
             
@@ -307,12 +294,12 @@ public class UserTable(string name) : Table<User>(name)
     /// <summary>
     /// Checks whether the given password is correct.
     /// </summary>
-    public bool ValidatePassword(string id, string password, Request? req)
-        => ValidatePassword(id, password, req, null);
+    public Task<bool> ValidatePasswordAsync(string id, string password, Request? req)
+        => ValidatePasswordAsync(id, password, req, null);
     
-    private bool ValidatePassword(string id, string password, Request? req, User? transactionUser)
+    private async Task<bool> ValidatePasswordAsync(string id, string password, Request? req, User? transactionUser)
     {
-        var user = transactionUser ?? GetById(id);
+        var user = transactionUser ?? await GetByIdAsync(id);
         
         if (user.Password == null)
             return false;
@@ -325,7 +312,7 @@ public class UserTable(string name) : Table<User>(name)
             {
                 if (transactionUser != null)
                     user.Password = new(password);
-                else Transaction(id, (ref User u) => u.Password = new(password));
+                else await TransactionAsync(id, t => t.Value.Password = new(password));
             }
             return true;
         }
@@ -339,54 +326,54 @@ public class UserTable(string name) : Table<User>(name)
     /// <summary>
     /// Creates a new object to save two-factor authentication data for an account using a new random secret key and new recovery keys. It needs to be verified before it can be used.
     /// </summary>
-    public void GenerateTOTP(string id)
-        => Transaction(id, (ref User user) => user.TwoFactor.TOTP = new());
+    public Task<TwoFactorTOTP> GenerateTOTPAsync(string id)
+        => TransactionAndGetAsync(id, t => t.Value.TwoFactor.TOTP = new());
 
     /// <summary>
     /// Disables TOTP 2FA and deletes the corresponding object.
     /// </summary>
-    public void DisableTOTP(string id)
-        => Transaction(id, (ref User user) => user.TwoFactor.TOTP = null);
+    public Task DisableTOTPAsync(string id)
+        => TransactionAsync(id, t => t.Value.TwoFactor.TOTP = null);
 
     /// <summary>
     /// Mark the TOTP 2FA object as verified, enabling it.
     /// </summary>
-    public void VerifyTOTP(string id)
-        => Transaction(id, (ref User user) =>
+    public Task VerifyTOTPAsync(string id)
+        => TransactionAsync(id, t =>
         {
-            if (user.TwoFactor.TOTP != null)
-                user.TwoFactor.TOTP.Verified = true;
+            if (t.Value.TwoFactor.TOTP != null)
+                t.Value.TwoFactor.TOTP.Verified = true;
         });
 
     /// <summary>
     /// Replaces the list of recovery codes with a newly generated list.
     /// </summary>
-    public void GenerateNewTOTPRecoveryCodes(string id)
-        => Transaction(id, (ref User user) =>
+    public Task GenerateNewTOTPRecoveryCodesAsync(string id)
+        => TransactionAsync(id, t =>
         {
-            if (user.TwoFactor.TOTP != null)
-                user.TwoFactor.TOTP.Recovery = TwoFactorTOTP.GenerateRecoveryCodes();
+            if (t.Value.TwoFactor.TOTP != null)
+                t.Value.TwoFactor.TOTP.Recovery = TwoFactorTOTP.GenerateRecoveryCodes();
         });
 
     /// <summary>
     /// Checks whether the given code is valid right now and hasn't been used before.
     /// </summary>
-    public bool ValidateTOTP(string id, string code, Request? req, bool tolerateRecovery)
+    public async Task<bool> ValidateTOTPAsync(string id, string code, Request? req, bool tolerateRecovery)
     {
-        var user = GetById(id);
+        var user = await GetByIdAsync(id);
         
         //banned?
         if (req != null && AccountManager.IsBanned(req.Context))
             return false;
 
         //TOTP disabled?
-        if (!user.TwoFactor.TOTPEnabled(out var totp))
+        if (!user.TwoFactor.TOTPGenerated(out var totp))
             return false;
         
         //recovery code?
         if (tolerateRecovery && totp.RecoveryCodes.Contains(code))
         {
-            Transaction(id, (ref User u) => u.TwoFactor.TOTP?.RemoveRecoveryCode(code));
+            await TransactionAsync(id, t => t.Value.TwoFactor.TOTP?.RemoveRecoveryCode(code));
             return true;
         }
 
@@ -394,9 +381,9 @@ public class UserTable(string name) : Table<User>(name)
         if (new Totp(totp.SecretKey).VerifyTotp(code, out long timeStepMatched, new VerificationWindow(1, 1)) && !totp.UsedTimeSteps.Contains(timeStepMatched))
         {
             //add to used time steps (and remove the oldest one if the list is full)
-            Transaction(id, (ref User u) =>
+            await TransactionAsync(id, t =>
             {
-                u.TwoFactor.TOTP?.AddUsedTimestamp(timeStepMatched);
+                t.Value.TwoFactor.TOTP?.AddUsedTimestamp(timeStepMatched);
 
                 //does an auth token even exist? (this should be the case, but you never know)
                 if (req != null && req.Cookies.TryGetValue("AuthToken", out var combinedToken))
@@ -404,12 +391,12 @@ public class UserTable(string name) : Table<User>(name)
                     //get and decode the auth token
                     string tokenId = combinedToken.Remove(12);
                     string authToken = combinedToken.Remove(0, 12);
-                    if (u.Id == tokenId && u.Auth.TryGetValue(authToken, out var data))
+                    if (t.Value.Id == tokenId && t.Value.Auth.TryGetValue(authToken, out var data))
                     {
                         //renew
                         if (Server.Config.Log.AuthTokenRenewed)
-                            Console.WriteLine($"Renewed a token after 2FA for user {u.Id}.");
-                        AccountManager.AddAuthTokenCookie(u.Id + RenewTokenInTransaction(u, authToken, data), req.Context, false);
+                            Console.WriteLine($"Renewed a token after 2FA for user {t.Value.Id}.");
+                        AccountManager.AddAuthTokenCookie(t.Value.Id + RenewTokenInTransaction(t.Value, authToken, data), req.Context, false);
                     }
                 }
             });
@@ -428,8 +415,8 @@ public class UserTable(string name) : Table<User>(name)
     /// Removes the given token from the token dictionary, then adds and returns a new token.<br/>
     /// The newly created token will not require 2FA and will not be temporary, so this shouldn't be used for temporary tokens for sessions that aren't fully logged in!
     /// </summary>
-    public string RenewToken(string id, string oldToken, AuthTokenData data)
-        => TransactionAndGet(id, (ref User user) => RenewTokenInTransaction(user, oldToken, data));
+    public Task<string> RenewTokenAsync(string id, string oldToken, AuthTokenData data)
+        => TransactionAndGetAsync(id, t => RenewTokenInTransaction(t.Value, oldToken, data));
     
     private static string RenewTokenInTransaction(User user, string oldToken, AuthTokenData data)
     {
@@ -441,8 +428,8 @@ public class UserTable(string name) : Table<User>(name)
         return token;
     }
     
-    public void SetTokenData(string id, string authToken, AuthTokenData data)
-        => Transaction(id, (ref User user) => SetTokenDataInTransaction(user, authToken, data));
+    public Task SetTokenDataAsync(string id, string authToken, AuthTokenData data)
+        => TransactionAsync(id, t => SetTokenDataInTransaction(t.Value, authToken, data));
     
     private static void SetTokenDataInTransaction(User user, string authToken, AuthTokenData data)
     {
@@ -468,78 +455,78 @@ public class UserTable(string name) : Table<User>(name)
     /// Generates a new authentication token and returns it.<br/>
     /// If the user is using 2FA, the token will still need it before the login process is finished.
     /// </summary>
-    public string AddNewToken(string id, out bool temporary)
+    public async Task<(string Token, bool Temporary)> AddNewTokenAsync(string id)
     {
         bool temp = false;
-        string token = TransactionAndGet(id, (ref User user) =>
+        string token = await TransactionAndGetAsync(id, t =>
         {
-            string token = Parsers.RandomString(64, user.Auth.ListAll());
-            bool twoFactor = user.TwoFactor.TOTPEnabled();
-            temp = twoFactor || user.MailToken != null;
-            SetTokenDataInTransaction(user, token, new AuthTokenData(twoFactor, temp, null, null));
+            string token = Parsers.RandomString(64, t.Value.Auth.ListAll());
+            bool twoFactor = t.Value.TwoFactor.TOTPEnabled();
+            temp = twoFactor || t.Value.MailToken != null;
+            SetTokenDataInTransaction(t.Value, token, new AuthTokenData(twoFactor, temp, null, null));
             return token;
         });
-        temporary = temp;
-        return token;
+        return (token, temp);
     }
 
     /// <summary>
     /// Generates a new limited authentication token and returns it.<br/>
     /// The token will not require 2FA and will not be temporary.
     /// </summary>
-    public string AddNewLimitedToken(string id, string? friendlyName, ReadOnlyCollection<string>? limitedToPaths)
-        => TransactionAndGet(id, (ref User user) =>
+    public Task<string> AddNewLimitedTokenAsync(string id, string? friendlyName, ReadOnlyCollection<string>? limitedToPaths)
+        => TransactionAndGetAsync(id, t =>
         {
-            string token = Parsers.RandomString(64, user._AuthTokens.Keys);
-            SetTokenDataInTransaction(user, token, new AuthTokenData(false, false, friendlyName, limitedToPaths));
+            string token = Parsers.RandomString(64, t.Value._AuthTokens.Keys);
+            SetTokenDataInTransaction(t.Value, token, new AuthTokenData(false, false, friendlyName, limitedToPaths));
             return token;
         });
 
     /// <summary>
     /// Deletes the given authentication token if it exists.
     /// </summary>
-    public void DeleteToken(string id, string authToken)
-        => Transaction(id, (ref User user) => user._AuthTokens.Remove(authToken));
+    public Task DeleteTokenAsync(string id, string authToken)
+        => TransactionAsync(id, t => t.Value._AuthTokens.Remove(authToken));
 
     /// <summary>
     /// Deletes all expired authentication tokens.
     /// </summary>
-    internal void DeleteExpiredTokens(User user)
+    internal Task DeleteExpiredTokensAsync(User user)
     {
         if (user._AuthTokens.Any(kv => kv.Value.Expires < DateTime.UtcNow))
-            Transaction(user.Id, (ref User u) =>
+            return TransactionAsync(user.Id, t =>
             {
-                foreach (var kv in u._AuthTokens.Where(kv => kv.Value.Expires < DateTime.UtcNow).ToList())
+                foreach (var kv in t.Value._AuthTokens.Where(kv => kv.Value.Expires < DateTime.UtcNow).ToList())
                 {
-                    u._AuthTokens.Remove(kv.Key);
+                    t.Value._AuthTokens.Remove(kv.Key);
                     if (Server.Config.Log.AuthTokenExpired)
                         Console.WriteLine($"Deleted an expired token for user {user.Id}.");
                 }
             });
+        else return Task.CompletedTask;
     }
 
     /// <summary>
     /// Deletes all authentication tokens except the given one (to log out all other clients).
     /// </summary>
-    public void DeleteAllTokensExcept(string id, string authToken)
-        => Transaction(id, (ref User user) =>
+    public Task DeleteAllTokensExceptAsync(string id, string authToken)
+        => TransactionAsync(id, t =>
         {
-            foreach (var kv in user._AuthTokens.Where(kv => kv.Key != authToken).ToList())
-                user._AuthTokens.Remove(kv.Key);
+            foreach (var kv in t.Value._AuthTokens.Where(kv => kv.Key != authToken).ToList())
+                t.Value._AuthTokens.Remove(kv.Key);
         });
 
     /// <summary>
     /// Deletes all authentication tokens.
     /// </summary>
-    public void DeleteAllTokens(string id)
-        => Transaction(id, (ref User user) => user._AuthTokens.Clear());
+    public Task DeleteAllTokensAsync(string id)
+        => TransactionAsync(id, t => t.Value._AuthTokens.Clear());
     
-    public void SetSetting(string id, string key, string value)
-        => Transaction(id, (ref User user) => user._Settings[key] = value);
+    public Task SetSettingAsync(string id, string key, string value)
+        => TransactionAsync(id, t => t.Value._Settings[key] = value);
 
     /// <summary>
     /// Deletes the setting with the given key if it exists and returns true if it did.
     /// </summary>
-    public bool DeleteSetting(string id, string key)
-        => TransactionAndGet(id, (ref User user) => user._Settings.Remove(key));
+    public Task<bool> DeleteSettingAsync(string id, string key)
+        => TransactionAndGetAsync(id, t => t.Value._Settings.Remove(key));
 }

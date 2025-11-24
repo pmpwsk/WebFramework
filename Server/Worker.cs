@@ -50,7 +50,7 @@ public static partial class Server
             //update certificates in store
             try
             {
-                UpdateCertificates();
+                await UpdateCertificatesAsync();
             }
             catch (Exception ex)
             {
@@ -78,7 +78,7 @@ public static partial class Server
             }
             try
             {
-                Tables.CheckAndFixAll();
+                await Tables.CheckAndFixAllAsync();
             }
             catch (Exception ex)
             {
@@ -91,8 +91,8 @@ public static partial class Server
                 try //delete expired tokens
                 {
                     foreach (var table in Config.Accounts.UserTables.Values.Distinct())
-                        foreach (var user in table.ListAll())
-                            table.DeleteExpiredTokens(user);
+                        foreach (var user in await table.ListAllAsync())
+                            await table.DeleteExpiredTokensAsync(user);
                 }
                 catch (Exception ex)
                 {
@@ -123,7 +123,7 @@ public static partial class Server
             await PluginManager.Work();
 
             //fire event that worker finished
-            await WorkerWorked.InvokeAsync
+            await WorkerWorked.InvokeWithAsyncCaller
             (
                 s => s(),
                 ex => Console.WriteLine("Error firing an event after the worker ran: " + ex.Message),
