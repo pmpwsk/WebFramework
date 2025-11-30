@@ -37,7 +37,7 @@ public class Body : WatchedElement
     /// </summary>
     public readonly ListWatchedContainer<ScriptReference> Scripts;
     
-    public Body(Request req, List<Menu>? menus = null, List<ScriptReference>? scripts = null)
+    public Body(Request req, IEnumerable<Menu>? menus = null, IEnumerable<ScriptReference>? scripts = null)
     {
         TopCoverContainer = new(this, new("span") { Class = "wf-top-cover" });
         OverlayBackgroundContainer = new(this, new("span") { Class = "wf-overlay-background" });

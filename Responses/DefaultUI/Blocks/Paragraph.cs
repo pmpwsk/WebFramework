@@ -1,4 +1,3 @@
-using uwap.WebFramework.Responses.Base;
 using uwap.WebFramework.Responses.Dynamic;
 
 namespace uwap.WebFramework.Responses.DefaultUI;
@@ -13,18 +12,18 @@ public class Paragraph : WatchedElement
     /// </summary>
     public readonly ListWatchedContainer<AbstractMarkdownPart> Content;
     
-    public Paragraph(List<AbstractMarkdownPart> content)
+    public Paragraph(IEnumerable<AbstractMarkdownPart> content)
     {
         Content = new(this, content);
     }
     
     public Paragraph(params string[] lines)
-        : this(Convert(lines))
+        : this(LineBreak.Convert(lines))
     {
     }
     
     public void SetLines(params string[] lines)
-        => Content.ReplaceAll(Convert(lines));
+        => Content.ReplaceAll(LineBreak.Convert(lines));
     
     public override string RenderedTag
         => "p";
@@ -33,17 +32,4 @@ public class Paragraph : WatchedElement
         => [
             Content
         ];
-
-    private static List<AbstractMarkdownPart> Convert(string[] lines)
-    {
-        List<AbstractMarkdownPart> parts = [];
-        foreach (var line in lines)
-        {
-            if (parts.Count != 0)
-                parts.Add(new LineBreak());
-            
-            parts.Add(new MarkdownText(line));
-        }
-        return parts;
-    }
 }

@@ -15,7 +15,7 @@ public abstract class AbstractSubsection : OptionalIdElement
     /// </summary>
     public readonly ListWatchedContainer<AbstractElement> Content;
     
-    protected AbstractSubsection(string? heading, List<AbstractElement>? content = null)
+    protected AbstractSubsection(string? heading, IEnumerable<AbstractElement>? content = null)
     {
         HeaderContainer = new(this, heading == null ? null : new(heading));
         Content = new(this, content ?? []);

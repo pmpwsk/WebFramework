@@ -157,6 +157,12 @@ public class Request(LayerRequestData data)
     /// If no client certificate was located, null is returned.
     /// </summary>
     public async Task<X509Certificate2?> GetClientCertificate() => Context.Connection.ClientCertificate ?? await Context.Connection.GetClientCertificateAsync();
+    
+    /// <summary>
+    /// Returns the URL of the requested page's origin.
+    /// </summary>
+    public string? CanonicalUrl
+        => Server.Config.Domains.CanonicalDomains.TryGetValueAny(out var domain, Domains) ? $"{Context.Proto()}{domain}{Context.PathQuery()}" : null;
 
     #endregion
 

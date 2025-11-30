@@ -1,3 +1,4 @@
+using uwap.WebFramework.Responses.Base;
 using uwap.WebFramework.Responses.Dynamic;
 
 namespace uwap.WebFramework.Responses.DefaultUI;
@@ -5,7 +6,7 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// <summary>
 /// An abstract default UI reference to a resource.
 /// </summary>
-public abstract class AbstractResource : WatchedElement
+public abstract class AbstractResource : OptionalIdElement
 {
     private readonly RequiredWatchedAttribute LocationAttribute;
     
@@ -20,7 +21,7 @@ public abstract class AbstractResource : WatchedElement
     public string Location
         => LocationAttribute.Value;
     
-    public void SetLocation(Request req, string url)
+    public virtual void SetLocation(Request req, string url)
         => LocationAttribute.Value = Server.ResourcePath(req, url);
     
     public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes

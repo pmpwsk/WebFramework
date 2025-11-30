@@ -3,23 +3,20 @@ namespace uwap.WebFramework.Responses.Dynamic;
 /// <summary>
 /// A class to contain multiple UI elements.
 /// </summary>
-public class ListWatchedContainer<T> : AbstractWatchedContainer where T : AbstractMarkdownPart?
+public class ListWatchedContainer<T> : AbstractWatchedContainer, IListWatchedContainer<T> where T : AbstractMarkdownPart?
 {
     /// <summary>
     /// The actual elements.
     /// </summary>
     private List<T> _Elements;
     
-    public ListWatchedContainer(IWatchedParent parent, List<T> elements) : base(parent)
+    public ListWatchedContainer(IWatchedParent parent, IEnumerable<T> elements) : base(parent)
     {
         _Elements = elements.ToList();
         foreach (var element in _Elements)
             WelcomeChild(element);
     }
     
-    /// <summary>
-    /// Adds the given element to the end of the list.
-    /// </summary>
     public void Add(T element)
     {
         var predecessor = _Elements.LastOrDefault();
@@ -40,9 +37,6 @@ public class ListWatchedContainer<T> : AbstractWatchedContainer where T : Abstra
         }
     }
     
-    /// <summary>
-    /// Removes the given element from the list.
-    /// </summary>
     public void Remove(T element)
     {
         if (!_Elements.Contains(element))
@@ -66,9 +60,6 @@ public class ListWatchedContainer<T> : AbstractWatchedContainer where T : Abstra
         }
     }
     
-    /// <summary>
-    /// Removes all elements from the list.
-    /// </summary>
     public void Clear()
     {
         if (HasUnwatchedChildren)

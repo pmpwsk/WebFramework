@@ -15,7 +15,7 @@ public class Menu : RequiredIdElement
     /// </summary>
     public readonly ListWatchedContainer<AbstractButton> Items;
     
-    public Menu(string id, string heading, List<AbstractButton>? items = null) : base(id)
+    public Menu(string id, string heading, IEnumerable<AbstractButton>? items = null) : base(id)
     {
         HeaderContainer = new(this, new(heading));
         Items = new(this, items ?? []);

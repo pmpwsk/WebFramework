@@ -41,6 +41,24 @@ public class Page : AbstractWatchablePage
         get => HeadContainer.Element.Title.Suffix;
         set => HeadContainer.Element.Title.Suffix = value;
     }
+    
+    /// <summary>
+    /// The page's description.
+    /// </summary>
+    public string? Description
+    {
+        get => HeadContainer.Element.Description;
+        set => HeadContainer.Element.Description = value;
+    }
+    
+    /// <summary>
+    /// The page's icon file.
+    /// </summary>
+    public Favicon? Favicon
+    {
+        get => HeadContainer.Element.Favicon;
+        set => HeadContainer.Element.Favicon = value;
+    }
 
     /// <summary>
     /// The CSS file references.

@@ -13,7 +13,7 @@ public class NavIsland : OptionalIdElement
     /// </summary>
     public readonly ListWatchedContainer<AbstractButton> Buttons;
     
-    public NavIsland(List<AbstractButton> buttons)
+    public NavIsland(IEnumerable<AbstractButton> buttons)
     {
         Buttons = new(this, buttons);
     }

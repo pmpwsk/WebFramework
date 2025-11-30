@@ -15,7 +15,7 @@ public class Sidebar : OptionalIdElement
     /// </summary>
     public readonly ListWatchedContainer<AbstractButton> Items;
     
-    public Sidebar(List<AbstractButton>? items = null)
+    public Sidebar(IEnumerable<AbstractButton>? items = null)
     {
         HeaderContainer = new(this, new("Navigation"));
         Items = new(this, items ?? []);

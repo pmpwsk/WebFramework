@@ -14,7 +14,7 @@ public class NavBar : WatchedElement
     /// </summary>
     public readonly ListWatchedContainer<NavIsland> Islands;
     
-    public NavBar(List<NavIsland>? navIslands = null)
+    public NavBar(IEnumerable<NavIsland>? navIslands = null)
     {
         SidebarButtonContainer = new(this, new());
         Islands = new(this, navIslands ?? []);
