@@ -97,7 +97,16 @@ document.addEventListener("click", event =>
     else if (event.target.matches(".wf-image"))
     {
         // Toggle image fullscreen
-        toggleClass(event.target, "wf-fullscreen");
+        if (event.target.matches(".wf-fullscreen"))
+        {
+            // Remove fullscreen image
+            event.target.remove();
+        } else {
+            // Add fullscreen image
+            let fullscreenImage = event.target.cloneNode();
+            fullscreenImage.classList.add("wf-fullscreen");
+            document.body.append(fullscreenImage);
+        }
     }
 });
 
