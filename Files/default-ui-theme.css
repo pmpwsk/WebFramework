@@ -1,0 +1,230 @@
+/* Font faces */
+
+@font-face {
+    font-family: 'custom-roboto';
+    font-style: normal;
+    font-weight: 400;
+    font-display: block;
+    src: url('fonts/roboto.woff2') format('woff2'), url('fonts/roboto.woff') format('woff'), url('fonts/roboto.ttf') format('truetype'), url('fonts/roboto.otf') format('otf'), url('fonts/roboto.eot') format('embedded-opentype'), url('fonts/roboto.svg') format('svg');
+    unicode-range: U+000-5FF;
+    size-adjust: 100%;
+}
+
+@font-face {
+    font-family: 'custom-roboto-mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: block;
+    src: url('fonts/roboto-mono.woff2') format('woff2'), url('fonts/roboto-mono.woff') format('woff'), url('fonts/roboto-mono.ttf') format('truetype'), url('fonts/roboto-mono.otf') format('otf'), url('fonts/roboto-mono.eot') format('embedded-opentype'), url('fonts/roboto-mono.svg') format('svg');
+    unicode-range: U+000-5FF;
+    size-adjust: 87%;
+}
+
+
+
+/* Variables */
+
+:root {
+    --max-width: 100rem;
+    --action-time: 100ms;
+    --overlay-time: 200ms;
+
+    --font-normal: 'custom-roboto';
+    --font-code: 'custom-roboto-mono';
+    --background: rgb(34, 32, 36);
+    --foreground: rgb(230, 230, 230);
+    --background-layer: rgba(68, 64, 72, 0.3);
+    --border: rgba(68, 64, 72, 0.7);
+    --code-background: rgba(34, 32, 36, 0.8);
+    --code-foreground: rgba(238, 224, 252, 0.65);
+    --action-dark: rgb(136, 128, 252);
+    --action: rgb(187, 176, 255);
+    --inset-shadow: rgba(102, 96, 108, 0.6);
+    --outer-shadow: rgba(17, 16, 18, 0.3);
+    --overlay-background: rgba(34, 32, 36, 0.6);
+    --scroll-background: rgb(68, 64, 72);
+    --marker: rgb(153, 144, 162);
+}
+
+
+
+/* Background */
+
+body, .wf-top-cover {
+    background: var(--background);
+}
+
+.wf-heading, nav, section, footer, aside, .wf-menu, .wf-button, .wf-checkbox, .wf-upload, .wf-upload::file-selector-button, select, .wf-textbox {
+    background: var(--background-layer);
+}
+
+.wf-heading, .wf-overlay-background {
+    backdrop-filter: blur(var(--s4));
+}
+
+code, pre {
+    background: var(--code-background);
+    box-shadow: var(--s4) 0 0 var(--code-background),
+    var(--n4) 0 0 var(--code-background)
+}
+
+code {
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+}
+
+.wf-overlay-background {
+    background: var(--overlay-background);
+}
+
+.wf-image.wf-fullscreen {
+    background: black;
+}
+
+
+
+/* Border radius */
+
+nav, section, footer, aside, .wf-menu {
+    border-radius: var(--s11);
+}
+
+.wf-button, .wf-checkbox, .wf-upload, .wf-upload::file-selector-button, select, .wf-textbox {
+    border-radius: var(--s8);
+}
+
+.wf-image, code {
+    border-radius: var(--s4);
+}
+
+h3.wf-heading, pre {
+    border-radius: var(--s5);
+}
+
+h1.wf-heading, aside > h2.wf-heading, .wf-menu > h2.wf-heading {
+    border-radius: var(--s11) 0;
+}
+
+.wf-subsection > h2.wf-heading {
+    border-radius: 0 var(--s11) var(--s11) 0;
+}
+
+
+
+/* Font */
+
+* {
+    color: var(--foreground);
+    font-family: var(--font-normal), sans-serif;
+}
+
+.wf-button, p a, li a, .wf-button:active, p a:active, .wf-button:focus, p a:focus, .wf-button h3, .wf-upload::file-selector-button {
+    color: var(--action);
+}
+
+p a:hover, li a:hover {
+    color: var(--action-dark);
+}
+
+code, pre {
+    font-family: var(--font-code), monospace;
+    color: var(--code-foreground);
+}
+
+
+
+/* Shadows */
+
+.wf-heading, nav, section, footer, aside, .wf-menu, .wf-image {
+    box-shadow: 0 0 var(--s4) 0 var(--inset-shadow) inset,
+    0 0 var(--s6) var(--s2) var(--outer-shadow),
+    0 9rem 3rem -10rem var(--inset-shadow) inset;
+}
+
+.wf-top-cover {
+    box-shadow: 0 0 var(--s4) var(--s6) var(--background);
+}
+
+
+
+/* Realistic elements */
+
+.wf-button, .wf-button:focus, .wf-upload::file-selector-button, .wf-upload::file-selector-button:focus {
+    box-shadow: 0 var(--s2) 0 0 var(--action-dark),
+    0 var(--s2) var(--s4) var(--s4) var(--outer-shadow),
+    0 0 0 var(--s1) var(--action) inset,
+    0 calc(8rem + var(--s7)) 3rem -10rem var(--action-dark) inset;
+    top: var(--n2);
+    transition: box-shadow var(--action-time) ease-in-out,
+    top var(--action-time) ease-in-out;
+}
+
+.wf-button:active, .wf-upload:active::file-selector-button, .wf-upload::file-selector-button:active {
+    box-shadow: 0 0 0 0 var(--action-dark),
+    0 var(--s2) var(--s3) var(--s3) var(--outer-shadow),
+    0 0 0 var(--s1) var(--action) inset,
+    0 calc(8rem + var(--s7)) 3rem -10rem var(--action-dark) inset;
+    top: 0;
+    transition: box-shadow var(--action-time) ease-in-out,
+    top var(--action-time) ease-in-out;
+}
+
+select, select:focus, select:active, .wf-checkbox, .wf-checkbox:focus, .wf-checkbox:active, .wf-upload, .wf-upload:focus, .wf-upload:active, .wf-textbox {
+    box-shadow: 0 0 0 var(--s1) var(--border) inset,
+    0 var(--s1) 0 var(--s1) var(--background) inset,
+    0 var(--s1) var(--s4) var(--s1) var(--background) inset,
+    0 calc(7rem + var(--s12)) 3rem -10rem var(--action-dark) inset;
+    transition: box-shadow var(--action-time) ease-in-out;
+}
+
+.wf-textbox:focus, .wf-textbox:active {
+    box-shadow: 0 0 0 var(--s1) var(--marker) inset,
+    0 var(--s1) 0 var(--s1) var(--background) inset,
+    0 var(--s1) var(--s4) var(--s1) var(--background) inset,
+    0 calc(7rem + var(--s12)) 3rem -10rem var(--action-dark) inset;
+    transition: box-shadow var(--action-time) ease-in-out;
+}
+
+
+
+/* Lists */
+
+li::marker {
+    color: var(--marker);
+}
+
+
+
+/* Scrollbar */
+
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner {
+    background-color: var(--scroll-background);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--action);
+    border-radius: var(--s5);
+
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--action-dark);
+}
+
+@-moz-document url-prefix() {
+    * {
+        scrollbar-color: var(--action) var(--scroll-background);
+    }
+}
+
+
+
+/* Other stuff */
+
+footer {
+    opacity: 0.5;
+}
+
+.wf-checkbox input {
+    accent-color: var(--action);
+}

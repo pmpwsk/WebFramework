@@ -28,7 +28,8 @@ public class Head : WatchedElement
     {
         TitleContainer = new(this, new("Untitled", Server.Config.Domains.TitleExtensions.GetValueAny(req.Domains)));
         ViewportSettingsContainer = new(this, new("viewport", "width=device-width, initial-scale=1.0, interactive-widget=resizes-content"));
-        DefaultStyle = new(this, new(req, $"{Server.Layers.SystemFilesLayerPrefix}/default-ui.css"));
+        LayoutStyleContainer = new(this, new(req, $"{Server.Layers.SystemFilesLayerPrefix}/default-ui-layout.css"));
+        ThemeStyleContainer = new(this, new(req, $"{Server.Layers.SystemFilesLayerPrefix}/default-ui-theme.css"));
         Styles = new(this, styles ?? []);
     }
     
@@ -41,6 +42,24 @@ public class Head : WatchedElement
         set => TitleContainer.Element = value;
     }
     
+    /// <summary>
+    /// The layout CSS file.
+    /// </summary>
+    public StyleReference LayoutStyle
+    {
+        get => LayoutStyleContainer.Element;
+        set => LayoutStyleContainer.Element = value;
+    }
+    
+    /// <summary>
+    /// The theme CSS file.
+    /// </summary>
+    public StyleReference ThemeStyle
+    {
+        get => ThemeStyleContainer.Element;
+        set => ThemeStyleContainer.Element = value;
+    }
+    
     public override string RenderedTag
         => "head";
 
@@ -48,7 +67,8 @@ public class Head : WatchedElement
         => [
             TitleContainer,
             ViewportSettingsContainer,
-            DefaultStyle,
+            LayoutStyleContainer,
+            ThemeStyleContainer,
             Styles
         ];
 }

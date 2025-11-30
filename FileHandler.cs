@@ -5,27 +5,29 @@ public static class SystemFiles
     public static byte[]? GetFile(string relPath, string pathPrefix, string domain)
         => relPath switch
         {
-            "/default-ui.css" => (byte[]?)PackedFiles_ResourceManager.GetObject("File0"),
-            "/default-ui.js" => (byte[]?)PackedFiles_ResourceManager.GetObject("File1"),
-            "/fonts/roboto-mono.eot" => (byte[]?)PackedFiles_ResourceManager.GetObject("File2"),
-            "/fonts/roboto-mono.otf" => (byte[]?)PackedFiles_ResourceManager.GetObject("File3"),
-            "/fonts/roboto-mono.svg" => (byte[]?)PackedFiles_ResourceManager.GetObject("File4"),
-            "/fonts/roboto-mono.ttf" => (byte[]?)PackedFiles_ResourceManager.GetObject("File5"),
-            "/fonts/roboto-mono.woff" => (byte[]?)PackedFiles_ResourceManager.GetObject("File6"),
-            "/fonts/roboto-mono.woff2" => (byte[]?)PackedFiles_ResourceManager.GetObject("File7"),
-            "/fonts/roboto.eot" => (byte[]?)PackedFiles_ResourceManager.GetObject("File8"),
-            "/fonts/roboto.otf" => (byte[]?)PackedFiles_ResourceManager.GetObject("File9"),
-            "/fonts/roboto.svg" => (byte[]?)PackedFiles_ResourceManager.GetObject("File10"),
-            "/fonts/roboto.ttf" => (byte[]?)PackedFiles_ResourceManager.GetObject("File11"),
-            "/fonts/roboto.woff" => (byte[]?)PackedFiles_ResourceManager.GetObject("File12"),
-            "/fonts/roboto.woff2" => (byte[]?)PackedFiles_ResourceManager.GetObject("File13"),
+            "/default-ui-layout.css" => (byte[]?)PackedFiles_ResourceManager.GetObject("File0"),
+            "/default-ui-theme.css" => (byte[]?)PackedFiles_ResourceManager.GetObject("File1"),
+            "/default-ui.js" => (byte[]?)PackedFiles_ResourceManager.GetObject("File2"),
+            "/fonts/roboto-mono.eot" => (byte[]?)PackedFiles_ResourceManager.GetObject("File3"),
+            "/fonts/roboto-mono.otf" => (byte[]?)PackedFiles_ResourceManager.GetObject("File4"),
+            "/fonts/roboto-mono.svg" => (byte[]?)PackedFiles_ResourceManager.GetObject("File5"),
+            "/fonts/roboto-mono.ttf" => (byte[]?)PackedFiles_ResourceManager.GetObject("File6"),
+            "/fonts/roboto-mono.woff" => (byte[]?)PackedFiles_ResourceManager.GetObject("File7"),
+            "/fonts/roboto-mono.woff2" => (byte[]?)PackedFiles_ResourceManager.GetObject("File8"),
+            "/fonts/roboto.eot" => (byte[]?)PackedFiles_ResourceManager.GetObject("File9"),
+            "/fonts/roboto.otf" => (byte[]?)PackedFiles_ResourceManager.GetObject("File10"),
+            "/fonts/roboto.svg" => (byte[]?)PackedFiles_ResourceManager.GetObject("File11"),
+            "/fonts/roboto.ttf" => (byte[]?)PackedFiles_ResourceManager.GetObject("File12"),
+            "/fonts/roboto.woff" => (byte[]?)PackedFiles_ResourceManager.GetObject("File13"),
+            "/fonts/roboto.woff2" => (byte[]?)PackedFiles_ResourceManager.GetObject("File14"),
             _ => null
         };
     
     public static string? GetFileVersion(string relPath)
         => relPath switch
         {
-            "/default-ui.css" => "639000949552765795",
+            "/default-ui-layout.css" => "639001009289181620",
+            "/default-ui-theme.css" => "639001009358571205",
             "/default-ui.js" => "638993622734275078",
             "/fonts/roboto-mono.eot" => "638993200608997332",
             "/fonts/roboto-mono.otf" => "638993200609177334",
