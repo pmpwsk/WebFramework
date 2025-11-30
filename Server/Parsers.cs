@@ -423,6 +423,50 @@ public static class Parsers
     }
 
     /// <summary>
+    /// Returns the part of the given string before the last occurrence of the given separator.
+    /// </summary>
+    public static string BeforeLast(this string value, string separator)
+    {
+        int index = value.LastIndexOf(separator, StringComparison.Ordinal);
+        if (index == -1)
+            return value;
+        return value.Remove(index);
+    }
+
+    /// <summary>
+    /// Returns the part of the given string before the last occurrence of the given separator.
+    /// </summary>
+    public static string BeforeLast(this string value, char separator)
+    {
+        int index = value.LastIndexOf(separator);
+        if (index == -1)
+            return value;
+        return value.Remove(index);
+    }
+
+    /// <summary>
+    /// Returns the part of the given string after the first occurrence of the given separator.
+    /// </summary>
+    public static string AfterFirst(this string value, string separator)
+    {
+        int index = value.IndexOf(separator, StringComparison.Ordinal);
+        if (index == -1)
+            return value;
+        return value.Remove(0, index + separator.Length);
+    }
+
+    /// <summary>
+    /// Returns the part of the given string after the first occurrence of the given separator.
+    /// </summary>
+    public static string AfterFirst(this string value, char separator)
+    {
+        int index = value.IndexOf(separator);
+        if (index == -1)
+            return value;
+        return value.Remove(0, index + 1);
+    }
+
+    /// <summary>
     /// Splits the string at the first occurrence of the given separator and returns both parts.
     /// </summary>
     public static bool SplitAtFirst(this string value, char separator, out string part1, out string part2)
@@ -709,4 +753,186 @@ public static class Parsers
     /// </summary>
     public static T? PeekOrDefault<T>(this Queue<T> queue)
         => queue.TryPeek(out var value) ? value : default;
+    
+    /// <summary>
+    /// Measures the indentation of the given line by counting the spaces. Tabs are equivalent to the specified number of spaces.
+    /// </summary>
+    public static (int Indentation, string Remainder) MeasureIndentation(this string line, int tabLength = 4)
+    {
+        int indentation = 0;
+        foreach (var c in line)
+        {
+            switch (c)
+            {
+                case ' ':
+                    indentation++;
+                    break;
+                case '\t':
+                    indentation += tabLength;
+                    break;
+                default:
+                    return (indentation, line[indentation..]);
+            }
+        }
+        return (line.Length, "");
+    }
+    
+    /// <summary>
+    /// Removes all items after the given index, including at the index itself.
+    /// </summary>
+    public static void RemoveRange<T>(this List<T> list, int index)
+    {
+        if (index > 0 || list.Count > 0)
+            list.RemoveRange(index, list.Count - index);
+    }
+    
+    /// <summary>
+    /// Inserts the given value at the given index while removing all elements after it.
+    /// </summary>
+    public static void ReplaceEnd<T>(this List<T> list, int index, T value)
+    {
+        list.RemoveRange(index);
+        list.Add(value);
+    }
+    
+    /// <summary>
+    /// Returns whether the given string contains a segment that is surrounded by the given symbols and returns the first occurrence if one exists.
+    /// </summary>
+    public static bool ContainsMarkedSegment(this string value, string symbol1, string symbol2, [MaybeNullWhen(false)] out string before, [MaybeNullWhen(false)] out string segment, [MaybeNullWhen(false)] out string after)
+    {
+        if (value.SplitAtFirst(symbol1, out before, out var afterFirst)
+            && afterFirst.SplitAtFirst(symbol2, out segment, out after))
+            return true;
+        
+        before = null;
+        segment = null;
+        after = null;
+        return false;
+    }
+    
+    /// <summary>
+    /// Returns whether the given string contains a segment that is surrounded by the given symbols and returns the first occurrence if one exists.
+    /// </summary>
+    public static bool ContainsMarkedSegment(this string value, string symbol1, string symbol2, string symbol3, [MaybeNullWhen(false)] out string before, [MaybeNullWhen(false)] out string segment1, [MaybeNullWhen(false)] out string segment2, [MaybeNullWhen(false)] out string after)
+    {
+        if (value.SplitAtFirst(symbol1, out before, out var afterFirst)
+            && afterFirst.SplitAtFirst(symbol2, out segment1, out var afterSecond)
+            && afterSecond.SplitAtFirst(symbol3, out segment2, out after))
+            return true;
+        
+        before = null;
+        segment1 = null;
+        segment2 = null;
+        after = null;
+        return false;
+    }
+    
+    /// <summary>
+    /// Returns whether the given string is a segment that is surrounded by the given symbols and returns the content if it matches the surroundings.
+    /// </summary>
+    public static bool IsMarkedSegment(this string value, string symbol1, string symbol2, [MaybeNullWhen(false)] out string segment)
+    {
+        if (value.StartsWith(symbol1, out var afterFirst)
+            && afterFirst.EndsWith(symbol2, out segment))
+            return true;
+        
+        segment = null;
+        return false;
+    }
+    
+    /// <summary>
+    /// Returns whether the given string is a segment that is surrounded by the given symbols and returns the content if it matches the surroundings.
+    /// </summary>
+    public static bool IsMarkedSegment(this string value, string symbol1, string symbol2, string symbol3, [MaybeNullWhen(false)] out string segment1, [MaybeNullWhen(false)] out string segment2)
+    {
+        if (value.StartsWith(symbol1, out var afterFirst)
+            && afterFirst.SplitAtFirst(symbol2, out segment1, out var afterSecond)
+            && afterSecond.EndsWith(symbol3, out segment2))
+            return true;
+        
+        segment1 = null;
+        segment2 = null;
+        return false;
+    }
+    
+    /// <summary>
+    /// Returns the top element of the given stack without removing it or <c>null</c> if the stack is empty.
+    /// </summary>
+    public static T? PeekOrDefault<T>(this Stack<T> stack)
+        => stack.TryPeek(out var value) ? value : default;
+    
+    /// <summary>
+    /// Returns whether the given value starts with the given possible beginning and returns the part after it.
+    /// </summary>
+    public static bool StartsWith(this string value, string start, [MaybeNullWhen(false)] out string rest)
+    {
+        if (value.StartsWith(start))
+        {
+            rest = value[start.Length..];
+            return true;
+        }
+        
+        rest = null;
+        return false;
+    }
+    
+    /// <summary>
+    /// Returns whether the given value starts with any of the given possible beginnings and returns the matched beginning and the part after it.
+    /// </summary>
+    public static bool StartsWithAny(this string value, [MaybeNullWhen(false)] out string rest, [MaybeNullWhen(false)] out string start, params string[] possibleStarts)
+    {
+        foreach (var possibleStart in possibleStarts)
+            if (value.StartsWith(possibleStart, out rest))
+            {
+                start = possibleStart;
+                return true;
+            }
+        
+        rest = null;
+        start = null;
+        return false;
+    }
+    
+    /// <summary>
+    /// Returns whether the given value ends with the given possible ending and returns the part before it.
+    /// </summary>
+    public static bool EndsWith(this string value, string end, [MaybeNullWhen(false)] out string rest)
+    {
+        if (value.EndsWith(end))
+        {
+            rest = value[..^end.Length];
+            return true;
+        }
+        
+        rest = null;
+        return false;
+    }
+    
+    /// <summary>
+    /// Returns whether the given value ends with any of the given possible endings and returns the matched ending and the part before it.
+    /// </summary>
+    public static bool EndsWithAny(this string value, [MaybeNullWhen(false)] out string rest, [MaybeNullWhen(false)] out string end, params string[] possibleEnds)
+    {
+        foreach (var possibleEnd in possibleEnds)
+            if (value.EndsWith(possibleEnd, out rest))
+            {
+                end = possibleEnd;
+                return true;
+            }
+        
+        rest = null;
+        end = null;
+        return false;
+    }
+    
+    /// <summary>
+    /// Returns the configured MIME type for the given URL based on its file extension, or null if the operation failed to find a type.
+    /// </summary>
+    public static string? GetMimeType(this string url)
+    {
+        if (url.Before('?').After('/').SplitAtLast('.', out _, out var extension)
+            && Server.Config.MimeTypes.TryGetValue('.' + extension, out var mimeType))
+            return mimeType;
+        return null;
+    }
 }

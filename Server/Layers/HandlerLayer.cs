@@ -58,7 +58,7 @@ public static partial class Server
                     //handler
                     if (await Handle(data, async req =>
                             {
-                                if (data.Method == "GET" && ParsePage(req, data.Domains))
+                                if (data.Method == "GET" && (ParsePage(req, data.Domains) || await MarkdownParser.HandleRequest(req, data.Domains)))
                                 {
                                 }
                                 else if (plugin != null)
