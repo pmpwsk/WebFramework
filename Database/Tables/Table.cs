@@ -632,6 +632,10 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
         
         var entry = Data.GetValueOrDefault(id);
         
+        R result;
+        T? oldValue;
+        T? newValue;
+        
         var request = entry == null ? null : await LockRequest.CreateLocalAsync(entry);
         if (request != null)
             await request.WaitUntilReady();
@@ -639,9 +643,10 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
         var locker = entry == null ? null : await entry.Lock.WaitWriteAsync();
         try
         {
+            oldValue = entry?.Deserialize();
+            
             TransactionData<T?> transaction = new(entry?.Deserialize());
             
-            R result;
             try
             {
                 result = await action(transaction);
@@ -699,13 +704,17 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
             if (request != null)
                 await LockRequest.DeleteAsync(entry, request.Timestamp, request.Randomness);
             
-            return result;
+            newValue = transaction.Value;
         }
         finally
         {
             if (locker != null)
                 await locker.DisposeAsync();
         }
+        
+        await entry.CallChangedEventAsync(oldValue, newValue);
+            
+        return result;
     }
     
     public override async Task<bool> DeleteAsync(string id)
