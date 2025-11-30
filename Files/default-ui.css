@@ -426,7 +426,7 @@ h1.wf-heading, aside > h2.wf-heading, .wf-menu > h2.wf-heading {
 
 * {
     color: var(--foreground);
-    font-family: var(--font-normal);
+    font-family: var(--font-normal), sans-serif;
     font-size: 1rem;
 }
 
@@ -452,17 +452,17 @@ h3 {
     line-height: calc(1rem + var(--s4));
 }
 
-.wf-button, p a, .wf-button:active, p a:active, .wf-button:focus, p a:focus, .wf-button h3, .wf-upload::file-selector-button {
+.wf-button, p a, li a, .wf-button:active, p a:active, .wf-button:focus, p a:focus, .wf-button h3, .wf-upload::file-selector-button {
     text-decoration: none;
     color: var(--action);
 }
 
-p a:hover {
+p a:hover, li a:hover {
     color: var(--action-dark);
 }
 
 code, pre {
-    font-family: var(--font-code);
+    font-family: var(--font-code), monospace;
     color: var(--code-foreground);
 }
 
