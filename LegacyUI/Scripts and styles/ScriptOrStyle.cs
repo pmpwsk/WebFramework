@@ -56,7 +56,7 @@ public abstract class ScriptOrStyle
     /// </summary>
     public IEnumerable<string> Export(Request req)
     {
-        Parsers.FormatPath(req.Context, Url, req.Domains, out var path, out var domains, out var query);
+        Parsers.FormatPath(req, Url, req.Domains, out var path, out var domains, out var query);
         if (Server.Cache.TryGetValueAny(out var entry, domains.Select(d => d + path).ToArray()))
             if (entry.IsPublic && !Flatten)
                 yield return BuildReference(Url + Parsers.QueryStringSuffix(query, $"t={entry.GetModifiedUtc().Ticks}"));
@@ -69,7 +69,7 @@ public abstract class ScriptOrStyle
             }
         else
         {
-            IPlugin? plugin = PluginManager.GetPlugin(req.Context, domains, path, out string relPath, out string pathPrefix, out string domain);
+            IPlugin? plugin = PluginManager.GetPlugin(req, domains, path, out string relPath, out string pathPrefix, out string domain);
             if (plugin != null)
             {
                 string? timestamp = plugin.GetFileVersion(relPath);

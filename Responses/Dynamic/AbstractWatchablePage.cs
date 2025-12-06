@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+
 namespace uwap.WebFramework.Responses.Dynamic;
 
 /// <summary>
@@ -12,11 +14,11 @@ public abstract class AbstractWatchablePage(bool dynamic) : AbstractTextResponse
     
     public ChangeWatcher? ChangeWatcher { get; private set; }
 
-    public override Task Respond(Request req)
+    public override Task Respond(Request req, HttpContext context)
     {
         if (Dynamic)
             ChangeWatcher = WatcherManager.CreateWatcher(this);
-        return base.Respond(req);
+        return base.Respond(req, context);
     }
 
     public abstract IEnumerable<AbstractWatchedContainer?> RenderedContainers { get; }

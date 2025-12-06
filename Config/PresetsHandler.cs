@@ -84,13 +84,13 @@ public class PresetsHandler
             LoginState.None or _
                 => new Elements.Button("Login", AccountPathMatches("/login") || AccountPathMatches("/register") || AccountPathMatches("/recovery", true)
                     ? $"{usersPluginPath}/login{req.CurrentRedirectQuery}"
-                    : $"{usersPluginPath}/login?redirect={HttpUtility.UrlEncode(req.Context.ProtoHostPathQuery())}", "right")
+                    : $"{usersPluginPath}/login?redirect={HttpUtility.UrlEncode(req.ProtoHostPathQuery)}", "right")
         };
 
         bool AccountPathMatches(string relPath, bool allowPrefix = false)
         {
             string wantedPath = usersPluginPath + relPath;
-            string testPath = wantedPath.StartsWith("http") ? req.Context.ProtoHostPath() : req.FullPath;
+            string testPath = wantedPath.StartsWith("http") ? req.ProtoHostPath : req.FullPath;
             return wantedPath == testPath || (allowPrefix && testPath.StartsWith(wantedPath + '/'));
         }
     }
@@ -128,14 +128,13 @@ public class PresetsHandler
     /// <summary>
     /// Adds elements to allow for password (and 2FA if present) verification with input IDs 'password' and 'code'.
     /// </summary>
-    public virtual void AddAuthElements(Request req)
+    public virtual void AddAuthElements(Elements.Page page, Request req)
     {
-        req.Init(out Elements.Page _, out var e);
         if (!req.LoggedIn) throw new Exception("Not logged in.");
         User user = req.User;
         string? twoFactorText = user.TwoFactor.TOTPEnabled() ? null : "disabled";
         string? twoFactorStyle = user.TwoFactor.TOTPEnabled() ? null : "display: none";
-        e.Add(new Elements.ContainerElement(null, new List<Elements.IContent>
+        page.Elements.Add(new Elements.ContainerElement(null, new List<Elements.IContent>
         {
             new Elements.Heading("Password:"),
             new Elements.TextBox("Enter your password...", null, "password", Elements.TextBoxRole.Password, "Continue()"),

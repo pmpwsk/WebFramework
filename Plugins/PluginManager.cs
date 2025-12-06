@@ -17,7 +17,7 @@ public static class PluginManager
     /// Finds the plugin that most closely matches the given path for any of the given domains and returns it and the relative path that is left over (rest), or returns null if no matching plugin was found.<br/>
     /// Domains should be sorted by their priority among plugins with the same depth (the most relevant domain should be first).
     /// </summary>
-    public static IPlugin? GetPlugin(HttpContext context, IEnumerable<string> domains, string path, out string relPath, out string pathPrefix, out string domain)
+    public static IPlugin? GetPlugin(Request req, IEnumerable<string> domains, string path, out string relPath, out string pathPrefix, out string domain)
     {
         Dictionary<int, Tuple<IPlugin,string>> results = [];
         foreach (var d in domains)
@@ -36,7 +36,7 @@ public static class PluginManager
         if (pathPrefix == "/")
             pathPrefix = "";
         relPath = path[pathPrefix.Length..];
-        pathPrefix = context.ProtoHost() + pathPrefix;
+        pathPrefix = req.ProtoHost + pathPrefix;
         var result = results[max];
         domain = result.Item2;
         return result.Item1;

@@ -8,6 +8,9 @@ namespace uwap.WebFramework.Responses.Dynamic;
 /// </summary>
 public static class WatcherManager
 {
+    public static readonly IResponse RejectResponse
+        = new SingleEventMessageResponse(JsonSerializer.Serialize(new { type = "Reload" }));
+    
     /// <summary>
     /// The currently watched pages, indexed by their watcher IDs.
     /// </summary>
@@ -67,7 +70,4 @@ public static class WatcherManager
             return false;
         }
     }
-    
-    public static Task Reject(Request req)
-        => req.EventMessage(JsonSerializer.Serialize(new { type = "Reload" }));
 }

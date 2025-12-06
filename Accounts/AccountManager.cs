@@ -43,20 +43,20 @@ public static class AccountManager
     private static readonly Dictionary<string,FailedAuthEntry> FailedAuth = [];
 
     /// <summary>
-    /// Returns the user table for the domain of the given context (or "any") or returns null if no matches were found.
+    /// Returns the user table for the domain of the given request (or "any") or returns null if no matches were found.
     /// </summary>
-    public static UserTable? GetUserTable(this HttpContext context)
-        => Settings.UserTables.TryGetValue(context.Request.Host.Host, out var t1) ? t1 : Settings.UserTables.GetValueOrDefault("any");
+    public static UserTable? GetUserTable(Request req)
+        => Settings.UserTables.TryGetValue(req.Domain, out var t1) ? t1 : Settings.UserTables.GetValueOrDefault("any");
     
     /// <summary>
     /// Reports one failed authentication attempt for the requesting IP of the given context.
     /// </summary>
-    public static void ReportFailedAuth(HttpContext context)
+    public static void ReportFailedAuth(Request req)
     {
         if (!Settings.FailedAttempts.EnableBanning)
             return;
 
-        string? ipString = context.IP(); //necessary for ::ffff:
+        string? ipString = req.IP; //necessary for ::ffff:
         if (ipString == null)
             return;
 
@@ -86,11 +86,11 @@ public static class AccountManager
     }
 
     /// <summary>
-    /// Checks whether the IP of the given context is currently banned from making login attempts.
+    /// Checks whether the IP of the given request is currently banned from making login attempts.
     /// </summary>
-    public static bool IsBanned(HttpContext context)
+    public static bool IsBanned(Request req)
     {
-        string? ip = context.IP();
+        string? ip = req.IP;
         if (ip == null) return false;
         string key = Convert.ToHexString(ip.ToSha256());
         if (FailedAuth.TryGetValue(key, out var fa) && (DateTime.UtcNow-fa.LastAttempt)<Settings.FailedAttempts.BanDuration)
@@ -109,12 +109,12 @@ public static class AccountManager
     }
 
     /// <summary>
-    /// Adds a cookie for the given authentication token to the given context.
+    /// Adds a cookie for the given authentication token to the given request.
     /// </summary>
-    internal static void AddAuthTokenCookie(string combinedToken, HttpContext context, bool temporary)
+    internal static void AddAuthTokenCookie(string combinedToken, Request req, bool temporary)
     {
-        GenerateAuthTokenCookieOptions(out var expires, out var sameSite, out var domain, context, temporary);
-        context.Response.Cookies.Append("AuthToken", combinedToken, new CookieOptions()
+        GenerateAuthTokenCookieOptions(out var expires, out var sameSite, out var domain, req, temporary);
+        req.Cookies.Add("AuthToken", combinedToken, new CookieOptions()
         {
             Expires = expires,
             SameSite = sameSite,
@@ -127,11 +127,11 @@ public static class AccountManager
     /// <summary>
     /// Generates the appropriate cookie options.
     /// </summary>
-    public static void GenerateAuthTokenCookieOptions(out DateTime expires, out SameSiteMode sameSite, out string? domain, HttpContext context, bool temporary = false)
+    public static void GenerateAuthTokenCookieOptions(out DateTime expires, out SameSiteMode sameSite, out string? domain, Request req, bool temporary = false)
     {
         expires = DateTime.UtcNow + (temporary ? TimeSpan.FromMinutes(10) : Settings.TokenExpiration);
         sameSite = Settings.SameSiteStrict ? SameSiteMode.Strict : SameSiteMode.Lax;
-        domain = GetWildcardDomain(context.Domain());
+        domain = GetWildcardDomain(req.Domain);
     }
 
     /// <summary>
@@ -139,10 +139,7 @@ public static class AccountManager
     /// </summary>
     public static string? GetWildcardDomain(string domain)
     {
-        string? wildcard;
-        if (Settings.WildcardDomains.Contains(domain))
-            wildcard = domain;
-        else wildcard = Settings.WildcardDomains.FirstOrDefault(x => domain.EndsWith('.' + x) && !domain[..(domain.Length - x.Length - 1)].Contains('.'));
+        var wildcard = Settings.WildcardDomains.Contains(domain) ? domain : Settings.WildcardDomains.FirstOrDefault(x => domain.EndsWith('.' + x) && !domain[..(domain.Length - x.Length - 1)].Contains('.'));
 
         if (wildcard != null) return '.' + wildcard;
         else return null;
@@ -154,7 +151,7 @@ public static class AccountManager
     internal static async Task LoginAsync(User user, Request req)
     {
         (string token, bool temporary) = await req.UserTable.AddNewTokenAsync(user.Id);
-        AddAuthTokenCookie(user.Id + token, req.Context, temporary);
+        AddAuthTokenCookie(user.Id + token, req, temporary);
     }
 
     /// <summary>

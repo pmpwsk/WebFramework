@@ -1,4 +1,6 @@
-﻿namespace uwap.WebFramework;
+﻿using uwap.WebFramework.Responses;
+
+namespace uwap.WebFramework;
 
 public static partial class Server
 {
@@ -7,20 +9,21 @@ public static partial class Server
         /// <summary>
         /// Handles ACME challenges for Let's Encrypt.
         /// </summary>
-        public static async Task<bool> LetsEncryptLayer(LayerRequestData data)
+        public static Task<IResponse?> LetsEncryptLayer(Request req)
+            => Task.FromResult(LetsEncryptLayerSync(req));
+        
+        public static IResponse? LetsEncryptLayerSync(Request req)
         {
-            if (Config.AutoCertificate.Email != null && data.Path.StartsWith("/.well-known/acme-challenge/"))
+            if (Config.AutoCertificate.Email != null && req.Path.StartsWith("/.well-known/acme-challenge/"))
             {
-                Request request = new(data);
-                string url = request.Domain + request.Path;
+                string url = req.Domain + req.Path;
                 if (AutoCertificateTokens.TryGetValue(url, out string? value))
-                    await request.Write(value);
-                else request.Status = 404;
-                await request.Finish();
-                return true;
+                    return new TextResponse(value);
+                else
+                    return StatusResponse.NotFound;
             }
 
-            return false;
+            return null;
         }
     }
 }

@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+
 namespace uwap.WebFramework.Responses;
 
 /// <summary>
@@ -5,11 +7,9 @@ namespace uwap.WebFramework.Responses;
 /// </summary>
 public abstract class AbstractTextResponse : AbstractMarkdownPart, IResponse
 {
-    public virtual async Task Respond(Request req)
+    public virtual async Task Respond(Request req, HttpContext context)
     {
-        req.WriteTextImmediately = true;
         foreach (var chunk in EnumerateChunks())
-            await req.Write(chunk);
-        await req.Finish();
+            await context.Response.WriteAsync(chunk);
     }
 }

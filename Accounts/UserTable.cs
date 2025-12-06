@@ -38,15 +38,15 @@ public class UserTable(string name) : Table<User>(name)
         => await GetByIdNullableAsync(await MailAddressIndex.GetAsync(mailAddress));
 
     /// <summary>
-    /// Checks and returns the login state of the given context and returns the user using the out-parameter if one has been found.
+    /// Checks and returns the login state of the given request and returns the user using the out-parameter if one has been found.
     /// If the user is fully logged in without additional requirements (2FA, verification), the token will be renewed if it's old enough.
     /// </summary>
-    public async Task<(LoginState State, User? User, ReadOnlyCollection<string>? LimitedToPaths)> AuthenticateAsync(HttpContext context)
+    public async Task<(LoginState State, User? User, ReadOnlyCollection<string>? LimitedToPaths)> AuthenticateAsync(Request req)
     {
-        if (AccountManager.IsBanned(context))
+        if (AccountManager.IsBanned(req))
             return (LoginState.Banned, null, null);
 
-        if (!context.Request.Cookies.TryGetValue("AuthToken", out var combinedToken))
+        if (!req.Cookies.TryGetValue("AuthToken", out var combinedToken))
             return (LoginState.None, null, null);
 
         string id = combinedToken.Remove(12);
@@ -54,13 +54,13 @@ public class UserTable(string name) : Table<User>(name)
         var user = await GetByIdNullableAsync(id);
         if (user == null || !user.Auth.TryGetValue(authToken, out var tokenData))
         { //user doesn't exist or doesn't contain the token provided
-            AccountManager.ReportFailedAuth(context);
-            context.Response.Cookies.Delete("AuthToken");
+            AccountManager.ReportFailedAuth(req);
+            req.Cookies.Delete("AuthToken");
             return (LoginState.None, null, null);
         }
         if (tokenData.Expires < DateTime.UtcNow)
         { //token expired <- don't report this because it's probably not brute-force
-            context.Response.Cookies.Delete("AuthToken");
+            req.Cookies.Delete("AuthToken");
             if (Server.Config.Log.AuthTokenExpired)
                 Console.WriteLine($"User {id} used an expired auth token.");
             return (LoginState.None, null, null);
@@ -74,7 +74,7 @@ public class UserTable(string name) : Table<User>(name)
         {
             if (tokenData.Expires < DateTime.UtcNow + Server.Config.Accounts.TokenExpiration - Server.Config.Accounts.TokenRenewalAfter)
             { //renew token if the renewal is due
-                AccountManager.AddAuthTokenCookie(user.Id + await RenewTokenAsync(user.Id, authToken, tokenData), context, false);
+                AccountManager.AddAuthTokenCookie(user.Id + await RenewTokenAsync(user.Id, authToken, tokenData), req, false);
                 if (Server.Config.Log.AuthTokenRenewed)
                     Console.WriteLine($"Renewed a token for user {id}.");
             }
@@ -85,14 +85,14 @@ public class UserTable(string name) : Table<User>(name)
     /// <summary>
     /// Logs out the current client or all other clients.
     /// </summary>
-    /// <param name="context">The context to log out.</param>
+    /// <param name="req">The request to log out.</param>
     /// <param name="logoutOthers">Whether to log out all other clients or the current client.</param>
-    private async Task LogoutAsync(HttpContext context, bool logoutOthers)
+    private async Task LogoutAsync(Request req, bool logoutOthers)
     {
-        if (!context.Request.Cookies.TryGetValue("AuthToken", out var combinedToken))
+        if (!req.Cookies.TryGetValue("AuthToken", out var combinedToken))
             return;
         if (!logoutOthers)
-            context.Response.Cookies.Delete("AuthToken", new CookieOptions { Domain = AccountManager.GetWildcardDomain(context.Domain())});
+            req.Cookies.Delete("AuthToken", new CookieOptions { Domain = AccountManager.GetWildcardDomain(req.Domain)});
         string id = combinedToken.Remove(12);
         string authToken = combinedToken.Remove(0, 12);
         if (!ContainsId(id))
@@ -105,22 +105,15 @@ public class UserTable(string name) : Table<User>(name)
     /// <summary>
     /// Logs out the current client.
     /// </summary>
-    public Task LogoutAsync(HttpContext context)
-        => LogoutAsync(context, false);
-
-    /// <summary>
-    /// Logs out the current client.
-    /// </summary>
-    /// <param name="req"></param>
     public Task LogoutAsync(Request req)
-        => LogoutAsync(req.Context, false);
+        => LogoutAsync(req, false);
 
     /// <summary>
     /// Logs out all other clients.
     /// </summary>
     /// <param name="req"></param>
     public Task LogoutOthersAsync(Request req)
-        => LogoutAsync(req.Context, true);
+        => LogoutAsync(req, true);
 
     /// <summary>
     /// Creates and adds a new user using the given data and logs in the given request or throws an Exception if some of the data wasn't acceptable.
@@ -160,12 +153,12 @@ public class UserTable(string name) : Table<User>(name)
     /// </summary>
     public async Task<User?> LoginAsync(string username, string password, Request req)
     {
-        if (AccountManager.IsBanned(req.Context))
+        if (AccountManager.IsBanned(req))
             return null;
 
         User? user = await LoginAsync(username, password);
 
-        if (user == null) AccountManager.ReportFailedAuth(req.Context);
+        if (user == null) AccountManager.ReportFailedAuth(req);
         else await AccountManager.LoginAsync(user, req);
 
         return user;
@@ -259,7 +252,7 @@ public class UserTable(string name) : Table<User>(name)
     /// Checks whether the given token is the token for mail verification and sets it to null (=verified) if it's the correct one.
     /// </summary>
     public async Task<bool> VerifyMailAsync(string id, string token, Request? req)
-        => (req == null || !AccountManager.IsBanned(req.Context)) && await TransactionAndGetAsync(id, t =>
+        => (req == null || !AccountManager.IsBanned(req)) && await TransactionAndGetAsync(id, t =>
         {
             if (t.Value.MailToken == null)
                 throw new Exception("This user's mail address is already verified.");
@@ -267,7 +260,7 @@ public class UserTable(string name) : Table<User>(name)
             if (t.Value.MailToken != token)
             {
                 if (req != null)
-                    AccountManager.ReportFailedAuth(req.Context);
+                    AccountManager.ReportFailedAuth(req);
                 return false;
             }
             
@@ -284,7 +277,7 @@ public class UserTable(string name) : Table<User>(name)
                     //renew
                     if (Server.Config.Log.AuthTokenRenewed)
                         Console.WriteLine($"Renewed a token after mail verification for user {tokenId}.");
-                    AccountManager.AddAuthTokenCookie(tokenId + RenewTokenInTransaction(t.Value, authToken, data), req.Context, false);
+                    AccountManager.AddAuthTokenCookie(tokenId + RenewTokenInTransaction(t.Value, authToken, data), req, false);
                 }
             }
             
@@ -303,7 +296,7 @@ public class UserTable(string name) : Table<User>(name)
         
         if (user.Password == null)
             return false;
-        if (req != null && AccountManager.IsBanned(req.Context))
+        if (req != null && AccountManager.IsBanned(req))
             return false;
 
         if (user.Password.Check(password))
@@ -318,7 +311,7 @@ public class UserTable(string name) : Table<User>(name)
         }
 
         if (req != null)
-            AccountManager.ReportFailedAuth(req.Context);
+            AccountManager.ReportFailedAuth(req);
 
         return false;
     }
@@ -363,7 +356,7 @@ public class UserTable(string name) : Table<User>(name)
         var user = await GetByIdAsync(id);
         
         //banned?
-        if (req != null && AccountManager.IsBanned(req.Context))
+        if (req != null && AccountManager.IsBanned(req))
             return false;
 
         //TOTP disabled?
@@ -396,7 +389,7 @@ public class UserTable(string name) : Table<User>(name)
                         //renew
                         if (Server.Config.Log.AuthTokenRenewed)
                             Console.WriteLine($"Renewed a token after 2FA for user {t.Value.Id}.");
-                        AccountManager.AddAuthTokenCookie(t.Value.Id + RenewTokenInTransaction(t.Value, authToken, data), req.Context, false);
+                        AccountManager.AddAuthTokenCookie(t.Value.Id + RenewTokenInTransaction(t.Value, authToken, data), req, false);
                     }
                 }
             });
@@ -406,7 +399,7 @@ public class UserTable(string name) : Table<User>(name)
         {
             //invalid, report as a failed attempt
             if (req != null)
-                AccountManager.ReportFailedAuth(req.Context);
+                AccountManager.ReportFailedAuth(req);
             return false;
         }
     }

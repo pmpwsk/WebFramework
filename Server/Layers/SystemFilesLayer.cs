@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using uwap.WebFramework.Responses;
 
 namespace uwap.WebFramework;
 
@@ -11,44 +12,23 @@ public static partial class Server
         /// <summary>
         /// Calls plugin or event handlers.
         /// </summary>
-        public static async Task<bool> SystemFilesLayer(LayerRequestData data)
+        public static Task<IResponse?> SystemFilesLayer(Request req)
+            => Task.FromResult(SystemFilesLayerSync(req));
+        
+        public static IResponse? SystemFilesLayerSync(Request req)
         {
-            if (!data.Path.StartsWith(SystemFilesLayerPrefix + '/'))
-                return false;
-            if (data.Method != "GET")
-            {
-                data.Context.Response.Headers.Append("Cache-Control", "no-cache, private");
-                data.Status = 405;
-                await data.Context.Response.WriteAsync(Parsers.StatusMessage(405));
-                return true;
-            }
+            if (!req.Path.StartsWith(SystemFilesLayerPrefix + '/'))
+                return null;
+            req.ForceGET();
             
-            var relPath = data.Path[SystemFilesLayerPrefix.Length..];
-            byte[]? file = SystemFiles.GetFile(relPath, "", data.Domain);
+            var relPath = req.Path[SystemFilesLayerPrefix.Length..];
+            byte[]? file = SystemFiles.GetFile(relPath, "", req.Domain);
             string? timestamp = SystemFiles.GetFileVersion(relPath);
             if (file != null && timestamp != null)
-            {
-                //headers
-                if (AddFileHeaders(data.Context, Parsers.Extension(relPath), timestamp))
-                    return true;
-
                 //send file
-                Request fileRequest = new(data) { CorsDomain = Config.FileCorsDomain };
-                try
-                {
-                    await fileRequest.WriteBytes(file);
-                }
-                catch (Exception ex)
-                {
-                    fileRequest.Exception = ex;
-                    fileRequest.Status = 500;
-                    try { await fileRequest.Finish(); } catch { }
-                }
-                            
-                return true;
-            }
+                return new ByteArrayResponse(file, Parsers.Extension(relPath), true, timestamp);
             
-            return false;
+            return null;
         }
     }
 }

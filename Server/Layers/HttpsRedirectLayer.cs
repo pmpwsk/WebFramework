@@ -1,4 +1,6 @@
-﻿namespace uwap.WebFramework;
+﻿using uwap.WebFramework.Responses;
+
+namespace uwap.WebFramework;
 
 public static partial class Server
 {
@@ -7,21 +9,22 @@ public static partial class Server
         /// <summary>
         /// Redirects to HTTPS if necessary and possible.
         /// </summary>
-        public static Task<bool> HttpsRedirectLayer(LayerRequestData data)
+        public static Task<IResponse?> HttpsRedirectLayer(Request req)
+            => Task.FromResult(HttpsRedirectLayerSync(req));
+        
+        public static IResponse? HttpsRedirectLayerSync(Request req)
         {
-            if (!data.Context.Request.IsHttps)
+            if (!req.IsHttps)
             {
                 var port = Config.HttpsPort ?? Config.ClientCertificatePort;
                 if (port != null)
-                {
-                    data.Context.Response.Redirect(
-                        $"https://{data.Domain}{(port == 443 ? "" : $":{port}")}{data.Path}{data.Context.Request.QueryString}",
-                        true);
-                    return Task.FromResult(true);
-                }
+                    return new RedirectResponse(
+                        $"https://{req.Domain}{(port == 443 ? "" : $":{port}")}{req.Path}{req.QueryString}",
+                        true
+                    );
             }
 
-            return Task.FromResult(false);
+            return null;
         }
     }
 }

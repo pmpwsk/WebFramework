@@ -35,6 +35,12 @@ public static class Parsers
     /// </summary>
     public static string StatusMessage(int status)
         => ((status<400) ? "Status" : "Error") + " " + status + (Server.Config.StatusMessages.TryGetValue(status, out string? m) ? $": {m}" : "");
+    
+    public static void SetCorsDomain(this HttpContext context, string? value)
+    {
+        if (value != null)
+            context.Response.Headers.Append("Access-Control-Allow-Origin", value);
+    }
 
     /// <summary>
     /// Protocol + Host + Path + Query.
@@ -661,7 +667,7 @@ public static class Parsers
     /// Formats the given path (possibly a relative path or including a domain) into a full path with a list of possible domains to match and returns the extracted query string, if present.<br/>
     /// This method is used to format paths in a way that the timestamps for referenced files can be found, even if the references include a domain or are relative paths.
     /// </summary>
-    public static void FormatPath(HttpContext context, string pathIn, List<string> domainsIn, out string pathOut, out List<string> domainsOut, out string? queryString)
+    public static void FormatPath(Request req, string pathIn, List<string> domainsIn, out string pathOut, out List<string> domainsOut, out string? queryString)
     {
         queryString = pathIn.SplitAtFirst('?', out pathIn, out queryString) ? '?' + queryString : null;
         if (pathIn.StartsWith('/'))
@@ -684,7 +690,7 @@ public static class Parsers
         else
         {
             domainsOut = domainsIn;
-            List<string> segments = [.. context.Path().Split('/')];
+            List<string> segments = [.. req.Path.Split('/')];
             if (segments.Count > 1)
                 segments.RemoveAt(segments.Count - 1);
             foreach (string segment in pathIn.Split('/'))

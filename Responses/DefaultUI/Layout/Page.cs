@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using uwap.WebFramework.Responses.Dynamic;
 
 namespace uwap.WebFramework.Responses.DefaultUI;
@@ -141,10 +142,10 @@ public class Page : AbstractWatchablePage
         yield return "</html>";
     }
 
-    public override Task Respond(Request req)
+    public override Task Respond(Request req, HttpContext context)
     {
-        req.Context.Response.ContentType = "text/html;charset=utf-8";
-        return base.Respond(req);
+        context.Response.ContentType = "text/html;charset=utf-8";
+        return base.Respond(req, context);
     }
 
     public override IEnumerable<AbstractWatchedContainer?> RenderedContainers

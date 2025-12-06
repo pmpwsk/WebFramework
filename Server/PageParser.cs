@@ -1,4 +1,5 @@
 ﻿using uwap.WebFramework.Elements;
+using uwap.WebFramework.Responses;
 
 namespace uwap.WebFramework;
 
@@ -7,11 +8,11 @@ public static partial class Server
     /// <summary>
     /// Attempts to handle the given request using a .wfpg file in ../Public for any of the domains (in order) and returns true if that was possible. If no matching file was found, false is returned.
     /// </summary>
-    private static bool ParsePage(Request req, List<string> domains, bool allowHTML = true)
+    private static IResponse? ParsePage(Request req, List<string> domains, bool allowHTML = true)
     {
         string path = req.Path;
         if (path.EndsWith("/index"))
-            return false;
+            return null;
         if (path.EndsWith('/'))
             path += "index";
         path += ".wfpg";
@@ -19,20 +20,21 @@ public static partial class Server
         {
             if (Cache.TryGetValue(domain + path, out CacheEntry? entry) && entry.IsPublic)
             {
-                ParsePage(req, entry, allowHTML);
-                return true;
+                var page = ParsePage(req, entry, allowHTML);
+                return new LegacyPageResponse(page, req);
             }
         }
-        return false;
+        return null;
     }
 
     /// <summary>
     /// Creates a blank page and parses the .wfpg file in the given cache entry to populate it with data and elements.
     /// </summary>
-    private static void ParsePage(Request req, CacheEntry cacheEntry, bool allowHTML = true)
+    private static Page ParsePage(Request req, CacheEntry cacheEntry, bool allowHTML = true)
     {
         Presets.CreatePage(req, cacheEntry.Key.After('/').RemoveLast(5).CapitalizeFirstLetter(), out Page page, out _);
         ParseIntoPage(req, page, cacheEntry.EnumerateTextLines(), allowHTML);
+        return page;
     }
 
     /// <summary>
@@ -146,22 +148,15 @@ public static partial class Server
                         break;
                     case "highlight":
                         foreach (IPageElement element in page.Sidebar)
-                            if (element is ButtonElement button && button.Link == req.Path + req.Context.Query())
-                            {
-                                if (arg2 == "")
-                                    button.Class = "green";
-                                else button.Class = arg2;
-                            }
+                            if (element is ButtonElement button && button.Link == req.Path + req.QueryString)
+                                button.Class = arg2 == "" ? "green" : arg2;
                         break;
                 }
                 break;
             case "redirect":
             case "r":
                 if (arguments != "" && arguments.StartsWithAny("/", "https://", "https://"))
-                {
-                    req.Redirect(arguments);
-                    return;
-                }
+                    throw new ForcedResponse(new RedirectResponse(arguments));
                 break;
             case "nav":
             case "n":
@@ -177,7 +172,7 @@ public static partial class Server
     private static IPageElement? ParseElement(Request req, List<IPageElement> e, IPageElement? currentElement, string line, bool sidebar, Page page, bool allowHTML)
     {
         IPageElement? result = null;
-        if (currentElement != null && currentElement is ContainerElement container)
+        if (currentElement is ContainerElement container)
         {
             if (line.StartsWith('-'))
             {
@@ -214,9 +209,9 @@ public static partial class Server
                 else container.Contents.Add(new Paragraph(text) {Unsafe = allowHTML});
             }
         }
-        else if (currentElement != null && currentElement is IButtonElement buttonElement && buttonElement.Text == null)
+        else if (currentElement is IButtonElement { Text: null } buttonElement)
             buttonElement.Text = line.Trim();
-        else if (ParseSpecialElement(line, out string p1, out string? p2, out string? target))
+        else if (ParseSpecialElement(line, out string p1, out string? p2, out string target))
         {
             string? titleLg = sidebar ? null : (p1 == "" ? null : p1);
             string? titleSm = sidebar ? (p1 == "" ? null : p1) : null;
@@ -239,16 +234,12 @@ public static partial class Server
         else if (e.Count == 0)
         {
             string? text = ParseTitle(line.Trim(), out string? classes, out string? id);
-            if (sidebar)
-                result = new ContainerElement(text, "", classes, id: sidebar ? null : id) {Unsafe = allowHTML};
-            else result = new LargeContainerElement(text, "", classes, id: sidebar ? null : id) {Unsafe = allowHTML};
+            result = sidebar ? new ContainerElement(text, "", classes, id: sidebar ? null : id) {Unsafe = allowHTML} : new LargeContainerElement(text, "", classes, id: sidebar ? null : id) {Unsafe = allowHTML};
         }
         else
         {
             string? text = ParseTitle(line.Trim(), out string? classes, out string? id);
-            if (sidebar)
-                result = new ContainerElement(null, text ?? "", classes, id: sidebar ? null : id) {Unsafe = allowHTML};
-            else result = new ContainerElement(text, "", classes, id: sidebar ? null : id) {Unsafe = allowHTML};
+            result = sidebar ? new ContainerElement(null, text ?? "", classes, id: sidebar ? null : id) {Unsafe = allowHTML} : new ContainerElement(text, "", classes, id: sidebar ? null : id) {Unsafe = allowHTML};
         }
         return result;
     }

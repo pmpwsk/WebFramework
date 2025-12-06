@@ -1,4 +1,5 @@
 using uwap.WebFramework.Accounts;
+using uwap.WebFramework.Responses;
 using uwap.WebFramework.Responses.Dynamic;
 
 namespace uwap.WebFramework;
@@ -9,14 +10,10 @@ public static partial class Server
     {
         private const string DynamicPageLayerPrefix = "/wf/dyn";
         
-        public static async Task<bool> DynamicPageLayer(LayerRequestData data)
-            => data.Path.StartsWith(DynamicPageLayerPrefix + '/')
-               && await Handle(data, DynamicPageLayer);
-
-        private static async Task<bool> DynamicPageLayer(Request req)
+        public static async Task<IResponse?> DynamicPageLayer(Request req)
         {
             if (!req.Path.StartsWith(DynamicPageLayerPrefix + '/'))
-                return false;
+                return null;
             
             var path = req.Path[DynamicPageLayerPrefix.Length..];
             
@@ -25,36 +22,31 @@ public static partial class Server
                 case "/watcher":
                 {
                     req.ForceGET();
-                    if (!req.Query.TryGetValue("id", out var id))
-                        throw new BadRequestSignal();
+                    var id = req.Query.GetOrThrow("id");
                     
                     if (!WatcherManager.TryGetWatcher(id, out var watcher))
                     {
-                        AccountManager.ReportFailedAuth(req.Context);
-                        await WatcherManager.Reject(req);
-                        return true;
+                        AccountManager.ReportFailedAuth(req);
+                        return WatcherManager.RejectResponse;
                     }
-                    if (watcher.Request != null)
-                    {
-                        await WatcherManager.Reject(req);
-                        return true;
-                    }
+                    if (watcher.EventResponse != null)
+                        return WatcherManager.RejectResponse;
                     
                     watcher.Expiration.Cancel();
-                    watcher.Request = req;
-                    await req.KeepEventAliveCancelled.RegisterAsync(_ =>
+                    var response = new EventResponse();
+                    await response.KeepEventAliveCancelled.RegisterAsync((_, _) =>
                     {
-                        watcher.Request = null;
+                        watcher.EventResponse = null;
                         watcher.Expiration.Start();
                         return Task.CompletedTask;
                     });
-                    await req.KeepEventAlive();
-                } break;
+                    watcher.EventResponse = response;
+                    return response;
+                }
+                
                 default:
-                    throw new NotFoundSignal();
+                    return StatusResponse.NotFound;
             }
-            
-            return true;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System.Diagnostics.CodeAnalysis;
+using uwap.WebFramework.Responses;
 
 namespace uwap.WebFramework;
 
@@ -30,6 +31,18 @@ public class QueryManager(IQueryCollection query)
     /// </summary>
     public bool ContainsKeys(params string[] keys)
         => keys.All(Query.ContainsKey);
+    
+    /// <summary>
+    /// Attempts to return the value of the query parameter with the given key while forcefully responding with a 400 Bad Request if it doesn't exist.
+    /// </summary>
+    public string GetOrThrow(string key)
+        => TryGet(key) ?? throw new ForcedResponse(StatusResponse.BadRequest);
+    
+    /// <summary>
+    /// Attempts to return the value of the query parameter with the given key while forcefully responding with a 400 Bad Request if it doesn't exist or doesn't match the type.
+    /// </summary>
+    public T GetOrThrow<T>(string key)
+        => TryGet<T>(key) ?? throw new ForcedResponse(StatusResponse.BadRequest);
 
     /// <summary>
     /// Returns the value of the query entry with the given key or null if no such entry exists.
@@ -187,9 +200,15 @@ public class QueryManager(IQueryCollection query)
                 default:
                     throw new Exception("Unrecognized type.");
             }
-            }
+        }
 
         value = default;
         return false;
     }
+    
+    /// <summary>
+    /// Lists all query key-value pairs.
+    /// </summary>
+    public List<KeyValuePair<string,Microsoft.Extensions.Primitives.StringValues>> ListAll()
+        => Query.ToList();
 }

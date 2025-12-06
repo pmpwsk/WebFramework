@@ -10,7 +10,7 @@ public class ChangeWatcher
 {
     public string Id;
     
-    public Request? Request = null;
+    public EventResponse? EventResponse = null;
     
     public readonly PlannedAction Expiration;
     
@@ -26,7 +26,7 @@ public class ChangeWatcher
     private void WriteChange(object change)
     {
         var data = JsonSerializer.Serialize(change);
-        Request?.EventMessage(data).GetAwaiter().GetResult();
+        EventResponse?.EventMessage(data).GetAwaiter().GetResult();
     }
     
     public void Welcome()

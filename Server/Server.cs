@@ -96,7 +96,7 @@ public static partial class Server
                 else kestrelOptions.ListenAnyIP((int)Config.ClientCertificatePort, lo => ConfigureKestrel(lo, true));
             }
 
-            Config.ConfigureKestrel?.Invoke(kestrelOptions);
+            Config.ConfigureKestrelAction?.Invoke(kestrelOptions);
         });
 
         //enable/disable asp.net logs
@@ -108,7 +108,7 @@ public static partial class Server
         builder.Services.AddHttpContextAccessor();
 
         //configure services according to config
-        Config.ConfigureServices?.Invoke(builder.Services);
+        Config.ConfigureServicesAction?.Invoke(builder.Services);
         
         //add lifetime service
         builder.Services.AddHostedService<LifetimeService>();
@@ -126,7 +126,7 @@ public static partial class Server
         App.UseMiddleware<Middleware>();
         
         //configure web app according to config
-        Config.ConfigureWebApp?.Invoke(App);
+        Config.ConfigureWebAppAction?.Invoke(App);
 
         //run :)
         if (Config.Log.Startup)

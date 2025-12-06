@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using uwap.WebFramework.Responses;
 using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework;
@@ -11,7 +12,7 @@ public delegate Task AsyncAction();
 /// <summary>
 /// Delegate for asynchronous request handlers.
 /// </summary>
-public delegate Task RequestHandler(Request req);
+public delegate Task<IResponse?> RequestHandler(Request req);
 
 /// <summary>
 /// Delegate for backup handlers.
@@ -33,7 +34,7 @@ public static partial class Server
     /// <summary>
     /// Called when a request has been received.
     /// </summary>
-    public static readonly SubscriberContainer<RequestHandler> RequestReceived = new();
+    public static RequestHandler? OtherRequestHandler { get; set; }
 
     /// <summary>
     /// Called when the server is being backed up (after everything else has been backed up).

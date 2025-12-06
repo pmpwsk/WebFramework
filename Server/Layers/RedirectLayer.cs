@@ -1,4 +1,6 @@
-﻿namespace uwap.WebFramework;
+﻿using uwap.WebFramework.Responses;
+
+namespace uwap.WebFramework;
 
 public static partial class Server
 {
@@ -7,15 +9,15 @@ public static partial class Server
         /// <summary>
         /// Redirects if there's a matching entry in Config.Domains.Redirect.
         /// </summary>
-        public static Task<bool> RedirectLayer(LayerRequestData data)
+        public static Task<IResponse?> RedirectLayer(Request req)
+            => Task.FromResult(RedirectLayerSync(req));
+        
+        public static IResponse? RedirectLayerSync(Request req)
         {
-            if (Config.Domains.Redirect.TryGetValue(data.Context.Domain(), out string? redirectTarget))
-            {
-                data.Redirect(data.Context.Proto() + redirectTarget + data.Path + data.Context.Query(), true);
-                return Task.FromResult(true);
-            }
+            if (Config.Domains.Redirect.TryGetValue(req.Domain, out string? redirectTarget))
+                return new RedirectResponse(req.Proto + redirectTarget + req.Path + req.QueryString, true);
 
-            return Task.FromResult(false);
+            return null;
         }
     }
 }

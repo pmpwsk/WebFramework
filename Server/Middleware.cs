@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Http;
+using uwap.WebFramework.Database;
+using uwap.WebFramework.Responses;
 
 namespace uwap.WebFramework;
 
@@ -23,53 +25,58 @@ public static partial class Server
         {
             try
             {
-                LayerRequestData data = new(context);
-                foreach (LayerDelegate layer in Config.Layers)
-                    if (await layer.Invoke(data))
-                        return;
-
-                if (Config.AllowMoreMiddlewaresIfUnhandled)
-                    await Next.Invoke(context);
-                else
+                context.Response.Headers.Append("server", Config.ServerHeader);
+                
+                if (PauseRequests)
                 {
-                    Request req = new(data);
-                    req.Status = 501;
-                    try { await req.Finish(); } catch { }
+                    context.Response.ContentType = "text/plain;charset=utf-8";
+                    context.Response.StatusCode = 503;
+                    context.Response.Headers.RetryAfter = "10";
+                    await context.Response.WriteAsync("The server is not accepting requests at this time, most likely because it is being updated. Please try again in a few seconds.");
+                    return;
                 }
+                
+                var data = new LayerRequestData(context);
+                data.Domains = Parsers.Domains(data.Domain);
+                
+                var req = new Request(data);
+                var response = await GetResponse(req, context);
+                await response.Respond(req, context);
             } catch { }
         }
-    }
-
-    /// <summary>
-    /// Adds the headers for file serving (type, cache). If the browser already has the latest version (=abort), true is returned, otherwise false.
-    /// </summary>
-    private static bool AddFileHeaders(HttpContext context, string extension, string timestamp)
-    {
-        //content type
-        if (Config.MimeTypes.TryGetValue(extension, out string? type)) context.Response.ContentType = type;
-
-        //browser cache
-        if (Config.BrowserCacheMaxAge.TryGetValue(extension, out int maxAge))
+    
+        private async Task<IResponse> GetResponse(Request req, HttpContext context)
         {
-            if (maxAge == 0)
-                context.Response.Headers.CacheControl = "no-cache, private";
-            else
+            try
             {
-                context.Response.Headers.CacheControl = "public, max-age=" + maxAge;
-                try
+                foreach (HandlerDelegate layer in Config.HandlingLayers)
                 {
-                    if (context.Request.Headers.TryGetValue("If-None-Match", out var oldTag) && oldTag == timestamp)
-                    {
-                        context.Response.StatusCode = 304;
-                        if (Config.FileCorsDomain != null)
-                            context.Response.Headers.AccessControlAllowOrigin = Config.FileCorsDomain;
-                        return true; //browser already has the current version
-                    }
-                    else context.Response.Headers.ETag = timestamp;
+                    var response = await layer.Invoke(req);
+                    if (response != null)
+                        return response;
                 }
-                catch { }
+            
+                if (Config.AllowMoreMiddlewaresIfUnhandled)
+                {
+                    await Next.Invoke(context);
+                    return new DummyResponse();
+                }
+                else
+                    return StatusResponse.NotImplemented;
+            }
+            catch (DatabaseEntryMissingException)
+            {
+                return StatusResponse.NotFound;
+            }
+            catch (ForcedResponse forcedResponse)
+            {
+                return forcedResponse.Response;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"\nException at '{context.ProtoHostPathQuery()}':\n{ex.Message}\n{ex.StackTrace}\n");
+                return new ExceptionResponse(ex);
             }
         }
-        return false;
     }
 }

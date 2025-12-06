@@ -14,11 +14,11 @@ public static class MarkdownParser
     /// <summary>
     /// Attempts to handle the given request using a .wfmd file in ../Public for any of the domains (in order) and returns true if that was possible. If no matching file was found, false is returned.
     /// </summary>
-    public static async Task<bool> HandleRequest(Request req, List<string> domains)
+    public static IResponse? HandleRequest(Request req, List<string> domains)
     {
         string path = req.Path;
         if (path.EndsWith("/index"))
-            return false;
+            return null;
         if (path.EndsWith('/'))
             path += "index";
         path += ".wfmd";
@@ -31,11 +31,10 @@ public static class MarkdownParser
                     Title = entry.Key.After('/').RemoveLast(5).CapitalizeFirstLetter()
                 };
                 Apply(req, page, entry.EnumerateTextLines());
-                await page.Respond(req);
-                return true;
+                return page;
             }
         
-        return false;
+        return null;
     }
     
     private class State

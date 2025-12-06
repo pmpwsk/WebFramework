@@ -101,8 +101,7 @@ public class Page : IPage
     public Page(string title, List<IStyle> styles)
     {
         Title = title;
-        if (styles != null)
-            Styles = styles;
+        Styles = styles;
     }
 
     //documentation inherited from IPage
@@ -120,21 +119,15 @@ public class Page : IPage
         {
             if (!Server.Config.StatusMessages.TryGetValue(req.Status, out var message))
                 message = $"{((req.Status < 400) ? "Status" : "Error")} {req.Status}";
-            if (req.Status == 500 && req.Exception != null && req.IsAdmin)
+            if (req.Status == 500 && req is { Exception: not null, IsAdmin: true })
                 message += $"<br/>Type: {(req.Exception.GetType().FullName ?? "Unknown").HtmlSafe()}" +
                     $"<br/>Message: {req.Exception.Message.HtmlSafe()}" +
                     $"<br/>StackTrace: {(req.Exception.StackTrace??"Unknown").HtmlSafe()}";
 
             foreach (string domain in req.Domains)
             {
-                if (Server.Cache.TryGetValue($"{domain}/status/{req.Status}.wfpg", out var entry))
-                {
-                    foreach (string line in Server.ParseStatusPageAndReturnExport(req, entry, message))
-                        yield return line;
-                    goto end;
-                }
-
-                if (Server.Cache.TryGetValue($"{domain}/status/any.wfpg", out entry))
+                if (Server.Cache.TryGetValue($"{domain}/status/{req.Status}.wfpg", out var entry)
+                    || Server.Cache.TryGetValue($"{domain}/status/any.wfpg", out entry))
                 {
                     foreach (string line in Server.ParseStatusPageAndReturnExport(req, entry, message))
                         yield return line;
@@ -161,7 +154,7 @@ public class Page : IPage
         if (Server.Config.Domains.CanonicalDomains.TryGetValueAny(out var canonical, req.Domains))
         {
             canonical ??= req.Domain;
-            yield return $"\t<link rel=\"canonical\" href=\"https://{canonical}{req.Path}{req.Context.Request.QueryString}\" />";
+            yield return $"\t<link rel=\"canonical\" href=\"https://{canonical}{req.Path}{req.QueryString}\" />";
         }
 
         //viewport settings + charset
@@ -179,17 +172,15 @@ public class Page : IPage
             if (dot != -1)
             {
                 mime = mime.Remove(0, dot);
-                if (Server.Config.MimeTypes.TryGetValue(mime, out mime))
-                    mime = $" type=\"{mime}\"";
-                else mime = "";
+                mime = Server.Config.MimeTypes.TryGetValue(mime, out mime) ? $" type=\"{mime}\"" : "";
             }
 
-            Parsers.FormatPath(req.Context, Favicon, req.Domains, out var faviconPath, out var faviconDomains, out var faviconQuery);
+            Parsers.FormatPath(req, Favicon, req.Domains, out var faviconPath, out var faviconDomains, out var faviconQuery);
             if (Server.Cache.TryGetValueAny(out var faviconA, faviconDomains.Select(d => d + faviconPath).ToArray()) && faviconA.IsPublic)
                 yield return $"\t<link rel=\"icon\"{mime} href=\"{(Favicon + Parsers.QueryStringSuffix(faviconQuery, $"t={faviconA.GetModifiedUtc().Ticks}")).HtmlValueSafe()}\">";
             else
             {
-                IPlugin? plugin = PluginManager.GetPlugin(req.Context, faviconDomains, faviconPath, out string relPath, out _, out _);
+                IPlugin? plugin = PluginManager.GetPlugin(req, faviconDomains, faviconPath, out string relPath, out _, out _);
                 if (plugin != null)
                 {
                     string? timestamp = plugin.GetFileVersion(relPath);
@@ -252,7 +243,7 @@ public class Page : IPage
             else
             {
                 List<IContent> content;
-                if (req.Status == 500 && req.Exception != null && req.IsAdmin)
+                if (req is { Status: 500, Exception: not null, IsAdmin: true })
                     content =
                     [
                         new Paragraph((req.Exception.GetType().FullName??"Unknown").HtmlSafe()),

@@ -14,20 +14,19 @@ public static partial class Server
         /// <summary>
         /// The layers of the middleware in order.<br/>
         /// Default: Init, LetsEncrypt, HttpsRedirect, Redirect, File, Auth, Handler<br/>
-        /// All of the default layers can be found under Server.Layers.[NAME]Layer.
+        /// All default layers can be found under Server.Layers.[NAME]Layer.
         /// </summary>
-        public static List<LayerDelegate> Layers { get; set; } =
+        public static List<HandlerDelegate> HandlingLayers { get; set; } =
         [
-            Server.Layers.InitLayer,
-            Server.Layers.DatabaseLayer,
-            Server.Layers.DynamicPageLayer,
-            Server.Layers.LetsEncryptLayer,
-            Server.Layers.HttpsRedirectLayer,
-            Server.Layers.RedirectLayer,
-            Server.Layers.FileLayer,
-            Server.Layers.SystemFilesLayer,
-            Server.Layers.AuthLayer,
-            Server.Layers.HandlerLayer
+            Layers.DatabaseLayer,
+            Layers.DynamicPageLayer,
+            Layers.LetsEncryptLayer,
+            Layers.HttpsRedirectLayer,
+            Layers.RedirectLayer,
+            Layers.FileLayer,
+            Layers.SystemFilesLayer,
+            Layers.AuthLayer,
+            Layers.HandlerLayer
         ];
 
         /// <summary>
@@ -215,23 +214,24 @@ public static partial class Server
             {429, "Too many requests."},
             {500, "Internal server error."},
             {501, "Not implemented."},
+            {503, "Service unavailable."},
             {507, "Insufficient storage."}
         };
 
         /// <summary>
         /// The function that should be called to configure the Kestrel server.
         /// </summary>
-        public static Action<KestrelServerOptions>? ConfigureKestrel {get; set;} = null;
+        public static Action<KestrelServerOptions>? ConfigureKestrelAction {get; set;} = null;
 
         /// <summary>
         /// The function that should be called to configure the ASP.NET services.
         /// </summary>
-        public static Action<IServiceCollection>? ConfigureServices {get; set;} = null;
+        public static Action<IServiceCollection>? ConfigureServicesAction {get; set;} = null;
 
         /// <summary>
         /// The function that should be called to configure the web app just before starting it.
         /// </summary>
-        public static Action<WebApplication>? ConfigureWebApp { get; set; } = null;
+        public static Action<WebApplication>? ConfigureWebAppAction { get; set; } = null;
         
         /// <summary>
         /// Whether to allow requesting client certificates after the TLS handshake.<br/>

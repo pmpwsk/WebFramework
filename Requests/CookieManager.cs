@@ -38,6 +38,12 @@ public class CookieManager(HttpContext context)
         => Response.Delete(key);
 
     /// <summary>
+    /// Asks the client to delete the cookie with the given key and options.
+    /// </summary>
+    public void Delete(string key, CookieOptions options)
+        => Response.Delete(key, options);
+
+    /// <summary>
     /// Gets the value of the cookie with the given key from the client.
     /// </summary>
     public string this[string key]
@@ -71,4 +77,10 @@ public class CookieManager(HttpContext context)
             return false;
         }
     }
+    
+    /// <summary>
+    /// Lists all request cookies.
+    /// </summary>
+    public List<KeyValuePair<string, string>> ListAll()
+        => Request.ToList();
 }

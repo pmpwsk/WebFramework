@@ -1,5 +1,6 @@
 ﻿using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
+using uwap.WebFramework.Responses;
 using uwap.WebFramework.Responses.DefaultUI;
 
 namespace uwap.WebFramework;
@@ -31,7 +32,6 @@ public static class Presets
         if (fontUrl != null && Handler.PreloadFont)
             page.Preloads.Add(new Elements.Preload(fontUrl, "font"));
         Navigation(req, page);
-        req.Page = page;
         return page;
     }
     
@@ -63,36 +63,6 @@ public static class Presets
     /// </summary>
     public static List<IStyle> Styles(Request req, out string? fontUrl)
         => Handler.Styles(req, out fontUrl);
-
-    /// <summary>
-    /// Assumes that the request already has a Page (not IPage!) object and returns the page object as well as the list of elements for easy access.
-    /// </summary>
-    public static void Init(this Request req, out Elements.Page page, out List<Elements.IPageElement> elements)
-    {
-        if (req.Page == null)
-            throw new Exception("No page was set.");
-
-        page = (Elements.Page)req.Page;
-        elements = page.Elements;
-    }
-
-    /// <summary>
-    /// Adds the script at /scripts[PATH].js to the Page to the given request (assuming it has one).
-    /// </summary>
-    public static void AddScript(this Request req)
-    {
-        if (req.Page != null)
-            ((Elements.Page)req.Page).AddScript(req.Path);
-    }
-
-    /// <summary>
-    /// Adds the script at /scripts[PATH]-[SUFFIX].js to the Page to the given request (assuming it has one).
-    /// </summary>
-    public static void AddScript(this Request req, string suffix)
-    {
-        if (req.Page != null)
-            ((Elements.Page)req.Page).AddScript(req.Path + "-" + suffix);
-    }
 
     /// <summary>
     /// Adds the script at /scripts[URL-MIDDLE].js to the given Page.
@@ -163,40 +133,25 @@ public static class Presets
     /// <summary>
     /// Adds elements to allow for password (and 2FA if present) verification with input IDs 'password' and 'code'.
     /// </summary>
-    public static void AddAuthElements(this Request req)
-        => Handler.AddAuthElements(req);
+    public static void AddAuthElements(Elements.Page page, Request req)
+        => Handler.AddAuthElements(page, req);
 
     /// <summary>
     /// Checks whether the given password (and 2FA code if necessary) provided in the query (keys 'password' and 'code') is correct for the given user.<br/>
-    /// If it is correct, true is returned and nothing else happens.
-    /// If it is incorrect, false is returned and "no" is written and the user is reported for failed authentication.
+    /// If it is correct, nothing else happens.
+    /// If it is incorrect, "no" is forcefully written and the user is reported for failed authentication.
     /// </summary>
-    public static async Task<bool> Auth(this Request req, User user)
+    public static async Task Auth(this Request req, User user)
     {
-        if (req.Query.ContainsKey("password") && req.Query.ContainsKey("code"))
+        string
+            password = req.Query.GetOrThrow("password"),
+            code = req.Query.GetOrThrow("code");
+        
+        if (!await req.UserTable.ValidatePasswordAsync(user.Id, password, null)
+            || (user.TwoFactor.TOTPEnabled() && !await req.UserTable.ValidateTOTPAsync(user.Id, code, req, true)))
         {
-            string password = req.Query["password"], code = req.Query["code"];
-            if (await req.UserTable.ValidatePasswordAsync(user.Id, password, null))
-            {
-                if (user.TwoFactor.TOTPEnabled() && !await req.UserTable.ValidateTOTPAsync(user.Id, code, req, true))
-                {
-                    AccountManager.ReportFailedAuth(req.Context);
-                    await req.Write("no");
-                    return false;
-                }
-                else return true;
-            }
-            else
-            {
-                AccountManager.ReportFailedAuth(req.Context);
-                await req.Write("no");
-                return false;
-            }
-        }
-        else
-        {
-            req.Status = 400;
-            return false;
+            AccountManager.ReportFailedAuth(req);
+            throw new ForcedResponse(new TextResponse("no"));
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using uwap.WebFramework.Responses;
 
 namespace uwap.WebFramework.Plugins;
 
@@ -8,27 +9,21 @@ namespace uwap.WebFramework.Plugins;
 /// </summary>
 public abstract class Plugin : IPlugin
 {
-    //documentation is inherited from IPlugin
-    public virtual Task Handle(Request req)
-        => throw new NotImplementedSignal();
+    public virtual Task<IResponse> HandleAsync(Request req)
+        => Task.FromResult<IResponse>(StatusResponse.NotImplemented);
 
-    //documentation is inherited from IPlugin
     public virtual Task Work()
         => Task.CompletedTask;
 
-    //documentation is inherited from IPlugin
     public virtual byte[]? GetFile(string relPath, string pathPrefix, string domain)
         => null;
 
-    //documentation is inherited from IPlugin
     public virtual string? GetFileVersion(string relPath)
         => null;
 
-    //documentation is inherited from IPlugin
     public virtual Task Backup(string id, ReadOnlyCollection<string> basedOnIds)
         => Task.CompletedTask;
 
-    //documentation is inherited from IPlugin
     public virtual Task Restore(ReadOnlyCollection<string> ids)
         => Task.CompletedTask;
 }

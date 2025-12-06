@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using uwap.WebFramework.Responses;
 
 namespace uwap.WebFramework.Plugins;
 
@@ -11,7 +12,7 @@ public interface IPlugin
     /// <summary>
     /// Handles the given request.
     /// </summary>
-    public Task Handle(Request req);
+    public Task<IResponse> HandleAsync(Request req);
 
     /// <summary>
     /// Does something that should be done regularly (every time the worker is active).

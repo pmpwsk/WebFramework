@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http;
+
 namespace uwap.WebFramework.Responses;
 
 /// <summary>
@@ -8,5 +10,5 @@ public interface IResponse
     /// <summary>
     /// Sends the response to the given request.
     /// </summary>
-    public Task Respond(Request req);
+    public Task Respond(Request req, HttpContext context);
 }

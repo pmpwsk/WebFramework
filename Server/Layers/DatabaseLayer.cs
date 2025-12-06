@@ -1,4 +1,5 @@
 using uwap.WebFramework.Database;
+using uwap.WebFramework.Responses;
 
 namespace uwap.WebFramework;
 
@@ -8,40 +9,36 @@ public static partial class Server
     {
         private const string DatabaseLayerPrefix = "/wf/db";
         
-        public static async Task<bool> DatabaseLayer(LayerRequestData data)
-            => data.Path.StartsWith(DatabaseLayerPrefix + '/')
-               && await Handle(data, DatabaseLayerHandler);
-        
         private static AbstractTable ValidateTableQuery(Request req, ClusterNode node, bool readingRequest)
         {
             if (!(req.Query.TryGetValue("table", out var tableName) && req.Query.TryGetValue(readingRequest ? "version" : "min-version", out var versionString) && Version.TryParse(versionString, out var version)))
-                throw new BadRequestSignal();
+                throw new ForcedResponse(StatusResponse.BadRequest);
             if (node.TableNames != null && !node.TableNames.Contains(tableName))
-                throw new ForbiddenSignal();
+                throw new ForcedResponse(StatusResponse.Forbidden);
             if (!Tables.Dictionary.TryGetValue(tableName, out var table))
-                throw new NotFoundSignal();
+                throw new ForcedResponse(StatusResponse.NotFound);
             if (readingRequest ? version < table.GetMinVersion() : table.GetTypeVersion() < version)
-                throw new TeapotSignal();
+                throw new ForcedResponse(StatusResponse.Teapot);
             return table;
         }
-
-        private static async Task<bool> DatabaseLayerHandler(Request req)
+        
+        public static async Task<IResponse?> DatabaseLayer(Request req)
         {
+            if (!req.Path.StartsWith(DatabaseLayerPrefix + '/'))
+                return null;
+            
             var path = req.Path[DatabaseLayerPrefix.Length..];
 
             if (path == "/node-id")
-            {
-                await req.Write(Tables.NodeId);
-                return true;
-            }
+                return new TextResponse(Tables.NodeId);
 
             var cert = await req.GetClientCertificate();
             if (cert == null)
-                throw new NotAuthenticatedSignal();
+                return StatusResponse.NotAuthenticated;
 
             var node = req.Query.TryGetValue("host", out var host) ? Config.Database.Cluster.FirstOrDefault(n => n.Host == host) : null;
             if (node == null || !node.CertificateValidators.Any(v => v.Validate(cert, node.Host.Before(':'))))
-                throw new ForbiddenSignal();
+                return StatusResponse.Forbidden;
 
             switch (path)
             {
@@ -52,8 +49,8 @@ public static partial class Server
                     var table = ValidateTableQuery(req, node, true);
                     
                     var result = table.GetState();
-                    await req.WriteBytes(Serialization.Serialize(result));
-                } break;
+                    return new ByteArrayResponse(Serialization.Serialize(result), null, false, null);
+                }
                 
                 case "/entry":
                 {
@@ -61,13 +58,13 @@ public static partial class Server
                     
                     var table = ValidateTableQuery(req, node, true);
                     if (!req.Query.TryGetValue("id", out var id))
-                        throw new BadRequestSignal();
+                        return StatusResponse.BadRequest;
                     if (!table.TryGetAbstractEntry(id, out var entry))
-                        throw new NotFoundSignal();
+                        return StatusResponse.NotFound;
                     
                     var result = entry.GetBytes();
-                    await req.WriteBytes(result);
-                } break;
+                    return new ByteArrayResponse(result, null, false, null);
+                }
                 
                 case "/file":
                 {
@@ -75,13 +72,13 @@ public static partial class Server
                     
                     var table = ValidateTableQuery(req, node, true);
                     if (!(req.Query.TryGetValue("id", out var id) && req.Query.TryGetValue("file", out var fileId)))
-                        throw new BadRequestSignal();
+                        return StatusResponse.BadRequest;
                     if (!(table.TryGetAbstractEntry(id, out var entry) && entry.EntryInfo.Files.ContainsKey(fileId)))
-                        throw new NotFoundSignal();
+                        return StatusResponse.NotFound;
                     
                     var result = await entry.GetFileBytes(fileId);
-                    await req.WriteBytes(result);
-                } break;
+                    return new ByteArrayResponse(result, null, false, null);
+                }
                 
                 case "/change":
                 {
@@ -89,7 +86,7 @@ public static partial class Server
                     
                     var table = ValidateTableQuery(req, node, false);
                     if (!(req.Query.TryGetValue("id", out var id) && req.Query.TryGetValue("timestamp", out long timestamp) && req.Query.TryGetValue("randomness", out var randomness)))
-                        throw new BadRequestSignal();
+                        return StatusResponse.BadRequest;
                     
                     req.BodySizeLimit = long.MaxValue;
                     var serialized = await req.GetBodyBytes();
@@ -105,7 +102,9 @@ public static partial class Server
                         if (table.TryGetAbstractEntry(id, out var entry))
                             await LockRequest.DeleteAsync(entry, timestamp, randomness);
                     });
-                } break;
+                    
+                    return StatusResponse.Success;
+                }
                 
                 case "/lock":
                 {
@@ -113,13 +112,13 @@ public static partial class Server
                     
                     var table = ValidateTableQuery(req, node, false);
                     if (!(req.Query.TryGetValue("id", out var id) && req.Query.TryGetValue("timestamp", out long timestamp) && req.Query.TryGetValue("randomness", out var randomness)))
-                        throw new BadRequestSignal();
+                        return StatusResponse.BadRequest;
                     if (!table.TryGetAbstractEntry(id, out var entry))
-                        throw new NotFoundSignal();
+                        return StatusResponse.NotFound;
                     
                     await LockRequest.CreateRemoteAsync(entry, timestamp, randomness);
-                    await req.Write(string.Join('&', entry.LockRequests.Select(lockReq => $"{lockReq.Timestamp};{lockReq.Randomness}")));
-                } break;
+                    return new TextResponse(string.Join('&', entry.LockRequests.Select(lockReq => $"{lockReq.Timestamp};{lockReq.Randomness}")));
+                }
                 
                 case "/cancel":
                 {
@@ -127,22 +126,25 @@ public static partial class Server
                     
                     var table = ValidateTableQuery(req, node, false);
                     if (!(req.Query.TryGetValue("id", out var id) && req.Query.TryGetValue("timestamp", out long timestamp) && req.Query.TryGetValue("randomness", out var randomness)))
-                        throw new BadRequestSignal();
+                        return StatusResponse.BadRequest;
                     if (!table.TryGetAbstractEntry(id, out var entry))
-                        throw new NotFoundSignal();
+                        return StatusResponse.NotFound;
                     
                     await LockRequest.DeleteAsync(entry, timestamp, randomness);
-                    await req.Write("ok");
-                } break;
+                    return new TextResponse("ok");
+                }
                 
                 case "/keep-alive":
                 {
                     req.ForceGET();
-                    await req.KeepEventAlive();
-                } break;
+                    return new EventResponse();
+                }
+                
+                default:
+                {
+                    return StatusResponse.NotFound;
+                }
             }
-
-            return true;
         }
     }
 }
