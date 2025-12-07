@@ -56,7 +56,7 @@ public static class AccountManager
         if (!Settings.FailedAttempts.EnableBanning)
             return;
 
-        string? ipString = req.IP; //necessary for ::ffff:
+        string? ipString = req.ClientAddress; //necessary for ::ffff:
         if (ipString == null)
             return;
 
@@ -90,7 +90,7 @@ public static class AccountManager
     /// </summary>
     public static bool IsBanned(Request req)
     {
-        string? ip = req.IP;
+        string? ip = req.ClientAddress;
         if (ip == null) return false;
         string key = Convert.ToHexString(ip.ToSha256());
         if (FailedAuth.TryGetValue(key, out var fa) && (DateTime.UtcNow-fa.LastAttempt)<Settings.FailedAttempts.BanDuration)

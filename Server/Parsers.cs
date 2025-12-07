@@ -76,7 +76,7 @@ public static class Parsers
     /// Protocol.
     /// </summary>
     public static string Proto(this HttpContext c)
-        => c.Request.IsHttps?"https://":"http://";
+        => c.Request.Scheme + "://";
 
     /// <summary>
     /// Host (with port if necessary).

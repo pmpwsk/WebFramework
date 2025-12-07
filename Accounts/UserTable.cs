@@ -41,7 +41,7 @@ public class UserTable(string name) : Table<User>(name)
     /// Checks and returns the login state of the given request and returns the user using the out-parameter if one has been found.
     /// If the user is fully logged in without additional requirements (2FA, verification), the token will be renewed if it's old enough.
     /// </summary>
-    public async Task<(LoginState State, User? User, ReadOnlyCollection<string>? LimitedToPaths)> AuthenticateAsync(Request req)
+    public async Task<(LoginState LoginState, User? User, ReadOnlyCollection<string>? LimitedToPaths)> AuthenticateAsync(Request req)
     {
         if (AccountManager.IsBanned(req))
             return (LoginState.Banned, null, null);

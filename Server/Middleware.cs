@@ -36,10 +36,7 @@ public static partial class Server
                     return;
                 }
                 
-                var data = new LayerRequestData(context);
-                data.Domains = Parsers.Domains(data.Domain);
-                
-                var req = new Request(data);
+                var req = new Request(context);
                 var response = await GetResponse(req, context);
                 await response.Respond(req, context);
             } catch { }

@@ -10,15 +10,90 @@ namespace uwap.WebFramework;
 /// <summary>
 /// Unified class for all possible requests.
 /// </summary>
-public class Request(LayerRequestData data)
+public class Request(HttpContext context)
 {
-    #region Properties
+    #region Basic
+    
+    private HttpContext HttpContext = context;
+
+    /// <summary>
+    /// The associated cookie manager.
+    /// </summary>
+    public readonly CookieManager Cookies = new(context);
+
+    /// <summary>
+    /// The associated query manager.
+    /// The query values are already URL decoded.
+    /// </summary>
+    public readonly QueryManager Query = new(context.Request.Query);
+    
+    /// <summary>
+    /// The requesting client's IP address, if available.
+    /// </summary>
+    public string? ClientAddress = context.IP();
+
+    /// <summary>
+    /// The HTTP method.
+    /// </summary>
+    public string Method = context.Request.Method.ToUpper();
+    
+    /// <summary>
+    /// Whether the protocol is HTTPS.
+    /// </summary>
+    public bool IsHttps = context.Request.IsHttps;
+    
+    /// <summary>
+    /// The protocol prefix including the colon and two slashes.
+    /// </summary>
+    public string Proto = context.Proto();
+    
+    /// <summary>
+    /// The requested host name including the port.
+    /// </summary>
+    public string Host = context.Host();
+
+    /// <summary>
+    /// The requested path.
+    /// </summary>
+    public string FullPath = context.Path();
+    
+    /// <summary>
+    /// The raw query string including the question mark, or an empty string if no query was provided.
+    /// </summary>
+    public string QueryString = context.Request.QueryString.Value ?? "";
+    
+    #endregion
+    
+    
+    
+    #region Auth
+
+    /// <summary>
+    /// The current user or null if no user is logged in.
+    /// </summary>
+    public User? UserNullable = null;
+
+    /// <summary>
+    /// The associated user table or null if no user table is associated with the request.
+    /// </summary>
+    public UserTable? UserTableNullable = null;
+
+    /// <summary>
+    /// The current login state.
+    /// </summary>
+    public LoginState LoginState = LoginState.None;
+
+    #endregion
+    
+    
+    
+    #region WF-specific
 
     /// <summary>
     /// The relative path for a plugin's request or the full path for other requests.
     /// The path segments are already URL path decoded, except for %2f (slash).
     /// </summary>
-    public string Path {get; internal set;} = data.Path;
+    public string Path {get; internal set;} = context.Request.Path.Value ?? "/";
 
     /// <summary>
     /// The handling plugin's path prefix or an empty string for other requests.
@@ -26,76 +101,38 @@ public class Request(LayerRequestData data)
     public string PluginPathPrefix {get; internal set;} = "";
 
     /// <summary>
-    /// The associated HttpContext object.
-    /// </summary>
-    private readonly HttpContext Context = data.Context;
-
-    /// <summary>
-    /// The associated cookie manager.
-    /// </summary>
-    public readonly CookieManager Cookies = data.Cookies;
-
-    /// <summary>
-    /// The associated query manager.
-    /// The query values are already URL decoded.
-    /// </summary>
-    public readonly QueryManager Query = data.Query;
-
-    /// <summary>
-    /// The current user or null if no user is logged in.
-    /// </summary>
-    private User? _User = data.User;
-
-    /// <summary>
-    /// The associated user table.
-    /// </summary>
-    private UserTable? _UserTable = data.UserTable;
-
-    /// <summary>
-    /// The current login state.
-    /// </summary>
-    public LoginState LoginState { get; internal set; } = data.LoginState;
-
-    /// <summary>
-    /// The exception that occurred or null if no exception interrupted the request handling.
-    /// </summary>
-    internal Exception? Exception = null;
-
-    /// <summary>
     /// The list of domains associated with this request.
     /// </summary>
-    public List<string> Domains = data.Domains;
+    public List<string> Domains = Parsers.Domains(context.Domain());
 
     #endregion
 
-    #region Request data
+    
+    
+    #region Accessors
 
     /// <summary>
-    /// The HTTP method.
+    /// The requested host name without the port.
     /// </summary>
-    public string Method
-        => data.Context.Request.Method.ToUpper();
+    public string Domain => Host.Before(':');
     
+    /// <summary>
+    /// The full requested URL.
+    /// </summary>
     public string ProtoHostPathQuery
-        => data.Context.ProtoHostPathQuery();
+        => Proto + Host + FullPath + QueryString;
     
+    /// <summary>
+    /// The requested URL without the query.
+    /// </summary>
     public string ProtoHostPath
-        => data.Context.ProtoHostPath();
+        => Proto + Host + FullPath;
     
+    /// <summary>
+    /// The requested URL without the path and query.
+    /// </summary>
     public string ProtoHost
-        => data.Context.ProtoHost();
-    
-    public string Proto
-        => data.Context.Proto();
-    
-    public string? IP
-        => data.Context.IP();
-    
-    public bool IsHttps
-        => Context.Request.IsHttps;
-    
-    public string QueryString
-        => Context.Request.QueryString.Value ?? "";
+        => Proto + Host;
 
     /// <summary>
     /// The associated user. If no user is associated with the request, an exception is thrown.<br/>
@@ -103,30 +140,30 @@ public class Request(LayerRequestData data)
     /// </summary>
     public User User
     {
-        get => _User ?? throw new Exception("This request doesn't contain a user.");
-        internal set => _User = value;
+        get => UserNullable ?? throw new Exception("This request doesn't contain a user.");
+        set => UserNullable = value;
     }
 
     /// <summary>
     /// Whether a user is associated with the request.
     /// </summary>
     public bool HasUser
-        => _User != null;
+        => UserNullable != null;
 
     /// <summary>
     /// The associated user table. If no table is assigned to requests to this domain, an exception is thrown.
     /// </summary>
     public UserTable UserTable
     {
-        get => _UserTable ?? throw new Exception("This request isn't referencing a user table.");
-        internal set => _UserTable = value;
+        get => UserTableNullable ?? throw new Exception("This request isn't referencing a user table.");
+        internal set => UserTableNullable = value;
     }
 
     /// <summary>
     /// Whether a user table is assigned to requests to this domain.
     /// </summary>
     public bool HasUserTable
-        => _UserTable != null;
+        => UserTableNullable != null;
 
     /// <summary>
     /// Whether the user is fully logged in.
@@ -141,23 +178,6 @@ public class Request(LayerRequestData data)
         => LoginState == LoginState.LoggedIn && User.AccessLevel == ushort.MaxValue;
 
     /// <summary>
-    /// The requested path.
-    /// </summary>
-    public string FullPath
-        => Context.Request.Path.Value ?? "/";
-
-    /// <summary>
-    /// The requested domain.
-    /// </summary>
-    public string Domain
-        => Context.Domain();
-
-    /// <summary>
-    /// The response status to be sent.
-    /// </summary>
-    public int Status => Context.Response.StatusCode;
-
-    /// <summary>
     /// The URL that is specified in the 'redirect' parameter, or "/" if no such parameter has been provided.
     /// Not allowed (returns "/"): URLs that don't start with /, https:// or http://.
     /// </summary>
@@ -165,20 +185,28 @@ public class Request(LayerRequestData data)
         => Query.TryGetValue("redirect", out var url) && url.StartsWithAny("/", "https://", "http://") ? url : "/";
 
     /// <summary>
+    /// Returns a query string (including '?') with the current 'redirect' parameter or an empty string if no such parameter was provided.
+    /// </summary>
+    public string CurrentRedirectQuery
+        => Query.TryGetValue("redirect", out var redirect) ? ("?redirect=" + HttpUtility.UrlEncode(redirect)) : "";
+
+    /// <summary>
     /// Returns the client certificate for the request, either from the initial connection or by requesting it from the client (<c>Server.Config.EnableDelayedClientCertificates</c> needs to be <c>true</c> for second option).<br/>
     /// If no client certificate was located, null is returned.
     /// </summary>
-    public async Task<X509Certificate2?> GetClientCertificate() => Context.Connection.ClientCertificate ?? await Context.Connection.GetClientCertificateAsync();
+    public async Task<X509Certificate2?> GetClientCertificate() => HttpContext.Connection.ClientCertificate ?? await HttpContext.Connection.GetClientCertificateAsync();
     
     /// <summary>
     /// Returns the URL of the requested page's origin.
     /// </summary>
     public string? CanonicalUrl
-        => Server.Config.Domains.CanonicalDomains.TryGetValueAny(out var domain, Domains) ? $"{Context.Proto()}{domain}{Context.PathQuery()}" : null;
+        => Server.Config.Domains.CanonicalDomains.TryGetValueAny(out var domain, Domains) ? $"{Proto}{domain}{Path}{QueryString}" : null;
 
     #endregion
 
-    #region Basic methods
+    
+    
+    #region Checks
 
     /// <summary>
     /// Throws a BadMethodSignal (status 405) if the HTTP method is something other than GET.
@@ -226,15 +254,7 @@ public class Request(LayerRequestData data)
 
     #endregion
 
-    #region Interface
-
-    /// <summary>
-    /// Returns a query string (including '?') with the current 'redirect' parameter or an empty string if no such parameter was provided.
-    /// </summary>
-    public string CurrentRedirectQuery
-        => Query.TryGetValue("redirect", out var redirect) ? ("?redirect=" + HttpUtility.UrlEncode(redirect)) : "";
-
-    #endregion
+    
 
     #region POST/forms
 
@@ -243,33 +263,33 @@ public class Request(LayerRequestData data)
     /// </summary>
     public long? BodySizeLimit
     {
-        set => (Context.Features.Get<IHttpMaxRequestBodySizeFeature>() ?? throw new Exception("IHttpMaxRequestBodySizeFeature is not supported.")).MaxRequestBodySize = value;
+        set => (HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>() ?? throw new Exception("IHttpMaxRequestBodySizeFeature is not supported.")).MaxRequestBodySize = value;
     }
 
     /// <summary>
     /// Whether the request has set a content type for a form.
     /// </summary>
     public bool IsForm
-        => Context.Request.HasFormContentType;
+        => HttpContext.Request.HasFormContentType;
 
     /// <summary>
     /// The posted form object.
     /// </summary>
     public IFormCollection Form
-        => Context.Request.Form;
+        => HttpContext.Request.Form;
 
     /// <summary>
     /// The uploaded files.
     /// </summary>
     public IFormFileCollection Files
-        => Context.Request.Form.Files;
+        => HttpContext.Request.Form.Files;
 
     /// <summary>
     /// The request body, interpreted as text.
     /// </summary>
     public async Task<string> GetBodyText()
     {
-        using StreamReader reader = new(Context.Request.Body, true);
+        using StreamReader reader = new(HttpContext.Request.Body, true);
         try
         {
             return await reader.ReadToEndAsync();
@@ -286,9 +306,25 @@ public class Request(LayerRequestData data)
     public async Task<byte[]> GetBodyBytes()
     {
         using MemoryStream target = new();
-        await Context.Request.Body.CopyToAsync(target);
+        await HttpContext.Request.Body.CopyToAsync(target);
         return target.ToArray();
     }
 
+    #endregion
+    
+    
+    
+    #region Legacy pages
+    
+    /// <summary>
+    /// The exception that occurred or null if no exception interrupted the request handling.
+    /// </summary>
+    internal Exception? Exception = null;
+
+    /// <summary>
+    /// The response status to be sent.
+    /// </summary>
+    public int Status => HttpContext.Response.StatusCode;
+    
     #endregion
 }
