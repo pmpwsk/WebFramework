@@ -4,6 +4,8 @@ using uwap.WebFramework.Responses;
 
 namespace uwap.WebFramework;
 
+public delegate Task<IResponse?> HandlerDelegate(Request req);
+
 public static partial class Server
 {
     /// <summary>
@@ -80,4 +82,16 @@ public static partial class Server
     
     public static Task<IResponse> GetOtherResponseAsync(Request req, string url)
         => Middleware.GetResponse(new(req, url), null, null);
+    
+    /// <summary>
+    /// Adds the correct timestamp to the given URL if it points to this server.
+    /// </summary>
+    public static async Task<string> ResourcePath(Request req, string url)
+    {
+        var otherRequest = new Request(req, url);
+        var response = await Middleware.GetResponse(otherRequest, null, null);
+        return response is AbstractFileResponse { Timestamp: not null } fileResponse
+            ? url + Parsers.QueryStringSuffix(otherRequest.Query.FullString, $"t={fileResponse.Timestamp}")
+            : url;
+    }
 }

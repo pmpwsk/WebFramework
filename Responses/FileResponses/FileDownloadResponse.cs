@@ -18,10 +18,10 @@ public class FileDownloadResponse(string path, string filename, string? timestam
     {
     }
     
-    protected override string? Extension
+    public override string? Extension
         => Filename.Contains('.') ? Filename.Remove(0, Filename.LastIndexOf('.')) : null;
     
-    protected override long? Length
+    public override long? Length
         => new FileInfo(Path).Length;
 
     protected override async Task WriteTo(HttpContext context)

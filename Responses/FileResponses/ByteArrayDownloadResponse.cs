@@ -11,10 +11,10 @@ public class ByteArrayDownloadResponse(byte[] bytes, string filename, string? ti
     
     private readonly string Filename = filename;
 
-    protected override string? Extension
+    public override string? Extension
         => Filename.Contains('.') ? Filename.Remove(0, Filename.LastIndexOf('.')) : null;
     
-    protected override long? Length
+    public override long? Length
         => Bytes.Length;
 
     protected override async Task WriteTo(HttpContext context)

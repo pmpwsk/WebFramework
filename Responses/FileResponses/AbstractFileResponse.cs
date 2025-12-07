@@ -7,9 +7,9 @@ namespace uwap.WebFramework.Responses;
 /// </summary>
 public abstract class AbstractFileResponse(bool allowCors, string? timestamp) : IResponse
 {
-    protected readonly bool AllowCors = allowCors;
+    public readonly bool AllowCors = allowCors;
     
-    protected readonly string? Timestamp = timestamp;
+    public readonly string? Timestamp = timestamp;
     
     public string? FixedType = null;
     
@@ -17,9 +17,9 @@ public abstract class AbstractFileResponse(bool allowCors, string? timestamp) : 
     
     public string? ContentSecurityPolicy = null;
     
-    protected abstract string? Extension { get; }
+    public abstract string? Extension { get; }
     
-    protected abstract long? Length { get; }
+    public abstract long? Length { get; }
     
     protected abstract Task WriteTo(HttpContext context);
     

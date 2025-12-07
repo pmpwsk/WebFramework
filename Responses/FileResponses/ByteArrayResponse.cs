@@ -9,9 +9,9 @@ public class ByteArrayResponse(byte[] bytes, string? extension, bool allowCors, 
 {
     private readonly byte[] Bytes = bytes;
     
-    protected override string? Extension { get; } = extension;
+    public override string? Extension { get; } = extension;
     
-    protected override long? Length
+    public override long? Length
         => Bytes.Length;
 
     protected override async Task WriteTo(HttpContext context)

@@ -11,10 +11,10 @@ public class FileResponse(string path, bool allowCors, string? timestamp) : Abst
     
     public bool DeleteAfter = false;
 
-    protected override string? Extension
+    public override string? Extension
         => new FileInfo(Path).Extension;
     
-    protected override long? Length
+    public override long? Length
         => new FileInfo(Path).Length;
 
     protected override async Task WriteTo(HttpContext context)

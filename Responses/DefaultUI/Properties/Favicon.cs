@@ -14,9 +14,9 @@ public class Favicon : AbstractResource
         TypeAttribute = new(this, "type", url.GetMimeType());
     }
     
-    public override void SetLocation(Request req, string url)
+    public override async Task SetLocationAsync(Request req, string url)
     {
-        base.SetLocation(req, url);
+        await base.SetLocationAsync(req, url);
         TypeAttribute.Value = url.GetMimeType();
     }
     

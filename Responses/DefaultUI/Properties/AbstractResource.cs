@@ -12,7 +12,7 @@ public abstract class AbstractResource : OptionalIdElement
     
     protected AbstractResource(Request req, string attributeName, string url)
     {
-        LocationAttribute = new(this, attributeName, Server.ResourcePath(req, url));
+        LocationAttribute = new(this, attributeName, Server.ResourcePath(req, url).GetAwaiter().GetResult());
     }
     
     /// <summary>
@@ -21,8 +21,8 @@ public abstract class AbstractResource : OptionalIdElement
     public string Location
         => LocationAttribute.Value;
     
-    public virtual void SetLocation(Request req, string url)
-        => LocationAttribute.Value = Server.ResourcePath(req, url);
+    public virtual async Task SetLocationAsync(Request req, string url)
+        => LocationAttribute.Value = await Server.ResourcePath(req, url);
     
     public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
         => [
