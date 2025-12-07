@@ -941,4 +941,57 @@ public static class Parsers
             return mimeType;
         return null;
     }
+    
+    /// <summary>
+    /// Parses the given URL (can be a full URL, an absolute path or a relative path) in relation to the given request.<br/>
+    /// The protocol includes the "://" after it, the path includes the "/" before it and the query includes the "?" before it if a query exists.
+    /// </summary>
+    public static (string Protocol, string Host, string Path, string Query) ParseUrl(Request req, string url)
+    {
+        string host, pathAndQuery;
+        if (url.SplitAtFirst("://", out var proto, out var hostAndPathAndQuery))
+        {
+            proto += "://";
+            if (hostAndPathAndQuery.SplitAtFirst('/', out host, out pathAndQuery))
+                pathAndQuery = "/" + pathAndQuery;
+            else
+                return (proto, hostAndPathAndQuery, "/", "");
+        }
+        else
+        {
+            proto = Server.Config.HttpsPort != null ? "https://" : "http://";
+            host = req.Host;
+            pathAndQuery = url;
+        }
+        
+        if (pathAndQuery.SplitAtFirst('?', out var path, out var query))
+            query = "?" + query;
+        else
+        {
+            path = pathAndQuery;
+            query = "";
+        }
+        
+        if (path.StartsWith('/'))
+            return (proto, host, path, query);
+        
+        List<string> segments = [];
+        foreach (var segment in (req.FullPath.BeforeLast('/') + "/" + path).Split('/'))
+            switch (segment)
+            {
+                case ".":
+                    break;
+                case "..":
+                    if (segments.Count == 0)
+                        segments.Add("..");
+                    else
+                        segments.RemoveAt(segments.Count - 1);
+                    break;
+                default:
+                    segments.Add(segment);
+                    break;
+            }
+        path = string.Join('/', segments);
+        return (proto, host, path, query);
+    }
 }

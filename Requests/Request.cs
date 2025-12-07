@@ -135,48 +135,26 @@ public class Request
     
     public Request(Request req, string url)
     {
-        if (!url.SplitAtFirst("://", out var proto, out var hostAndPathAndQuery))
-            throw new ArgumentException("Invalid URL");
-        
-        Proto = proto + "://";
-        IsHttps = Proto == "https://";
-        string fullQuery;
-        if (hostAndPathAndQuery.SplitAtFirst('/', out var host, out var pathAndQuery))
-        {
-            Host = host;
-            if (pathAndQuery.SplitAtFirst('?', out var path, out var query))
-            {
-                FullPath = "/" + string.Join('/', path.Split('/').Select(HttpUtility.UrlDecode));
-                fullQuery = "?" + query;
-            }
-            else
-            {
-                FullPath = "/" + string.Join('/', pathAndQuery.Split('/').Select(HttpUtility.UrlDecode));
-                fullQuery = "";
-            }
-        }
-        else
-        {
-            Host = hostAndPathAndQuery;
-            FullPath = "/";
-            fullQuery = "";
-        }
-        
+        var parts = Parsers.ParseUrl(req, url);
         
         HttpContext = req.HttpContext;
         Cookies = req.Cookies;
         CookieWriter = null;
-        Query = new(fullQuery);
+        Query = new(parts.Query);
         Form = null;
         Body = null;
         ClientAddress = req.ClientAddress;
         Method = "GET";
+        IsHttps = parts.Protocol == "https://";
+        Proto = parts.Protocol;
+        Host = parts.Host;
+        FullPath = parts.Path;
         
         UserNullable = null;
         UserTableNullable = null;
         LoginState = LoginState.None;
         
-        Path = FullPath;
+        Path = string.Join('/', FullPath.Split('/').Select(HttpUtility.UrlDecode));
         PluginPathPrefix = "";
         Domains = Parsers.Domains(Domain);
         IsInternal = true;
