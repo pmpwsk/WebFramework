@@ -14,9 +14,9 @@ public static partial class Server
     /// <summary>
     /// Middleware to attach handlers to ASP.NET.
     /// </summary>
-    private class Middleware(RequestDelegate next)
+    private class Middleware(RequestDelegate? next)
     {
-        private RequestDelegate Next = next;
+        private RequestDelegate? Next = next;
         
         /// <summary>
         /// Invoked by ASP.NET for an incoming request with the given HttpContext.
@@ -37,12 +37,12 @@ public static partial class Server
                 }
                 
                 var req = new Request(context);
-                var response = await GetResponse(req, context);
+                var response = await GetResponse(req, Next, context);
                 await response.Respond(req, context);
             } catch { }
         }
     
-        private async Task<IResponse> GetResponse(Request req, HttpContext context)
+        internal static async Task<IResponse> GetResponse(Request req, RequestDelegate? next, HttpContext? context)
         {
             try
             {
@@ -53,9 +53,10 @@ public static partial class Server
                         return response;
                 }
             
-                if (Config.AllowMoreMiddlewaresIfUnhandled)
+                if (Config.AllowMoreMiddlewaresIfUnhandled && next != null)
                 {
-                    await Next.Invoke(context);
+                    if (context != null)
+                        await next.Invoke(context);
                     return new DummyResponse();
                 }
                 else
@@ -71,9 +72,12 @@ public static partial class Server
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"\nException at '{context.ProtoHostPathQuery()}':\n{ex.Message}\n{ex.StackTrace}\n");
+                Console.WriteLine($"\nException at '{req.ProtoHostPathQuery}':\n{ex.Message}\n{ex.StackTrace}\n");
                 return new ExceptionResponse(ex);
             }
         }
     }
+    
+    public static Task<IResponse> GetOtherResponseAsync(Request req, string url)
+        => Middleware.GetResponse(new(req, url), null, null);
 }
