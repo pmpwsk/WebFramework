@@ -154,7 +154,7 @@ public class Page : IPage
         if (Server.Config.Domains.CanonicalDomains.TryGetValueAny(out var canonical, req.Domains))
         {
             canonical ??= req.Domain;
-            yield return $"\t<link rel=\"canonical\" href=\"https://{canonical}{req.Path}{req.QueryString}\" />";
+            yield return $"\t<link rel=\"canonical\" href=\"https://{canonical}{req.FullPath}{req.Query.FullString}\" />";
         }
 
         //viewport settings + charset

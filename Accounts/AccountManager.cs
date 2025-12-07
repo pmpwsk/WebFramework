@@ -114,7 +114,7 @@ public static class AccountManager
     internal static void AddAuthTokenCookie(string combinedToken, Request req, bool temporary)
     {
         GenerateAuthTokenCookieOptions(out var expires, out var sameSite, out var domain, req, temporary);
-        req.Cookies.Add("AuthToken", combinedToken, new CookieOptions()
+        req.CookieWriter?.Set("AuthToken", combinedToken, new CookieOptions()
         {
             Expires = expires,
             SameSite = sameSite,

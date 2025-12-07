@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Web;
 using uwap.WebFramework.Responses;
 
 namespace uwap.WebFramework;
@@ -7,30 +7,49 @@ namespace uwap.WebFramework;
 /// <summary>
 /// Manages the query of an IRequest.
 /// </summary>
-public class QueryManager(IQueryCollection query)
+public class QueryManager
 {
-    /// <summary>
-    /// The query object.
-    /// </summary>
-    private readonly IQueryCollection Query = query;
-
-    /// <summary>
-    /// Gets the value of the query entry with the given key. If no such query entry exists, an exception is thrown.
-    /// </summary>
-    public string this[string key]
-        => (Query.TryGetValue(key, out var v) ? (string?)v : null) ?? throw new ArgumentException("Query does not contain the provided key.");
+    public readonly string FullString;
+    
+    private readonly Dictionary<string, string> Pairs = [];
+    
+    public QueryManager(string fullString)
+    {
+        FullString = fullString;
+        if (FullString.StartsWith('?'))
+        {
+            foreach (var pair in FullString[1..].Split('&'))
+            {
+                if (pair.SplitAtFirst('=', out string key, out string? value))
+                {
+                    if (value == "")
+                        value = null;
+                }
+                else
+                {
+                    key = pair;
+                    value = null;
+                }
+                key = HttpUtility.UrlDecode(key);
+                value = HttpUtility.UrlDecode(value);
+                if (Pairs.TryGetValue(key, out var oldValue) && oldValue != "")
+                {
+                    if (value != null)
+                        Pairs[key] = value + " " + oldValue;
+                }
+                else if (value == null)
+                    Pairs[key] = "";
+                else
+                    Pairs[key] = value;
+            }
+        }
+    }
 
     /// <summary>
     /// Whether the query contains an entry with the given key.
     /// </summary>
     public bool ContainsKey(string key)
-        => Query.ContainsKey(key);
-
-    /// <summary>
-    /// Whether the query contains entries for all of the given keys.
-    /// </summary>
-    public bool ContainsKeys(params string[] keys)
-        => keys.All(Query.ContainsKey);
+        => Pairs.ContainsKey(key);
     
     /// <summary>
     /// Attempts to return the value of the query parameter with the given key while forcefully responding with a 400 Bad Request if it doesn't exist.
@@ -48,7 +67,7 @@ public class QueryManager(IQueryCollection query)
     /// Returns the value of the query entry with the given key or null if no such entry exists.
     /// </summary>
     public string? TryGet(string key)
-        => Query.TryGetValue(key, out var value) ? ((string?)value)??"" : null;
+        => Pairs.GetValueOrDefault(key);
 
     /// <summary>
     /// Returns the value of the query entry with the given key and type, or null/default if no such entry exists.
@@ -60,25 +79,14 @@ public class QueryManager(IQueryCollection query)
     /// Returns whether the query contains an entry with the given key and the associated value as an out-argument if true.
     /// </summary>
     public bool TryGetValue(string key, [MaybeNullWhen(false)] out string value)
-    {
-        if (Query.TryGetValue(key, out var v))
-        {
-            value = ((string?)v)??"";
-            return true;
-        }
-        else
-        {
-            value = null;
-            return false;
-        }
-    }
+        => Pairs.TryGetValue(key, out value);
 
     /// <summary>
     /// Returns whether the query contains an entry with the given key and type, and the associated value as an out-argument if true.
     /// </summary>
     public bool TryGetValue<T>(string key, [MaybeNullWhen(false)] out T value)
     {
-        if (Query.TryGetValue(key, out var sv))
+        if (Pairs.TryGetValue(key, out var sv))
         {
             string v = ((string?)sv) ?? "";
             switch (Type.GetTypeCode(typeof(T)))
@@ -209,6 +217,6 @@ public class QueryManager(IQueryCollection query)
     /// <summary>
     /// Lists all query key-value pairs.
     /// </summary>
-    public List<KeyValuePair<string,Microsoft.Extensions.Primitives.StringValues>> ListAll()
-        => Query.ToList();
+    public List<KeyValuePair<string,string>> ListAll()
+        => Pairs.ToList();
 }

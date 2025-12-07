@@ -85,11 +85,15 @@ public static partial class Server
                     req.ForcePOST();
                     
                     var table = ValidateTableQuery(req, node, false);
-                    if (!(req.Query.TryGetValue("id", out var id) && req.Query.TryGetValue("timestamp", out long timestamp) && req.Query.TryGetValue("randomness", out var randomness)))
+                    var id = req.Query.GetOrThrow("id");
+                    var timestamp = req.Query.GetOrThrow<long>("timestamp");
+                    var randomness = req.Query.GetOrThrow("randomness");
+                    
+                    if (req.Body == null)
                         return StatusResponse.BadRequest;
                     
                     req.BodySizeLimit = long.MaxValue;
-                    var serialized = await req.GetBodyBytes();
+                    var serialized = await req.Body.GetBytes();
                     
                     _ = Task.Run(async () => //don't make the sender wait
                     {

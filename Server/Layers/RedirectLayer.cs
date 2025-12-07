@@ -15,7 +15,7 @@ public static partial class Server
         public static IResponse? RedirectLayerSync(Request req)
         {
             if (Config.Domains.Redirect.TryGetValue(req.Domain, out string? redirectTarget))
-                return new RedirectResponse(req.Proto + redirectTarget + req.Path + req.QueryString, true);
+                return new RedirectResponse(req.Proto + redirectTarget + req.Path + req.Query.FullString, true);
 
             return null;
         }

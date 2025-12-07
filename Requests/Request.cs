@@ -10,117 +10,191 @@ namespace uwap.WebFramework;
 /// <summary>
 /// Unified class for all possible requests.
 /// </summary>
-public class Request(HttpContext context)
+public class Request
 {
-    #region Basic
-    
-    private HttpContext HttpContext = context;
+    private HttpContext HttpContext;
 
     /// <summary>
     /// The associated cookie manager.
     /// </summary>
-    public readonly CookieManager Cookies = new(context);
+    public readonly CookieManager Cookies;
+    
+    /// <summary>
+    /// The associated cookie writer or null if the request can't modify the client's cookies.
+    /// </summary>
+    public readonly CookieWriter? CookieWriter;
 
     /// <summary>
     /// The associated query manager.
     /// The query values are already URL decoded.
     /// </summary>
-    public readonly QueryManager Query = new(context.Request.Query);
+    public readonly QueryManager Query;
+    
+    /// <summary>
+    /// The associated form manager.
+    /// </summary>
+    public readonly FormManager? Form;
+    
+    /// <summary>
+    /// The associated request body manager.
+    /// </summary>
+    public readonly RequestBodyManager? Body;
     
     /// <summary>
     /// The requesting client's IP address, if available.
     /// </summary>
-    public string? ClientAddress = context.IP();
+    public string? ClientAddress;
 
     /// <summary>
     /// The HTTP method.
     /// </summary>
-    public string Method = context.Request.Method.ToUpper();
+    public string Method;
     
     /// <summary>
     /// Whether the protocol is HTTPS.
     /// </summary>
-    public bool IsHttps = context.Request.IsHttps;
+    public bool IsHttps;
     
     /// <summary>
     /// The protocol prefix including the colon and two slashes.
     /// </summary>
-    public string Proto = context.Proto();
+    public string Proto;
     
     /// <summary>
     /// The requested host name including the port.
     /// </summary>
-    public string Host = context.Host();
+    public string Host;
 
     /// <summary>
     /// The requested path.
     /// </summary>
-    public string FullPath = context.Path();
-    
-    /// <summary>
-    /// The raw query string including the question mark, or an empty string if no query was provided.
-    /// </summary>
-    public string QueryString = context.Request.QueryString.Value ?? "";
-    
-    #endregion
-    
-    
-    
-    #region Auth
+    public string FullPath;
 
     /// <summary>
     /// The current user or null if no user is logged in.
     /// </summary>
-    public User? UserNullable = null;
+    public User? UserNullable;
 
     /// <summary>
     /// The associated user table or null if no user table is associated with the request.
     /// </summary>
-    public UserTable? UserTableNullable = null;
+    public UserTable? UserTableNullable;
 
     /// <summary>
     /// The current login state.
     /// </summary>
-    public LoginState LoginState = LoginState.None;
-
-    #endregion
-    
-    
-    
-    #region WF-specific
+    public LoginState LoginState;
 
     /// <summary>
     /// The relative path for a plugin's request or the full path for other requests.
     /// The path segments are already URL path decoded, except for %2f (slash).
     /// </summary>
-    public string Path {get; internal set;} = context.Request.Path.Value ?? "/";
+    public string Path;
 
     /// <summary>
     /// The handling plugin's path prefix or an empty string for other requests.
     /// </summary>
-    public string PluginPathPrefix {get; internal set;} = "";
+    public string PluginPathPrefix;
 
     /// <summary>
     /// The list of domains associated with this request.
     /// </summary>
-    public List<string> Domains = Parsers.Domains(context.Domain());
-
-    #endregion
-
+    public List<string> Domains;
     
+    /// <summary>
+    /// Whether the request originates from the program instance itself.
+    /// </summary>
+    public readonly bool IsInternal;
     
-    #region Accessors
+    public Request(HttpContext context)
+    {
+        HttpContext = context;
+        Cookies = new(context);
+        CookieWriter = new(Cookies, context);
+        Query = new(context.Query());
+        Form = HttpContext.Request.HasFormContentType ? new(context) : null;
+        Body = HttpContext.Request.HasFormContentType ? null : new(context);
+        ClientAddress = context.IP();
+        Method = context.Request.Method.ToUpper();
+        IsHttps = context.Request.IsHttps;
+        Proto = context.Proto();
+        Host = context.Host();
+        FullPath = context.Path();
+        
+        UserNullable = null;
+        UserTableNullable = null;
+        LoginState = LoginState.None;
+        
+        Path = context.Request.Path.Value ?? "/";
+        PluginPathPrefix = "";
+        Domains = Parsers.Domains(Domain);
+        IsInternal = false;
+        
+        Exception = null;
+    }
+    
+    public Request(Request req, string url)
+    {
+        if (!url.SplitAtFirst("://", out var proto, out var hostAndPathAndQuery))
+            throw new ArgumentException("Invalid URL");
+        
+        Proto = proto + "://";
+        IsHttps = Proto == "https://";
+        string fullQuery;
+        if (hostAndPathAndQuery.SplitAtFirst('/', out var host, out var pathAndQuery))
+        {
+            Host = host;
+            if (pathAndQuery.SplitAtFirst('?', out var path, out var query))
+            {
+                FullPath = "/" + string.Join('/', path.Split('/').Select(HttpUtility.UrlDecode));
+                fullQuery = "?" + query;
+            }
+            else
+            {
+                FullPath = "/" + string.Join('/', pathAndQuery.Split('/').Select(HttpUtility.UrlDecode));
+                fullQuery = "";
+            }
+        }
+        else
+        {
+            Host = hostAndPathAndQuery;
+            FullPath = "/";
+            fullQuery = "";
+        }
+        
+        
+        HttpContext = req.HttpContext;
+        Cookies = req.Cookies;
+        CookieWriter = null;
+        Query = new(fullQuery);
+        Form = null;
+        Body = null;
+        ClientAddress = req.ClientAddress;
+        Method = "GET";
+        
+        UserNullable = null;
+        UserTableNullable = null;
+        LoginState = LoginState.None;
+        
+        Path = FullPath;
+        PluginPathPrefix = "";
+        Domains = Parsers.Domains(Domain);
+        IsInternal = true;
+        
+        Exception = null;
+    }
 
     /// <summary>
     /// The requested host name without the port.
     /// </summary>
-    public string Domain => Host.Before(':');
+    public string Domain
+        => Host.Before(':');
     
     /// <summary>
     /// The full requested URL.
     /// </summary>
     public string ProtoHostPathQuery
-        => Proto + Host + FullPath + QueryString;
+        => Proto + Host + FullPath + Query.FullString;
     
     /// <summary>
     /// The requested URL without the query.
@@ -156,7 +230,7 @@ public class Request(HttpContext context)
     public UserTable UserTable
     {
         get => UserTableNullable ?? throw new Exception("This request isn't referencing a user table.");
-        internal set => UserTableNullable = value;
+        set => UserTableNullable = value;
     }
 
     /// <summary>
@@ -194,19 +268,22 @@ public class Request(HttpContext context)
     /// Returns the client certificate for the request, either from the initial connection or by requesting it from the client (<c>Server.Config.EnableDelayedClientCertificates</c> needs to be <c>true</c> for second option).<br/>
     /// If no client certificate was located, null is returned.
     /// </summary>
-    public async Task<X509Certificate2?> GetClientCertificate() => HttpContext.Connection.ClientCertificate ?? await HttpContext.Connection.GetClientCertificateAsync();
+    public async Task<X509Certificate2?> GetClientCertificate()
+        => HttpContext.Connection.ClientCertificate ?? await HttpContext.Connection.GetClientCertificateAsync();
     
     /// <summary>
     /// Returns the URL of the requested page's origin.
     /// </summary>
     public string? CanonicalUrl
-        => Server.Config.Domains.CanonicalDomains.TryGetValueAny(out var domain, Domains) ? $"{Proto}{domain}{Path}{QueryString}" : null;
-
-    #endregion
-
+        => Server.Config.Domains.CanonicalDomains.TryGetValueAny(out var domain, Domains) ? $"{Proto}{domain}{FullPath}{Query.FullString}" : null;
     
-    
-    #region Checks
+    /// <summary>
+    /// The largest allowed request body size for this request in bytes. This may only be set once and only before any reading has begun.
+    /// </summary>
+    public long? BodySizeLimit
+    {
+        set => (HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>() ?? throw new Exception("IHttpMaxRequestBodySizeFeature is not supported.")).MaxRequestBodySize = value;
+    }
 
     /// <summary>
     /// Throws a BadMethodSignal (status 405) if the HTTP method is something other than GET.
@@ -251,80 +328,19 @@ public class Request(HttpContext context)
             throw new ForcedResponse(new RedirectToLoginResponse(this));
         else throw new ForcedResponse(StatusResponse.Forbidden);
     }
-
-    #endregion
-
-    
-
-    #region POST/forms
-
-    /// <summary>
-    /// The largest allowed request body size for this request in bytes. This may only be set once and only before any reading has begun.
-    /// </summary>
-    public long? BodySizeLimit
-    {
-        set => (HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>() ?? throw new Exception("IHttpMaxRequestBodySizeFeature is not supported.")).MaxRequestBodySize = value;
-    }
-
-    /// <summary>
-    /// Whether the request has set a content type for a form.
-    /// </summary>
-    public bool IsForm
-        => HttpContext.Request.HasFormContentType;
-
-    /// <summary>
-    /// The posted form object.
-    /// </summary>
-    public IFormCollection Form
-        => HttpContext.Request.Form;
-
-    /// <summary>
-    /// The uploaded files.
-    /// </summary>
-    public IFormFileCollection Files
-        => HttpContext.Request.Form.Files;
-
-    /// <summary>
-    /// The request body, interpreted as text.
-    /// </summary>
-    public async Task<string> GetBodyText()
-    {
-        using StreamReader reader = new(HttpContext.Request.Body, true);
-        try
-        {
-            return await reader.ReadToEndAsync();
-        }
-        finally
-        {
-            reader.Close();
-        }
-    }
-
-    /// <summary>
-    /// The request body, interpreted as bytes.
-    /// </summary>
-    public async Task<byte[]> GetBodyBytes()
-    {
-        using MemoryStream target = new();
-        await HttpContext.Request.Body.CopyToAsync(target);
-        return target.ToArray();
-    }
-
-    #endregion
-    
-    
     
     #region Legacy pages
     
     /// <summary>
     /// The exception that occurred or null if no exception interrupted the request handling.
     /// </summary>
-    internal Exception? Exception = null;
+    internal Exception? Exception;
 
     /// <summary>
     /// The response status to be sent.
     /// </summary>
-    public int Status => HttpContext.Response.StatusCode;
+    public int Status
+        => HttpContext.Response.StatusCode;
     
     #endregion
 }

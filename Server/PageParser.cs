@@ -148,7 +148,7 @@ public static partial class Server
                         break;
                     case "highlight":
                         foreach (IPageElement element in page.Sidebar)
-                            if (element is ButtonElement button && button.Link == req.Path + req.QueryString)
+                            if (element is ButtonElement button && button.Link == req.Path + req.Query.FullString)
                                 button.Class = arg2 == "" ? "green" : arg2;
                         break;
                 }

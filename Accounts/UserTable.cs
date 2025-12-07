@@ -55,12 +55,12 @@ public class UserTable(string name) : Table<User>(name)
         if (user == null || !user.Auth.TryGetValue(authToken, out var tokenData))
         { //user doesn't exist or doesn't contain the token provided
             AccountManager.ReportFailedAuth(req);
-            req.Cookies.Delete("AuthToken");
+            req.CookieWriter?.Delete("AuthToken");
             return (LoginState.None, null, null);
         }
         if (tokenData.Expires < DateTime.UtcNow)
         { //token expired <- don't report this because it's probably not brute-force
-            req.Cookies.Delete("AuthToken");
+            req.CookieWriter?.Delete("AuthToken");
             if (Server.Config.Log.AuthTokenExpired)
                 Console.WriteLine($"User {id} used an expired auth token.");
             return (LoginState.None, null, null);
@@ -72,7 +72,7 @@ public class UserTable(string name) : Table<User>(name)
             return (LoginState.NeedsMailVerification, user, tokenData.LimitedToPaths);
         else
         {
-            if (tokenData.Expires < DateTime.UtcNow + Server.Config.Accounts.TokenExpiration - Server.Config.Accounts.TokenRenewalAfter)
+            if (req.CookieWriter != null && tokenData.Expires < DateTime.UtcNow + Server.Config.Accounts.TokenExpiration - Server.Config.Accounts.TokenRenewalAfter)
             { //renew token if the renewal is due
                 AccountManager.AddAuthTokenCookie(user.Id + await RenewTokenAsync(user.Id, authToken, tokenData), req, false);
                 if (Server.Config.Log.AuthTokenRenewed)
@@ -92,7 +92,7 @@ public class UserTable(string name) : Table<User>(name)
         if (!req.Cookies.TryGetValue("AuthToken", out var combinedToken))
             return;
         if (!logoutOthers)
-            req.Cookies.Delete("AuthToken", new CookieOptions { Domain = AccountManager.GetWildcardDomain(req.Domain)});
+            req.CookieWriter?.Delete("AuthToken", new CookieOptions { Domain = AccountManager.GetWildcardDomain(req.Domain)});
         string id = combinedToken.Remove(12);
         string authToken = combinedToken.Remove(0, 12);
         if (!ContainsId(id))

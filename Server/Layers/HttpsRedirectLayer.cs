@@ -19,7 +19,7 @@ public static partial class Server
                 var port = Config.HttpsPort ?? Config.ClientCertificatePort;
                 if (port != null)
                     return new RedirectResponse(
-                        $"https://{req.Domain}{(port == 443 ? "" : $":{port}")}{req.Path}{req.QueryString}",
+                        $"https://{req.Domain}{(port == 443 ? "" : $":{port}")}{req.Path}{req.Query.FullString}",
                         true
                     );
             }
