@@ -22,7 +22,7 @@ public delegate Task<R> AsyncTransactionDelegate<T, R>(TransactionData<T> transa
 /// <summary>
 /// Contains the table functionality.
 /// </summary>
-public class Table<T> : AbstractTable where T : AbstractTableValue
+public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
 {
     /// <summary>
     /// The dictionary of entries indexed by their IDs.
@@ -758,11 +758,21 @@ public class Table<T> : AbstractTable where T : AbstractTableValue
         {
             transaction.FileActions = modify.FileActions;
             newValue = transaction.Value ?? throw new DatabaseEntryMissingException();
+            // ReSharper disable once AccessToDisposedClosure
             await waiter.ReadyAsync();
             await modify.WaitAsync();
         });
         waiter.WaitAsync().GetAwaiter().GetResult();
+        waiter.Dispose();
         value = newValue ?? throw new DatabaseEntryMissingException();
         return modify;
+    }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        CreationLock.Dispose();
+        foreach (var index in Indices)
+            index.Dispose();
     }
 }

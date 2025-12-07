@@ -11,7 +11,7 @@ public delegate R DelegateCallerWithResult<in T, out R>(T subscriber);
 /// <summary>
 /// Custom container for event subscribers of a certain type, mostly a callback function.
 /// </summary>
-public class SubscriberContainer<T>
+public class SubscriberContainer<T> : IDisposable
 {
     /// <summary>
     /// The lock to use when changing the list of subscribers.
@@ -179,5 +179,11 @@ public class SubscriberContainer<T>
     {
         using var h = await Lock.WaitAsync();
         return Subscribers.Count == 0;
+    }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        Lock.Dispose();
     }
 }

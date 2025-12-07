@@ -6,7 +6,7 @@ namespace uwap.WebFramework.Database;
 /// <summary>
 /// Contains the table entry functionality that doesn't require knowledge of the stored type.
 /// </summary>
-public abstract class AbstractTableEntry
+public abstract class AbstractTableEntry : IDisposable
 {
     /// <summary>
     /// The table the entry belongs to.
@@ -171,5 +171,14 @@ public abstract class AbstractTableEntry
             File.Delete(TrashPath);
         if (File.Exists(BufferPath))
             File.Delete(BufferPath);
+    }
+
+    public virtual void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        Lock.Dispose();
+        foreach (var request in LockRequests)
+            request.Dispose();
+        LockRequestStateLock.Dispose();
     }
 }

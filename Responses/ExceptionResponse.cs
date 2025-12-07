@@ -16,4 +16,9 @@ public class ExceptionResponse(Exception exception) : IResponse
         Presets.CreatePage(req, "Error", out var page);
         return new LegacyPageResponse(page, req).Respond(req, context);
     }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+    }
 }

@@ -88,4 +88,10 @@ public class M2MTableIndex<T, K>(Func<T,List<K>> selector) : ITableIndex<T> wher
         
         return Index.TryGetValue(key, out var set) ? [..set] : [];
     }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        Lock.Dispose();
+    }
 }

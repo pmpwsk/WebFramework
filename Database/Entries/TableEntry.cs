@@ -62,4 +62,11 @@ public class TableEntry<T>(Table<T> table, string id, byte[] serialized)
     /// </summary>
     public Task CallChangedEventAsync(T? oldValue, T? newValue)
         => ValueChanged.InvokeWithSyncCaller(s => s(oldValue, newValue), _ => {});
+
+    public override void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        base.Dispose();
+        ValueChanged.Dispose();
+    }
 }

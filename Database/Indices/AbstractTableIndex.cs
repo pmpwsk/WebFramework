@@ -56,4 +56,10 @@ public abstract class AbstractTableIndex<T, K>(Func<T,K> selector) : ITableIndex
             ReverseIndex.Remove(id);
         }
     }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        Lock.Dispose();
+    }
 }

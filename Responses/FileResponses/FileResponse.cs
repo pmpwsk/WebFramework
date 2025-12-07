@@ -20,6 +20,11 @@ public class FileResponse(string path, bool allowCors, string? timestamp) : Abst
     protected override async Task WriteTo(HttpContext context)
     {
         await context.Response.SendFileAsync(Path);
+    }
+
+    public override void Dispose()
+    {
+        GC.SuppressFinalize(this);
         if (DeleteAfter)
             File.Delete(Path);
     }

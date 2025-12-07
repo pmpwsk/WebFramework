@@ -9,4 +9,9 @@ public class DummyResponse : IResponse
 {
     public Task Respond(Request req, HttpContext context)
         => Task.CompletedTask;
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+    }
 }

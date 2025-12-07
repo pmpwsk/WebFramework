@@ -5,7 +5,7 @@ namespace uwap.WebFramework.Responses;
 /// <summary>
 /// A generic response to a request.
 /// </summary>
-public interface IResponse
+public interface IResponse : IDisposable
 {
     /// <summary>
     /// Sends the response to the given request.

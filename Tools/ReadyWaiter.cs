@@ -3,7 +3,7 @@ namespace uwap.WebFramework.Tools;
 /// <summary>
 /// A waiter that waits until <c>Ready()</c> is called.
 /// </summary>
-public class ReadyWaiter
+public class ReadyWaiter : IDisposable
 {
     private AsyncLock StateLock = new();
     
@@ -67,5 +67,12 @@ public class ReadyWaiter
         IsReady = true;
         Semaphore.Release();
         return true;
+    }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        StateLock.Dispose();
+        Semaphore.Dispose();
     }
 }

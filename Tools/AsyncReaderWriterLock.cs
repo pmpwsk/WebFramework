@@ -3,7 +3,7 @@ namespace uwap.WebFramework.Tools;
 /// <summary>
 /// A simple lock that works asynchronously.
 /// </summary>
-public class AsyncReaderWriterLock
+public class AsyncReaderWriterLock : IDisposable
 {
     private AsyncLock StateLock = new();
     
@@ -117,12 +117,25 @@ public class AsyncReaderWriterLock
     /// </summary>
     public Task<AsyncReaderWriterLockHolder> WaitWriteAsync()
         => WaitAsync(true);
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        StateLock.Dispose();
+        foreach (var holder in ReadWaiters)
+            holder.Dispose();
+        foreach (var holder in WriteWaiters)
+            holder.Dispose();
+        foreach (var holder in ReadHolders)
+            holder.Dispose();
+        WriteHolder?.Dispose();
+    }
 }
 
 /// <summary>
 /// An object holding a lock for the <c>AsyncReaderWriterLock</c> class.
 /// </summary>
-public class AsyncReaderWriterLockHolder : IAsyncDisposable
+public class AsyncReaderWriterLockHolder : IDisposable, IAsyncDisposable
 {
     /// <summary>
     /// The time the lock request was started.
@@ -156,5 +169,12 @@ public class AsyncReaderWriterLockHolder : IAsyncDisposable
     {
         GC.SuppressFinalize(this);
         await Parent.HolderFinished(this);
+        Waiter.Dispose();
+    }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        Waiter.Dispose();
     }
 }

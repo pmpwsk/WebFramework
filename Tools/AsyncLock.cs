@@ -3,7 +3,7 @@ namespace uwap.WebFramework.Tools;
 /// <summary>
 /// A simple lock that works asynchronously.
 /// </summary>
-public class AsyncLock
+public class AsyncLock : IDisposable
 {
     internal SemaphoreSlim Semaphore = new(1, 1);
     
@@ -23,6 +23,12 @@ public class AsyncLock
     /// </summary>
     public Task<AsyncLockHolder> WaitAsync()
         => WaitAsync(CancellationToken.None);
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        Semaphore.Dispose();
+    }
 }
 
 /// <summary>

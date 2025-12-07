@@ -71,4 +71,9 @@ public abstract class AbstractFileResponse(bool allowCors, string? timestamp) : 
         // Body
         return WriteTo(context);
     }
+
+    public virtual void Dispose()
+    {
+        GC.SuppressFinalize(this);
+    }
 }

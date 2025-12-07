@@ -12,4 +12,9 @@ public abstract class AbstractTextResponse : AbstractMarkdownPart, IResponse
         foreach (var chunk in EnumerateChunks())
             await context.Response.WriteAsync(chunk);
     }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+    }
 }

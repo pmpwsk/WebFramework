@@ -5,7 +5,7 @@ namespace uwap.WebFramework.Database;
 /// <summary>
 /// Contains the file action list and commits the transaction when disposed. 
 /// </summary>
-public class ModifyTransactionData : IAsyncDisposable
+public class ModifyTransactionData : IDisposable, IAsyncDisposable
 {
     /// <summary>
     /// The file actions to execute.
@@ -25,6 +25,14 @@ public class ModifyTransactionData : IAsyncDisposable
     /// </summary>
     public async ValueTask DisposeAsync()
     {
+        GC.SuppressFinalize(this);
         await Waiter.ReadyAsync();
+        Waiter.Dispose();
+    }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        Waiter.Dispose();
     }
 }

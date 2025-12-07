@@ -5,7 +5,7 @@ namespace uwap.WebFramework.Database;
 /// <summary>
 /// Describes a lock request in a WebFramework database cluster.
 /// </summary>
-public class LockRequest : FunctionalComparable<LockRequest>
+public class LockRequest : FunctionalComparable<LockRequest>, IDisposable
 {
     /// <summary>
     /// Creates, queues and distributes a new lock request for the given entry that will be executed by this program instance.
@@ -152,6 +152,8 @@ public class LockRequest : FunctionalComparable<LockRequest>
             
             Entry.LockRequests.Remove(this);
             
+            Dispose();
+            
             var first = Entry.LockRequests.FirstOrDefault();
             if (first != null)
                 await first.SetReadyAsync();
@@ -160,4 +162,11 @@ public class LockRequest : FunctionalComparable<LockRequest>
 
     protected override IEnumerable<Func<LockRequest, IComparable>> EnumerateComparators()
         => [ x => x.Timestamp, x => x.Randomness ];
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        Lock.Dispose();
+        Waiter.Dispose();
+    }
 }

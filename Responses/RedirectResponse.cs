@@ -18,6 +18,11 @@ public class RedirectResponse(string location, bool permanent = false) : IRespon
         context.Response.Redirect(Location, Permanent);
         return Task.CompletedTask;
     }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+    }
 }
 
 /// <summary>

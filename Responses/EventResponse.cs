@@ -83,4 +83,11 @@ public class EventResponse(CancellationToken cancellationToken = default) : IRes
             true
         );
     }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        EventLock.Dispose();
+        KeepEventAliveCancelled.Dispose();
+    }
 }

@@ -28,6 +28,11 @@ public class FileDownloadResponse(string path, string filename, string? timestam
     {
         context.Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{Filename}\"");
         await context.Response.SendFileAsync(Path);
+    }
+
+    public override void Dispose()
+    {
+        GC.SuppressFinalize(this);
         if (DeleteAfter)
             File.Delete(Path);
     }

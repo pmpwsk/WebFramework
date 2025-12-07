@@ -39,7 +39,7 @@ public static partial class Server
                 }
                 
                 var req = new Request(context);
-                var response = await GetResponse(req, Next, context);
+                using var response = await GetResponse(req, Next, context);
                 await response.Respond(req, context);
             } catch { }
         }
@@ -89,7 +89,7 @@ public static partial class Server
     public static async Task<string> ResourcePath(Request req, string url)
     {
         var otherRequest = new Request(req, url);
-        var response = await Middleware.GetResponse(otherRequest, null, null);
+        using var response = await Middleware.GetResponse(otherRequest, null, null);
         return response is AbstractFileResponse { Timestamp: not null } fileResponse
             ? url + Parsers.QueryStringSuffix(otherRequest.Query.FullString, $"t={fileResponse.Timestamp}")
             : url;

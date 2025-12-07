@@ -44,4 +44,9 @@ public class StatusResponse(int status) : IResponse
         Presets.CreatePage(req, Status.ToString(), out var page);
         return new LegacyPageResponse(page, req).Respond(req, context);
     }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+    }
 }

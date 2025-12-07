@@ -19,4 +19,9 @@ public class SingleEventMessageResponse(string message) : IResponse
         await context.Response.WriteAsync($"data: {Message}\r\r", cts.Token);
         await context.Response.Body.FlushAsync(cts.Token);
     }
+
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+    }
 }
