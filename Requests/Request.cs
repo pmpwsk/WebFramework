@@ -41,6 +41,11 @@ public class Request
     public readonly RequestBodyManager? Body;
     
     /// <summary>
+    /// The associated web socket manager.
+    /// </summary>
+    public readonly WebSocketManager? WebSocket;
+    
+    /// <summary>
     /// The requesting client's IP address, if available.
     /// </summary>
     public string? ClientAddress;
@@ -114,6 +119,7 @@ public class Request
         Query = new(context.Query());
         Form = HttpContext.Request.HasFormContentType ? new(context) : null;
         Body = HttpContext.Request.HasFormContentType ? null : new(context);
+        WebSocket = HttpContext.WebSockets.IsWebSocketRequest ? HttpContext.WebSockets : null;
         ClientAddress = context.IP();
         Method = context.Request.Method.ToUpper();
         IsHttps = context.Request.IsHttps;
@@ -143,6 +149,7 @@ public class Request
         Query = new(parts.Query);
         Form = null;
         Body = null;
+        WebSocket = null;
         ClientAddress = req.ClientAddress;
         Method = "GET";
         IsHttps = parts.Protocol == "https://";
