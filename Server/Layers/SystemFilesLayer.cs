@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using uwap.WebFramework.Responses;
 
 namespace uwap.WebFramework;
