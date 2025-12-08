@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
 
 namespace uwap.WebFramework.Responses.Dynamic;
 
@@ -8,13 +7,10 @@ namespace uwap.WebFramework.Responses.Dynamic;
 /// </summary>
 public static class WatcherManager
 {
-    public static readonly IResponse RejectResponse
-        = new SingleEventMessageResponse(JsonSerializer.Serialize(new { type = "Reload" }));
-    
     /// <summary>
     /// The currently watched pages, indexed by their watcher IDs.
     /// </summary>
-    private static Dictionary<string, AbstractWatchablePage> WatchedPages = [];
+    private static readonly Dictionary<string, AbstractWatchablePage> WatchedPages = [];
     
     /// <summary>
     /// Creates and saves a new watcher for the given page, while starting its expiration timeout.
@@ -26,6 +22,7 @@ public static class WatcherManager
             var id = Parsers.RandomString(64, WatchedPages.Keys);
             var watcher = new ChangeWatcher(id);
             WatchedPages[id] = page;
+            page.ChangeWatcher = watcher;
             return watcher;
         }
     }
@@ -39,9 +36,9 @@ public static class WatcherManager
         {
             if (WatchedPages.GetValueOrDefault(watcher.Id)?.ChangeWatcher != watcher)
                 return;
-            
-            WatchedPages.Remove(watcher.Id);
-            watcher.ExpirationToken.Cancel();
+
+            if (WatchedPages.Remove(watcher.Id, out var page))
+                page.Dispose();
         }
     }
     
@@ -52,22 +49,5 @@ public static class WatcherManager
     {
         lock (WatchedPages)
             return WatchedPages.TryGetValue(id, out page);
-    }
-    
-    /// <summary>
-    /// Attempts to find the change watcher with the given watcher ID.
-    /// </summary>
-    public static bool TryGetWatcher(string id, [MaybeNullWhen(false)] out ChangeWatcher watcher)
-    {
-        if (TryGetPage(id, out var page) && page.ChangeWatcher != null)
-        {
-            watcher = page.ChangeWatcher;
-            return true;
-        }
-        else
-        {
-            watcher = null;
-            return false;
-        }
     }
 }

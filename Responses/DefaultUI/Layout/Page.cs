@@ -18,12 +18,30 @@ public class Page : AbstractWatchablePage
     /// </summary>
     private readonly RequiredWatchedContainer<Body> BodyContainer;
     
-    public Page(Request req, bool dynamic) : base(dynamic)
+    public Page(Request req, bool dynamic) : base(req, dynamic)
     {
         HeadContainer = new(this, new(req));
         BodyContainer = new(this, new(req));
         Presets.ModifyPage(req, this);
+        if (dynamic && !req.IsInternal)
+        {
+            Title = "...";
+            Sections.Add(new("Loading"));
+            throw new ForcedResponse(this);
+        }
     }
+    
+    /// <summary>
+    /// The head element.
+    /// </summary>
+    public Head Head
+        => HeadContainer.Element;
+    
+    /// <summary>
+    /// The body element.
+    /// </summary>
+    public Body Body
+        => BodyContainer.Element;
     
     /// <summary>
     /// The page's title.
@@ -132,7 +150,7 @@ public class Page : AbstractWatchablePage
     
     public override IEnumerable<string> EnumerateChunks()
     {
-        yield return $"<!DOCTYPE html><html{(ChangeWatcher == null ? "" : $" data-wf-watcher=\"{ChangeWatcher.Id}\"")}>";
+        yield return $"<!DOCTYPE html><html{(WatchedUrl == null ? "" : $" data-wf-url=\"{WatchedUrl}\"")}>";
         
         foreach (var container in RenderedContainers.WhereNotNull())
             foreach (var element in container.WhereNotNull())

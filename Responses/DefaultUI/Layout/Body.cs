@@ -30,7 +30,7 @@ public class Body : WatchedElement
     /// <summary>
     /// The default UI script.
     /// </summary>
-    private readonly RequiredWatchedContainer<ScriptReference> DefaultScript;
+    private readonly RequiredWatchedContainer<SystemScriptReference> DefaultScript;
     
     /// <summary>
     /// The scripts to load.
@@ -44,7 +44,7 @@ public class Body : WatchedElement
         NavBarContainer = new(this, new());
         PageContentContainer = new(this, new(req));
         Menus = new(this, menus ?? []);
-        DefaultScript = new(this, new(req, $"{Server.Layers.SystemFilesLayerPrefix}/default-ui.js"));
+        DefaultScript = new(this, new(req));
         Scripts = new(this, scripts ?? []);
     }
     
@@ -67,6 +67,9 @@ public class Body : WatchedElement
     }
     
     public override string RenderedTag
+        => "body";
+
+    internal override string? FixedSystemId
         => "body";
 
     public override IEnumerable<AbstractWatchedContainer?> RenderedContainers

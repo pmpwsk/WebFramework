@@ -13,7 +13,7 @@ public abstract class AbstractTextResponse : AbstractMarkdownPart, IResponse
             await context.Response.WriteAsync(chunk);
     }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         GC.SuppressFinalize(this);
     }

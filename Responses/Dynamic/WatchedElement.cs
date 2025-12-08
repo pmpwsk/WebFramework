@@ -11,11 +11,20 @@ public abstract class WatchedElement : AbstractElement, IWatchedParent
     /// The watched container holding this element.
     /// </summary>
     internal AbstractWatchedContainer? ParentContainer = null;
-    
+
+    private string? _SystemId = null;
+
     /// <summary>
     /// The unique system ID within the parent.
     /// </summary>
-    internal string? SystemId = null;
+    internal string? SystemId
+    {
+        get => FixedSystemId ?? _SystemId;
+        set => _SystemId = value;
+    }
+    
+    internal virtual string? FixedSystemId
+        => null;
     
     public sealed override IEnumerable<AbstractMarkdownPart?> RenderedContent
         => RenderedContainers.WhereNotNull().SelectMany(container => container);

@@ -1,5 +1,5 @@
 using System.Text.Json;
-using uwap.WebFramework.Tools;
+using uwap.WebFramework.Responses.DefaultUI;
 
 namespace uwap.WebFramework.Responses.Dynamic;
 
@@ -11,33 +11,54 @@ public class ChangeWatcher
     public string Id;
     
     public EventResponse? EventResponse = null;
-    
-    public readonly PlannedAction Expiration;
-    
-    public readonly CancellationTokenSource ExpirationToken = new();
+
+    private readonly Queue<string> WaitingChanges = [];
+
+    private bool Loaded = false; 
     
     internal ChangeWatcher(string id)
     {
         Id = id;
-        Expiration = new PlannedAction(Server.Config.WatcherExpiration, () => WatcherManager.DeleteWatcher(this));
-        Expiration.Start();
     }
     
-    private void WriteChange(object change)
+    private void WriteChange(object change, bool forLoading = false)
     {
         var data = JsonSerializer.Serialize(change);
-        EventResponse?.EventMessage(data).GetAwaiter().GetResult();
+        lock (WaitingChanges)
+        {
+            if (Loaded || forLoading)
+                EventResponse?.EventMessage(data).GetAwaiter().GetResult();
+            else
+                WaitingChanges.Enqueue(data);
+        }
     }
-    
-    public void Welcome()
+
+    public void WritePage(Page page)
     {
-        WriteChange(new { type = "Welcome" });
+        WriteChange(new { type = "Head", elements = page.Head.RenderedContent.WhereNotNull().Select(ToCode).ToList() }, true);
+        List<string> beforeScript = [];
+        List<string> afterScript = [];
+        bool passedScript = false;
+        foreach (var part in page.Body.RenderedContent)
+            if (part != null)
+                if (part is SystemScriptReference)
+                    passedScript = true;
+                else if (passedScript)
+                    afterScript.Add(ToCode(part));
+                else
+                    beforeScript.Add(ToCode(part));
+        WriteChange(new { type = "BodyBeforeScript", elements = beforeScript }, true);
+        WriteChange(new { type = "BodyAfterScript", elements = afterScript }, true);
+        lock (WaitingChanges)
+        {
+            while (WaitingChanges.TryDequeue(out var data))
+                EventResponse?.EventMessage(data).GetAwaiter().GetResult();
+            Loaded = true;
+        }
     }
-    
-    public void WelcomeBack()
-    {
-        WriteChange(new { type = "WelcomeBack" });
-    }
+
+    private static string ToCode(AbstractMarkdownPart part)
+        => string.Join("", part.EnumerateChunks());
     
     public void AttributeChanged(WatchedElement element, string attributeName)
     {

@@ -1,9 +1,7 @@
-let aside = document.querySelector("aside");
-if (document.documentElement.hasAttribute("data-wf-watcher"))
+if (document.documentElement.hasAttribute("data-wf-url"))
 {
-    let watcherId = document.documentElement.getAttribute("data-wf-watcher");
-    let watcher = new EventSource(`/wf/dyn/watcher?id=${watcherId}`);
-    let watcherGreeted = false;
+    let url = document.documentElement.getAttribute("data-wf-url");
+    let watcher = new EventSource(`/wf/dyn/watcher?url=${encodeURIComponent(url)}`);
     onbeforeunload = () => watcher.close();
     watcher.onmessage = async event =>
     {
@@ -13,15 +11,29 @@ if (document.documentElement.hasAttribute("data-wf-watcher"))
         let change = JSON.parse(event.data);
         switch (change.type)
         {
-            case "Reload":
-                window.location.reload();
+            case "Head":
+                document.head.innerHTML = "";
+                for (let html of change.elements)
+                    document.head.append(parseElement(html));
                 break;
-            case "Welcome":
-                watcherGreeted = true;
+            case "BodyBeforeScript":
+                for (let child of [...document.body.children])
+                    if (matchesSystemId(child, "script"))
+                        break;
+                    else
+                        child.remove();
+                for (let html of change.elements.reverse())
+                    document.body.prepend(parseElement(html));
                 break;
-            case "WelcomeBack":
-                if (!watcherGreeted)
-                    window.location.reload();
+            case "BodyAfterScript":
+                let scriptPassed = false;
+                for (let child of [...document.body.children])
+                    if (matchesSystemId(child, "script"))
+                        scriptPassed = true;
+                    else if (scriptPassed)
+                        child.remove();
+                for (let html of change.elements)
+                    document.body.append(parseElement(html));
                 break;
             case "AttributeChanged":
             {
@@ -79,7 +91,7 @@ document.addEventListener("click", event =>
     {
         // Toggle nav menu
         closeAllMenus();
-        toggleClass(aside, "wf-is-forced");
+        toggleClass(findAside(), "wf-is-forced");
     }
     else if (event.target.matches(".wf-menu-toggle"))
     {
@@ -91,7 +103,7 @@ document.addEventListener("click", event =>
     else if (event.target.matches(".wf-overlay-background, aside *, .wf-menu *"))
     {
         // Close all menus
-        removeClass(aside, "wf-is-forced");
+        removeClass(findAside(), "wf-is-forced");
         closeAllMenus();
     }
     else if (event.target.matches(".wf-image"))
@@ -110,9 +122,14 @@ document.addEventListener("click", event =>
     }
 });
 
+function findAside()
+{
+    return document.querySelector("aside");
+}
+
 function openMenu(menu)
 {
-    removeClass(aside, "wf-is-forced");
+    removeClass(findAside(), "wf-is-forced");
     closeAllMenus(menu);
     toggleClass(menu, "wf-is-open");
 }
@@ -158,10 +175,14 @@ function getElementByPath(path)
     return node;
 }
 
+function matchesSystemId(element, id) {
+    return element.hasAttribute("data-wf-id") && element.getAttribute("data-wf-id") === id;
+}
+
 function getElementBySystemId(parent, id)
 {
     for (let child of parent.children)
-        if (child.hasAttribute("data-wf-id") && child.getAttribute("data-wf-id") === id)
+        if (matchesSystemId(child, id))
             return child;
     return null;
 }

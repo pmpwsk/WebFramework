@@ -104,6 +104,9 @@ public class Head : WatchedElement
     public override string RenderedTag
         => "head";
 
+    internal override string? FixedSystemId
+        => "head";
+
     public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
         => [
             TitleContainer,

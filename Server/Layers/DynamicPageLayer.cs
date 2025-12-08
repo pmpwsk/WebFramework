@@ -1,5 +1,5 @@
-using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Responses;
+using uwap.WebFramework.Responses.DefaultUI;
 using uwap.WebFramework.Responses.Dynamic;
 
 namespace uwap.WebFramework;
@@ -22,25 +22,26 @@ public static partial class Server
                 case "/watcher":
                 {
                     req.ForceGET();
-                    var id = req.Query.GetOrThrow("id");
+                    var url = req.Query.GetOrThrow("url");
                     
-                    if (!WatcherManager.TryGetWatcher(id, out var watcher))
-                    {
-                        AccountManager.ReportFailedAuth(req);
-                        return WatcherManager.RejectResponse;
-                    }
-                    if (watcher.EventResponse != null)
-                        return WatcherManager.RejectResponse;
+                    var otherResponse = await GetOtherResponseAsync(req, url);
+                    if (otherResponse is not Page page)
+                        return StatusResponse.NotFound;
+                    var watcher = WatcherManager.CreateWatcher(page);
                     
-                    watcher.Expiration.Cancel();
                     var response = new EventResponse();
                     await response.KeepEventAliveCancelled.RegisterAsync((_, _) =>
                     {
                         watcher.EventResponse = null;
-                        watcher.Expiration.Start();
+                        WatcherManager.DeleteWatcher(watcher);
                         return Task.CompletedTask;
                     });
                     watcher.EventResponse = response;
+                    response.OnStart = () =>
+                    {
+                        watcher.WritePage(page);
+                        return Task.CompletedTask;
+                    };
                     return response;
                 }
                 
