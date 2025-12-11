@@ -1,3 +1,5 @@
+let watcherId = null;
+
 if (document.documentElement.hasAttribute("data-wf-url"))
 {
     let url = document.documentElement.getAttribute("data-wf-url");
@@ -11,6 +13,9 @@ if (document.documentElement.hasAttribute("data-wf-url"))
         let change = JSON.parse(event.data);
         switch (change.type)
         {
+            case "Welcome":
+                watcherId = change.id;
+                break;
             case "Head":
                 document.head.innerHTML = "";
                 for (let html of change.elements)
@@ -113,12 +118,30 @@ document.addEventListener("click", event =>
         {
             // Remove fullscreen image
             event.target.remove();
-        } else {
+        }
+        else
+        {
             // Add fullscreen image
             let fullscreenImage = event.target.cloneNode();
             fullscreenImage.classList.add("wf-fullscreen");
             document.body.append(fullscreenImage);
         }
+    }
+});
+
+document.addEventListener("submit", event =>
+{
+    if (watcherId && event.submitter.matches(".wf-server-form-override"))
+    {
+        // Form with overriden server action
+        event.preventDefault();
+        runServerAction(event.submitter, event.target);
+    }
+    else if (watcherId && event.target.matches(".wf-server-form"))
+    {
+        // Form with server action
+        event.preventDefault();
+        runServerAction(event.target, event.target);
     }
 });
 
@@ -175,7 +198,8 @@ function getElementByPath(path)
     return node;
 }
 
-function matchesSystemId(element, id) {
+function matchesSystemId(element, id)
+{
     return element.hasAttribute("data-wf-id") && element.getAttribute("data-wf-id") === id;
 }
 
@@ -185,6 +209,24 @@ function getElementBySystemId(parent, id)
         if (matchesSystemId(child, id))
             return child;
     return null;
+}
+
+function getSystemPath(element)
+{
+    let path = [];
+    while (element && element.hasAttribute("data-wf-id"))
+    {
+        path.push(element.getAttribute("data-wf-id"));
+        element = element.parentElement;
+    }
+    return path.reverse();
+}
+
+function runServerAction(submitter, form)
+{
+    let request = new XMLHttpRequest();
+    request.open("POST", `/wf/dyn/submit?id=${watcherId}&path=${encodeURIComponent(JSON.stringify(getSystemPath(submitter)))}`);
+    request.send(new FormData(form));
 }
 
 function parseElement(html)

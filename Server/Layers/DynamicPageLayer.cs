@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Web;
 using uwap.WebFramework.Responses;
 using uwap.WebFramework.Responses.DefaultUI;
 using uwap.WebFramework.Responses.Dynamic;
@@ -39,10 +41,49 @@ public static partial class Server
                     watcher.EventResponse = response;
                     response.OnStart = () =>
                     {
+                        watcher.Welcome();
                         watcher.WritePage(page);
                         return Task.CompletedTask;
                     };
                     return response;
+                }
+
+                case "/submit":
+                {
+                    req.ForcePOST();
+                    var id = req.Query.GetOrThrow("id");
+                    if (!WatcherManager.TryGetPage(id, out var page))
+                        return StatusResponse.NotFound;
+                    var elemPathEncoded = req.Query.GetOrThrow("path");
+                    var elemPath = JsonSerializer.Deserialize<string[]>(HttpUtility.UrlDecode(elemPathEncoded));
+                    if (elemPath == null)
+                        return StatusResponse.BadRequest;
+                    var element = page.FindByPath(elemPath);
+                    WatchedElement? form;
+                    Func<IResponse> action;
+                    switch (element)
+                    {
+                        case null:
+                            return StatusResponse.NotFound;
+                        case ServerForm e:
+                            form = e;
+                            action = e.Action;
+                            break;
+                        case ServerActionButton e:
+                            form = e;
+                            action = e.Action;
+                            break;
+                        case ServerSubmitButton e:
+                            form = e.FindForm();
+                            if (form == null)
+                                return StatusResponse.BadRequest;
+                            action = e.Action;
+                            break;
+                        default:
+                            return StatusResponse.BadRequest;
+                    }
+
+                    return action();
                 }
                 
                 default:

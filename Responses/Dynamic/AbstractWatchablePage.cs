@@ -20,6 +20,26 @@ public abstract class AbstractWatchablePage(Request req, bool dynamic) : Abstrac
 
     public readonly SubscriberContainer<Action> Disposing = new();
 
+    public WatchedElement? FindByPath(string[] path)
+    {
+        var containers = RenderedContainers;
+        for (int i = 0; i < path.Length; i++)
+        {
+            var child = containers
+                .WhereNotNull()
+                .SelectMany(c => c)
+                .OfType<WatchedElement>()
+                .FirstOrDefault(e => e.SystemId == path[i]);
+            if (child == null)
+                return null;
+            if (i == path.Length - 1)
+                return child;
+            containers = child.RenderedContainers;
+        }
+
+        return null;
+    }
+
     public override void Dispose()
     {
         GC.SuppressFinalize(this);

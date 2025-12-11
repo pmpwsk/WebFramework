@@ -32,6 +32,11 @@ public class ChangeWatcher
                 WaitingChanges.Enqueue(data);
         }
     }
+    
+    public void Welcome()
+    {
+        WriteChange(new { type = "Welcome", id = Id });
+    }
 
     public void WritePage(Page page)
     {
