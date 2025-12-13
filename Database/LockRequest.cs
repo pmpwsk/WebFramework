@@ -132,7 +132,8 @@ public class LockRequest : FunctionalComparable<LockRequest>, IDisposable
             _ = Task.Run(async () =>
             {
                 await Task.Delay(Server.Config.Database.LockExpiration);
-                await SetFinishedAsync();
+                if (!Finished)
+                    await SetFinishedAsync();
             });
         }
     }
@@ -142,7 +143,7 @@ public class LockRequest : FunctionalComparable<LockRequest>, IDisposable
     /// </summary>
     public async Task SetFinishedAsync()
     {
-        using var h = await Lock.WaitAsync();
+        var h = await Lock.WaitAsync();
         
         if (!Finished)
         {
@@ -152,12 +153,15 @@ public class LockRequest : FunctionalComparable<LockRequest>, IDisposable
             
             Entry.LockRequests.Remove(this);
             
+            h.Dispose();
             Dispose();
             
             var first = Entry.LockRequests.FirstOrDefault();
             if (first != null)
                 await first.SetReadyAsync();
         }
+        else
+            h.Dispose();
     }
 
     protected override IEnumerable<Func<LockRequest, IComparable>> EnumerateComparators()
