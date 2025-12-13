@@ -74,7 +74,7 @@ public static partial class Server
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"\nException at '{req.ProtoHostPathQuery}':\n{ex.Message}\n{ex.StackTrace}\n");
+                Console.WriteLine($"\nException at '{req.ProtoHostPath}':\n{ex.Message}\n{ex.StackTrace}\n");
                 return new ExceptionResponse(ex);
             }
         }
