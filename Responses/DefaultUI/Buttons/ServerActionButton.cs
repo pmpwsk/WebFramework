@@ -1,3 +1,4 @@
+using uwap.WebFramework.Responses.Actions;
 using uwap.WebFramework.Responses.Dynamic;
 
 namespace uwap.WebFramework.Responses.DefaultUI;
@@ -10,13 +11,14 @@ public class ServerActionButton : AbstractButton
     /// <summary>
     /// The action to perform when the form is submitted.
     /// </summary>
-    public Func<IResponse> Action = () => StatusResponse.Success;
+    public ActionHandler Action;
     
     private readonly RequiredWatchedContainer<SubmitButton> SubmitContainer;
     
-    public ServerActionButton(string text)
+    public ServerActionButton(string text, ActionHandler action)
     {
         SubmitContainer = new(this, new(text));
+        Action = action;
     }
     
     /// <summary>

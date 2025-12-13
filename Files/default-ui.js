@@ -226,6 +226,22 @@ function runServerAction(submitter, form)
 {
     let request = new XMLHttpRequest();
     request.open("POST", `/wf/dyn/submit?id=${watcherId}&path=${encodeURIComponent(JSON.stringify(getSystemPath(submitter)))}`);
+    request.onload = () =>
+    {
+        let action = JSON.parse(request.responseText);
+        switch (action.type)
+        {
+            case "Nothing":
+                break;
+            case "Navigate":
+                window.location.assign(action.location);
+                break;
+            default:
+            {
+                console.warn("Unknown action", action);
+            } break;
+        }
+    }
     request.send(new FormData(form));
 }
 

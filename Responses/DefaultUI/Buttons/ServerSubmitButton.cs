@@ -1,3 +1,4 @@
+using uwap.WebFramework.Responses.Actions;
 using uwap.WebFramework.Responses.Base;
 using uwap.WebFramework.Responses.Dynamic;
 
@@ -11,13 +12,14 @@ public class ServerSubmitButton : AbstractButton
     /// <summary>
     /// The action to perform when the form is submitted.
     /// </summary>
-    public Func<IResponse> Action = () => StatusResponse.Success;
+    public ActionHandler Action;
     
     private readonly RequiredWatchedAttribute TextAttribute;
     
-    public ServerSubmitButton(string text)
+    public ServerSubmitButton(string text, ActionHandler action)
     {
         TextAttribute = new(this, "value", text);
+        Action = action;
     }
     
     public override string RenderedTag

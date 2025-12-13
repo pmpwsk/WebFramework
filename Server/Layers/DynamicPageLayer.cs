@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Web;
 using uwap.WebFramework.Responses;
+using uwap.WebFramework.Responses.Actions;
 using uwap.WebFramework.Responses.DefaultUI;
 using uwap.WebFramework.Responses.Dynamic;
 
@@ -60,7 +61,7 @@ public static partial class Server
                         return StatusResponse.BadRequest;
                     var element = page.FindByPath(elemPath);
                     WatchedElement? form;
-                    Func<IResponse> action;
+                    ActionHandler action;
                     switch (element)
                     {
                         case null:
@@ -83,7 +84,7 @@ public static partial class Server
                             return StatusResponse.BadRequest;
                     }
 
-                    return action();
+                    return new TextResponse(JsonSerializer.Serialize((await action(req)).Generate(req)));
                 }
                 
                 default:
