@@ -12,6 +12,8 @@ public class MenuButton : ButtonWithText
     public MenuButton(string text, string menuId) : base(text)
     {
         MenuIdAttribute = new(this, "data-wf-target-id", menuId);
+        FixedAttributes.Add(("type", "button"));
+        FixedAttributes.Add(("class", "wf-menu-toggle"));
     }
     
     /// <summary>
@@ -25,17 +27,4 @@ public class MenuButton : ButtonWithText
 
     public override string RenderedTag
         => "button";
-
-    public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [
-            ..base.WatchedAttributes,
-            MenuIdAttribute
-        ];
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("type", "button"),
-            ("class", "wf-menu-toggle")
-        ];
 }

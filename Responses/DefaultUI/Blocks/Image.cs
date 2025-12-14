@@ -12,20 +12,9 @@ public class Image : AbstractResource
     public Image(Request req, string url, string? title = null) : base(req, "src", url)
     {
         TitleAttribute = new(this, "title", title);
+        FixedAttributes.Add(("class", "wf-image"));
     }
         
     public override string RenderedTag
         => "img";
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("class", "wf-image")
-        ];
-
-    public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [
-            ..base.WatchedAttributes,
-            TitleAttribute
-        ];
 }

@@ -32,10 +32,4 @@ public class Sidebar : OptionalIdElement
         get => HeaderContainer.Element;
         set => HeaderContainer.Element = value;
     }
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            HeaderContainer,
-            Items
-        ];
 }

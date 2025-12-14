@@ -27,12 +27,6 @@ public class OrderedList : AbstractList
     public override string RenderedTag
         => "ol";
 
-    public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [
-            ..base.WatchedAttributes,
-            TypeAttribute
-        ];
-
     public static string ConvertType(ListMarkerType type)
         => type switch
         {

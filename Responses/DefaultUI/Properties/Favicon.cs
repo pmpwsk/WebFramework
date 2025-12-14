@@ -12,6 +12,7 @@ public class Favicon : AbstractResource
     public Favicon(Request req, string url) : base(req, "href", url)
     {
         TypeAttribute = new(this, "type", url.GetMimeType());
+        FixedAttributes.Add(("rel", "icon"));
     }
     
     public override async Task SetLocationAsync(Request req, string url)
@@ -22,16 +23,4 @@ public class Favicon : AbstractResource
     
     public override string RenderedTag
         => "link";
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("rel", "icon")
-        ];
-
-    public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [
-            ..base.WatchedAttributes,
-            TypeAttribute
-        ];
 }

@@ -71,15 +71,4 @@ public class Body : WatchedElement
 
     internal override string? FixedSystemId
         => "body";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            TopCoverContainer,
-            OverlayBackgroundContainer,
-            NavBarContainer,
-            PageContentContainer,
-            Menus,
-            DefaultScript,
-            Scripts
-        ];
 }

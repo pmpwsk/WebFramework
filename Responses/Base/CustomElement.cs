@@ -24,9 +24,4 @@ public class CustomElement : OptionalIdElement
     }
 
     public override string RenderedTag => Tag;
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            Content
-        ];
 }

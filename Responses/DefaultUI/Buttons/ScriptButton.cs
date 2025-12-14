@@ -12,6 +12,7 @@ public class ScriptButton : ButtonWithText
     public ScriptButton(string text, string onClick) : base(text)
     {
         OnClickAttribute = new(this, "onclick", onClick);
+        FixedAttributes.Add(("type", "button"));
     }
     
     /// <summary>
@@ -25,16 +26,4 @@ public class ScriptButton : ButtonWithText
     
     public override string RenderedTag
         => "button";
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("type", "button")
-        ];
-
-    public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [
-            ..base.WatchedAttributes,
-            OnClickAttribute
-        ];
 }

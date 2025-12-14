@@ -23,10 +23,4 @@ public abstract class AbstractResource : OptionalIdElement
     
     public virtual async Task SetLocationAsync(Request req, string url)
         => LocationAttribute.Value = await Server.ResourcePath(req, url);
-    
-    public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [
-            ..base.WatchedAttributes,
-            LocationAttribute
-        ];
 }

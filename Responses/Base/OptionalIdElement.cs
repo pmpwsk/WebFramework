@@ -25,10 +25,4 @@ public abstract class OptionalIdElement : CommonElement
         get => IdAttribute.Value;
         set => IdAttribute.Value = value;
     }
-
-    public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [
-            ..base.WatchedAttributes,
-            IdAttribute
-        ];
 }

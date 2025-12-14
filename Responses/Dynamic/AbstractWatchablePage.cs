@@ -16,7 +16,7 @@ public abstract class AbstractWatchablePage(Request req, bool dynamic) : Abstrac
 
     public readonly string? WatchedUrl = dynamic ? req.ProtoHostPathQuery : null;
 
-    public abstract IEnumerable<AbstractWatchedContainer?> RenderedContainers { get; }
+    public List<AbstractWatchedContainer?> RenderedContainers { get; } = [];
 
     public readonly SubscriberContainer<Action> Disposing = new();
 

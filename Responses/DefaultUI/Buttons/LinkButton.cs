@@ -25,10 +25,4 @@ public class LinkButton : ButtonWithText
     
     public override string RenderedTag
         => "a";
-
-    public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [
-            ..base.WatchedAttributes,
-            TargetAttribute
-        ];
 }

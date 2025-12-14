@@ -38,16 +38,4 @@ public class Link : OptionalIdElement
     
     public override string RenderedTag
         => "a";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            ..base.RenderedContainers,
-            ContentContainer
-        ];
-
-    public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [
-            ..base.WatchedAttributes,
-            TargetAttribute
-        ];
 }

@@ -19,6 +19,7 @@ public abstract class AbstractSubsection : OptionalIdElement
     {
         HeaderContainer = new(this, heading == null ? null : new(heading));
         Content = new(this, content ?? []);
+        FixedAttributes.Add(("class", "wf-subsection"));
     }
     
     /// <summary>
@@ -29,16 +30,4 @@ public abstract class AbstractSubsection : OptionalIdElement
         get => HeaderContainer.Element;
         set => HeaderContainer.Element = value;
     }
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            HeaderContainer,
-            Content
-        ];
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("class", "wf-subsection")
-        ];
 }

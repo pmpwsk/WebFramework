@@ -20,6 +20,8 @@ public class ServerSubmitButton : AbstractButton
     {
         TextAttribute = new(this, "value", text);
         Action = action;
+        FixedAttributes.Add(("class", "wf-button wf-server-form-override"));
+        FixedAttributes.Add(("type", "submit"));
     }
     
     public override string RenderedTag
@@ -51,17 +53,4 @@ public class ServerSubmitButton : AbstractButton
 
         return null;
     }
-
-    public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [
-            ..base.WatchedAttributes,
-            TextAttribute
-        ];
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("class", "wf-button wf-server-form-override"),
-            ("type", "submit")
-        ];
 }

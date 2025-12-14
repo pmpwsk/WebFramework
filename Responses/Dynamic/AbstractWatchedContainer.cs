@@ -5,13 +5,22 @@ namespace uwap.WebFramework.Responses.Dynamic;
 /// <summary>
 /// A generic class to contain dynamic default UI elements.
 /// </summary>
-public abstract class AbstractWatchedContainer(IWatchedParent parent) : IEnumerable<AbstractMarkdownPart?>
+public abstract class AbstractWatchedContainer : IEnumerable<AbstractMarkdownPart?>
 {
     /// <summary>
     /// The parent element.
     /// </summary>
-    internal readonly IWatchedParent Parent = parent;
-    
+    internal readonly IWatchedParent Parent;
+
+    /// <summary>
+    /// A generic class to contain dynamic default UI elements.
+    /// </summary>
+    protected AbstractWatchedContainer(IWatchedParent parent)
+    {
+        Parent = parent;
+        Parent.RenderedContainers.Add(this);
+    }
+
     public void WelcomeChild(AbstractMarkdownPart? part)
     {
         if (part is WatchedElement element)
@@ -36,7 +45,7 @@ public abstract class AbstractWatchedContainer(IWatchedParent parent) : IEnumera
     public WatchedElement? FindElementBefore()
     {
         bool thisPassed = false;
-        foreach (var container in Parent.RenderedContainers.Reverse().WhereNotNull())
+        foreach (var container in Parent.RenderedContainers.AsEnumerable().Reverse().WhereNotNull())
         {
             if (thisPassed)
                 foreach (var element in container.Reverse().WhereNotNull())

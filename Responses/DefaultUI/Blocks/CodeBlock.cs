@@ -21,10 +21,4 @@ public class CodeBlock : OptionalIdElement
     
     public override string RenderedTag
         => "pre";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            ..base.RenderedContainers,
-            Content
-        ];
 }

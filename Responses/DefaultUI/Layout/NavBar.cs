@@ -22,10 +22,4 @@ public class NavBar : WatchedElement
     
     public override string RenderedTag
         => "nav";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            SidebarButtonContainer,
-            Islands
-        ];
 }

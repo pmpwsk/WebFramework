@@ -15,6 +15,8 @@ public class PostButton : AbstractButton
     {
         ActionAttribute = new(this, "action", action);
         SubmitContainer = new(this, new(text));
+        FixedAttributes.Add(("method", "post"));
+        FixedAttributes.Add(("enctype", "multipart/form-data"));
     }
     
     /// <summary>
@@ -46,23 +48,4 @@ public class PostButton : AbstractButton
     
     public override string RenderedTag
         => "form";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            ..base.RenderedContainers,
-            SubmitContainer
-        ];
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("method", "post"),
-            ("enctype", "multipart/form-data")
-        ];
-
-    public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [
-            ..base.WatchedAttributes,
-            ActionAttribute
-        ];
 }

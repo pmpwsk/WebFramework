@@ -106,17 +106,4 @@ public class Head : WatchedElement
 
     internal override string? FixedSystemId
         => "head";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            TitleContainer,
-            DescriptionContainer,
-            ViewportSettingsContainer,
-            CharsetContainer,
-            CanonicalContainer,
-            FaviconContainer,
-            LayoutStyleContainer,
-            ThemeStyleContainer,
-            Styles
-        ];
 }

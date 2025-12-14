@@ -7,22 +7,22 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// <summary>
 /// A default UI form subsection that executes a server action instead of posting to a URL.
 /// </summary>
-public class ServerForm(string? heading, ActionHandler action, IEnumerable<AbstractElement>? content = null) : AbstractSubsection(heading, content)
+public class ServerForm : AbstractSubsection
 {
     /// <summary>
     /// The action to perform when the form is submitted.
     /// </summary>
-    public ActionHandler Action = action;
-    
+    public ActionHandler Action;
+
+    public ServerForm(string? heading, ActionHandler action, IEnumerable<AbstractElement>? content = null) : base(heading, content)
+    {
+        Action = action;
+        FixedAttributes.Add(("class", "wf-server-form"));
+        FixedAttributes.Add(("method", "post"));
+        FixedAttributes.Add(("enctype", "multipart/form-data"));
+        FixedAttributes.Add(("action", "#"));
+    }
+
     public override string RenderedTag
         => "form";
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("class", "wf-server-form"),
-            ("method", "post"),
-            ("enctype", "multipart/form-data"),
-            ("action", "#")
-        ];
 }

@@ -7,12 +7,11 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// </summary>
 public class Charset : WatchedElement
 {
+    public Charset()
+    {
+        FixedAttributes.Add(("charset", "utf-8"));
+    }
+    
     public override string RenderedTag
         => "meta";
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("charset", "utf-8")
-        ];
 }

@@ -13,6 +13,7 @@ public class CanonicalReference : OptionalIdElement
     public CanonicalReference(string url)
     {
         LocationAttribute = new(this, "href", url);
+        FixedAttributes.Add(("rel", "canonical"));
     }
     
     public override string RenderedTag
@@ -26,16 +27,4 @@ public class CanonicalReference : OptionalIdElement
         get => LocationAttribute.Value;
         set => LocationAttribute.Value = value;
     }
-    
-    public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [
-            ..base.WatchedAttributes,
-            LocationAttribute
-        ];
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("rel", "canonical")
-        ];
 }

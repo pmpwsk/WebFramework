@@ -15,6 +15,7 @@ public class PageContent : WatchedElement
     {
         SidebarContainer = new(this, new());
         MainContainer = new(this, new(req));
+        FixedAttributes.Add(("class", "wf-content"));
     }
     
     /// <summary>
@@ -37,16 +38,4 @@ public class PageContent : WatchedElement
     
     public override string RenderedTag
         => "div";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            SidebarContainer,
-            MainContainer
-        ];
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("class", "wf-content")
-        ];
 }

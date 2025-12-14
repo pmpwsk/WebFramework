@@ -19,6 +19,7 @@ public class Menu : RequiredIdElement
     {
         HeaderContainer = new(this, new(heading));
         Items = new(this, items ?? []);
+        FixedAttributes.Add(("class", "wf-menu"));
     }
     
     public override string RenderedTag
@@ -32,16 +33,4 @@ public class Menu : RequiredIdElement
         get => HeaderContainer.Element;
         set => HeaderContainer.Element = value;
     }
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            HeaderContainer,
-            Items
-        ];
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("class", "wf-menu")
-        ];
 }

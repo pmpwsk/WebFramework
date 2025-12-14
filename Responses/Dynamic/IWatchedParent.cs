@@ -8,7 +8,7 @@ public interface IWatchedParent
     /// <summary>
     /// The watched content containers to render.
     /// </summary>
-    public IEnumerable<AbstractWatchedContainer?> RenderedContainers { get; }
+    public List<AbstractWatchedContainer?> RenderedContainers { get; }
     
     /// <summary>
     /// The watcher to notify of any changes.

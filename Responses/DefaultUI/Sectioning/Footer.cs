@@ -45,12 +45,6 @@ public class Footer : WatchedElement
     public override string RenderedTag
         => "footer";
 
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            CopyrightContainer,
-            PoweredByContainer
-        ];
-
     private string BuildCopyright()
         => $"Copyright {DateTime.UtcNow.Year} {_CopyrightName} - All other trademarks, screenshots, logos and copyrights are the property of their respective owners.";
 }

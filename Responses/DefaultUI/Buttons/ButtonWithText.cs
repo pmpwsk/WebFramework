@@ -16,6 +16,7 @@ public abstract class ButtonWithText : AbstractButton
     protected ButtonWithText(string text)
     {
         ContentContainer = new(this, new(text));
+        FixedAttributes.Add(("class", "wf-button"));
     }
     
     /// <summary>
@@ -26,15 +27,4 @@ public abstract class ButtonWithText : AbstractButton
         get => ContentContainer.Element.Text;
         set => ContentContainer.Element = new(value);
     }
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            ContentContainer
-        ];
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("class", "wf-button")
-        ];
 }

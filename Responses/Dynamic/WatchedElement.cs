@@ -14,6 +14,18 @@ public abstract class WatchedElement : AbstractElement, IWatchedParent
 
     private string? _SystemId = null;
 
+    public List<AbstractWatchedContainer?> RenderedContainers { get; } = [];
+    
+    /// <summary>
+    /// The attributes that can't change.
+    /// </summary>
+    public List<(string Name, string? Value)> FixedAttributes { get; } = [];
+    
+    /// <summary>
+    /// The containers of attributes that can change.
+    /// </summary>
+    public List<AbstractWatchedAttribute> WatchedAttributes { get; } = [];
+
     /// <summary>
     /// The unique system ID within the parent.
     /// </summary>
@@ -28,9 +40,6 @@ public abstract class WatchedElement : AbstractElement, IWatchedParent
     
     public sealed override IEnumerable<AbstractMarkdownPart?> RenderedContent
         => RenderedContainers.WhereNotNull().SelectMany(container => container);
-
-    public virtual IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [];
     
     public ChangeWatcher? ChangeWatcher
         => ParentContainer?.Parent.ChangeWatcher;
@@ -57,16 +66,4 @@ public abstract class WatchedElement : AbstractElement, IWatchedParent
             ..FixedAttributes,
             ..WatchedAttributes.Select(a => a.Build())
         ];
-    
-    /// <summary>
-    /// Enumerates the attributes that can't change.
-    /// </summary>
-    public virtual IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [];
-    
-    /// <summary>
-    /// Enumerates the containers of attributes that can change.
-    /// </summary>
-    public virtual IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [];
 }

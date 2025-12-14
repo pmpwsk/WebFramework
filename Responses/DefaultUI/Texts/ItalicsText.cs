@@ -17,10 +17,4 @@ public class ItalicsText : OptionalIdElement
     
     public override string RenderedTag
         => "i";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            ..base.RenderedContainers,
-            Content
-        ];
 }

@@ -55,9 +55,4 @@ public class Title : WatchedElement
     
     public override string RenderedTag
         => "title";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            ContentContainer
-        ];
 }

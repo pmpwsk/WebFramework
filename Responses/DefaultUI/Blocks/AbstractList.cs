@@ -17,10 +17,4 @@ public abstract class AbstractList : OptionalIdElement
     {
         Items = new(this, items);
     }
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            ..base.RenderedContainers,
-            Items
-        ];
 }

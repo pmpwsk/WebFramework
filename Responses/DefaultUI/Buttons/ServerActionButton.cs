@@ -19,6 +19,10 @@ public class ServerActionButton : AbstractButton
     {
         SubmitContainer = new(this, new(text));
         Action = action;
+        FixedAttributes.Add(("class", "wf-server-form"));
+        FixedAttributes.Add(("method", "post"));
+        FixedAttributes.Add(("enctype", "multipart/form-data"));
+        FixedAttributes.Add(("action", "#"));
     }
     
     /// <summary>
@@ -41,19 +45,4 @@ public class ServerActionButton : AbstractButton
     
     public override string RenderedTag
         => "form";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            ..base.RenderedContainers,
-            SubmitContainer
-        ];
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("class", "wf-server-form"),
-            ("method", "post"),
-            ("enctype", "multipart/form-data"),
-            ("action", "#")
-        ];
 }

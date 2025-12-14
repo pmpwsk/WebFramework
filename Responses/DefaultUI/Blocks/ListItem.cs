@@ -33,10 +33,4 @@ public class ListItem : WatchedElement
     
     public override string RenderedTag
         => "li";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            Content,
-            Sublists
-        ];
 }

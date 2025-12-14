@@ -27,9 +27,4 @@ public class Paragraph : WatchedElement
     
     public override string RenderedTag
         => "p";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            Content
-        ];
 }

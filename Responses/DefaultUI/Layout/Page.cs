@@ -165,10 +165,4 @@ public class Page : AbstractWatchablePage
         context.Response.ContentType = "text/html;charset=utf-8";
         return base.Respond(req, context);
     }
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            HeadContainer,
-            BodyContainer
-        ];
 }

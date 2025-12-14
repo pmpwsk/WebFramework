@@ -13,6 +13,8 @@ public class Form : AbstractSubsection
     public Form(string? heading, string action, IEnumerable<AbstractElement>? content = null) : base(heading, content)
     {
         ActionAttribute = new(this, "action", action);
+        FixedAttributes.Add(("method", "post"));
+        FixedAttributes.Add(("enctype", "multipart/form-data"));
     }
     
     public override string RenderedTag
@@ -26,16 +28,4 @@ public class Form : AbstractSubsection
         get => ActionAttribute.Value;
         set => ActionAttribute.Value = value;
     }
-
-    public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [
-            ActionAttribute
-        ];
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("method", "post"),
-            ("enctype", "multipart/form-data")
-        ];
 }

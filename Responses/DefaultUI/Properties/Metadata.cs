@@ -37,11 +37,4 @@ public class Metadata : WatchedElement
     
     public override string RenderedTag
         => "meta";
-
-    public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [
-            ..base.WatchedAttributes,
-            NameAttribute,
-            ContentAttribute
-        ];
 }

@@ -30,11 +30,4 @@ public class Main : WatchedElement
     }
     public override string RenderedTag
         => "main";
-
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            Sections,
-            FooterContainer
-        ];
 }

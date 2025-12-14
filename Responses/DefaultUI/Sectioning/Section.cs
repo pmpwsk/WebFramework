@@ -32,10 +32,4 @@ public class Section : OptionalIdElement
     
     public override string RenderedTag
         => "section";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            HeaderContainer,
-            Subsections
-        ];
 }

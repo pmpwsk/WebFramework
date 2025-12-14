@@ -17,10 +17,4 @@ public class BoldText : OptionalIdElement
     
     public override string RenderedTag
         => "b";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            ..base.RenderedContainers,
-            Content
-        ];
 }

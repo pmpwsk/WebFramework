@@ -15,6 +15,8 @@ public class SubmitButton : AbstractButton
     {
         OverrideActionAttribute = new(this, "formaction", overrideAction);
         TextAttribute = new(this, "value", text);
+        FixedAttributes.Add(("class", "wf-button"));
+        FixedAttributes.Add(("type", "submit"));
     }
     
     public override string RenderedTag
@@ -37,18 +39,4 @@ public class SubmitButton : AbstractButton
         get => TextAttribute.Value;
         set => TextAttribute.Value = value;
     }
-
-    public override IEnumerable<AbstractWatchedAttribute> WatchedAttributes
-        => [
-            ..base.WatchedAttributes,
-            OverrideActionAttribute,
-            TextAttribute
-        ];
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("class", "wf-button"),
-            ("type", "submit")
-        ];
 }

@@ -16,20 +16,9 @@ public class NavIsland : OptionalIdElement
     public NavIsland(IEnumerable<AbstractButton> buttons)
     {
         Buttons = new(this, buttons);
+        FixedAttributes.Add(("class", "wf-nav-island"));
     }
     
     public override string RenderedTag
         => "div";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            ..base.RenderedContainers,
-            Buttons
-        ];
-
-    public override IEnumerable<(string Name, string? Value)> FixedAttributes
-        => [
-            ..base.FixedAttributes,
-            ("class", "wf-nav-island")
-        ];
 }

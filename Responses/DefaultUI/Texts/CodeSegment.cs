@@ -17,10 +17,4 @@ public class CodeSegment : OptionalIdElement
     
     public override string RenderedTag
         => "code";
-
-    public override IEnumerable<AbstractWatchedContainer?> RenderedContainers
-        => [
-            ..base.RenderedContainers,
-            Content
-        ];
 }
