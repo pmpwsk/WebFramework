@@ -155,14 +155,14 @@ document.addEventListener("keydown", event =>
 {
     let value = getValueForForm(event.target);
     if (value !== undefined)
-        event.target.setAttribute("data-wf-modified", "true");
+        event.target.setAttribute("data-wf-modified", "");
 });
 
 document.addEventListener("change", event =>
 {
     let value = getValueForForm(event.target);
     if (value !== undefined)
-        event.target.setAttribute("data-wf-modified", "true");
+        event.target.setAttribute("data-wf-modified", "");
 });
 
 function findAside()
@@ -308,7 +308,7 @@ function writeAllValuesFromMap(element, map)
 
 function getValueWriter(element)
 {
-    if (!element.name)
+    if (!element.name || !element.hasAttribute("data-wf-modified"))
         return null;
 
     if (element.matches(".wf-textbox"))
@@ -317,7 +317,10 @@ function getValueWriter(element)
         return otherElement =>
         {
             if (otherElement.matches(".wf-textbox"))
+            {
                 otherElement.value = value;
+                otherElement.setAttribute("data-wf-modified", "");
+            }
         };
     }
 }
