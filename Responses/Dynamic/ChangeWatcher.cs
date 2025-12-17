@@ -40,20 +40,21 @@ public class ChangeWatcher
 
     public void WritePage(Page page)
     {
-        WriteChange(new { type = "Head", elements = page.Head.RenderedContent.WhereNotNull().Select(ToCode).ToList() }, true);
+        var head = page.Head.RenderedContent.WhereNotNull().Select(ToCode).ToList();
         List<string> beforeScript = [];
         List<string> afterScript = [];
-        bool passedScript = false;
+        string? script = null;
         foreach (var part in page.Body.RenderedContent)
             if (part != null)
-                if (part is SystemScriptReference)
-                    passedScript = true;
-                else if (passedScript)
+                if (part is SystemScriptReference s)
+                    script = s.Location;
+                else if (script != null)
                     afterScript.Add(ToCode(part));
                 else
                     beforeScript.Add(ToCode(part));
-        WriteChange(new { type = "BodyBeforeScript", elements = beforeScript }, true);
-        WriteChange(new { type = "BodyAfterScript", elements = afterScript }, true);
+        if (script == null)
+            throw new ForcedResponse(StatusResponse.Teapot);
+        WriteChange(new { type = "FullPage", head, beforeScript, afterScript, script }, true);
         lock (WaitingChanges)
         {
             while (WaitingChanges.TryDequeue(out var data))

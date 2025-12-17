@@ -6,12 +6,9 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// <summary>
 /// A default UI button with an integrated form that executes an action on the server.
 /// </summary>
-public class ServerActionButton : AbstractButton
+public class ServerActionButton : AbstractButton, IActionHaver
 {
-    /// <summary>
-    /// The action to perform when the form is submitted.
-    /// </summary>
-    public ActionHandler Action;
+    public ActionHandler Action { get; set; }
     
     private readonly RequiredWatchedContainer<SubmitButton> SubmitContainer;
     

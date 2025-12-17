@@ -7,12 +7,9 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// <summary>
 /// A default UI button that submits a form while overriding the action with an action executed on the server.
 /// </summary>
-public class ServerSubmitButton : AbstractButton
+public class ServerSubmitButton : AbstractButton, IActionHaver
 {
-    /// <summary>
-    /// The action to perform when the form is submitted.
-    /// </summary>
-    public ActionHandler Action;
+    public ActionHandler Action { get; set; }
     
     private readonly RequiredWatchedAttribute TextAttribute;
     

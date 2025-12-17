@@ -7,12 +7,9 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// <summary>
 /// A default UI form subsection that executes a server action instead of posting to a URL.
 /// </summary>
-public class ServerForm : AbstractSubsection
+public class ServerForm : AbstractSubsection, IActionHaver
 {
-    /// <summary>
-    /// The action to perform when the form is submitted.
-    /// </summary>
-    public ActionHandler Action;
+    public ActionHandler Action { get; set; }
 
     public ServerForm(string? heading, ActionHandler action, IEnumerable<AbstractElement>? content = null) : base(heading, content)
     {

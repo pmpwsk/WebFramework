@@ -16,29 +16,35 @@ if (document.documentElement.hasAttribute("data-wf-url"))
             case "Welcome":
                 watcherId = change.id;
                 break;
-            case "Head":
+            case "FullPage":
+                let script = getElementByPath(["body", "script"]);
+                if (script && script.getAttribute("src") !== change.script)
+                {
+                    window.location.reload();
+                    break;
+                }
+                
+                let valueMap = new Map();
+                writeAllValuesToMap(document.body, valueMap);
+                let focusName = document.activeElement?.name;
+                
                 document.head.innerHTML = "";
-                for (let html of change.elements)
+                for (let html of change.head)
                     document.head.append(parseElement(html));
-                break;
-            case "BodyBeforeScript":
+
                 for (let child of [...document.body.children])
-                    if (matchesSystemId(child, "script"))
-                        break;
-                    else
+                    if (!matchesSystemId(child, "script"))
                         child.remove();
-                for (let html of change.elements.reverse())
+                
+                for (let html of change.beforeScript.reverse())
                     document.body.prepend(parseElement(html));
-                break;
-            case "BodyAfterScript":
-                let scriptPassed = false;
-                for (let child of [...document.body.children])
-                    if (matchesSystemId(child, "script"))
-                        scriptPassed = true;
-                    else if (scriptPassed)
-                        child.remove();
-                for (let html of change.elements)
+
+                for (let html of change.afterScript)
                     document.body.append(parseElement(html));
+                
+                writeAllValuesFromMap(document.body, valueMap);
+                if (focusName)
+                    document.getElementsByName(focusName)[0].focus();
                 break;
             case "AttributeChanged":
             {
@@ -145,6 +151,20 @@ document.addEventListener("submit", event =>
     }
 });
 
+document.addEventListener("keydown", event =>
+{
+    let value = getValueForForm(event.target);
+    if (value !== undefined)
+        event.target.setAttribute("data-wf-modified", "true");
+});
+
+document.addEventListener("change", event =>
+{
+    let value = getValueForForm(event.target);
+    if (value !== undefined)
+        event.target.setAttribute("data-wf-modified", "true");
+});
+
 function findAside()
 {
     return document.querySelector("aside");
@@ -237,12 +257,69 @@ function runServerAction(submitter, form)
                 window.location.assign(action.location);
                 break;
             default:
-            {
                 console.warn("Unknown action", action);
-            } break;
+                break;
         }
     }
-    request.send(new FormData(form));
+    let formData = new FormData();
+    appendAllToForm(form, formData);
+    request.send(formData);
+}
+
+function getValueForForm(element)
+{
+    if (element.matches(".wf-textbox"))
+        return element.value;
+    return undefined;
+}
+
+function appendAllToForm(element, formData)
+{
+    let value = getValueForForm(element);
+    if (value !== undefined)
+        formData.append(JSON.stringify(getSystemPath(element)), value);
+    
+    for (let child of element.children)
+        appendAllToForm(child, formData);
+}
+
+function writeAllValuesToMap(element, map)
+{
+    let valueWriter = getValueWriter(element);
+    if (element.name && valueWriter)
+        map.set(element.name, valueWriter);
+
+    for (let child of element.children)
+        writeAllValuesToMap(child, map);
+}
+
+function writeAllValuesFromMap(element, map)
+{
+    if (element.name)
+    {
+        let valueWriter = map.get(element.name);
+        if (valueWriter)
+            valueWriter(element);
+    }
+
+    for (let child of element.children)
+        writeAllValuesFromMap(child, map);
+}
+
+function getValueWriter(element)
+{
+    if (!element.name)
+        return null;
+
+    if (element.matches(".wf-textbox"))
+    {
+        let value = element.value;
+        return otherElement =>
+        {
+            if (otherElement.matches(".wf-textbox"))
+                otherElement.value = value;
+        };
+    }
 }
 
 function parseElement(html)

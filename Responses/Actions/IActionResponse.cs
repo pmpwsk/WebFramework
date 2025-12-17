@@ -1,7 +1,7 @@
 namespace uwap.WebFramework.Responses.Actions;
 
 /// <summary>
-/// An abstract response to a UI action.
+/// A generic response to a UI action.
 /// </summary>
 public interface IActionResponse : IDisposable
 {

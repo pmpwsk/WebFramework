@@ -52,6 +52,8 @@ public static partial class Server
                 case "/submit":
                 {
                     req.ForcePOST();
+                    if (req.Form == null)
+                        return StatusResponse.BadRequest;
                     var id = req.Query.GetOrThrow("id");
                     if (!WatcherManager.TryGetPage(id, out var page))
                         return StatusResponse.NotFound;
@@ -60,30 +62,34 @@ public static partial class Server
                     if (elemPath == null)
                         return StatusResponse.BadRequest;
                     var element = page.FindByPath(elemPath);
-                    WatchedElement? form;
                     ActionHandler action;
                     switch (element)
                     {
                         case null:
                             return StatusResponse.NotFound;
-                        case ServerForm e:
-                            form = e;
-                            action = e.Action;
-                            break;
-                        case ServerActionButton e:
-                            form = e;
-                            action = e.Action;
-                            break;
-                        case ServerSubmitButton e:
-                            form = e.FindForm();
-                            if (form == null)
-                                return StatusResponse.BadRequest;
-                            action = e.Action;
+                        case IActionHaver actionHaver:
+                            action = actionHaver.Action;
                             break;
                         default:
                             return StatusResponse.BadRequest;
                     }
-
+                    
+                    foreach (var (encodedKey, stringValues) in req.Form.Data)
+                    {
+                        var key = Uri.UnescapeDataString(encodedKey);
+                        var value = (string?)stringValues;
+                        
+                        var formElemPath = JsonSerializer.Deserialize<string[]>(HttpUtility.UrlDecode(key));
+                        if (formElemPath == null)
+                            return StatusResponse.BadRequest;
+                        
+                        var formElement = page.FindByPath(formElemPath);
+                        if (formElement is not AbstractInput formInput)
+                            return StatusResponse.BadRequest;
+                        
+                        formInput.SetValueFromForm(value ?? "");
+                    }
+                    
                     return new TextResponse(JsonSerializer.Serialize((await action(req)).Generate(req)));
                 }
                 
