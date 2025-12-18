@@ -29,7 +29,10 @@ public static partial class Server
                     
                     var otherResponse = await GetOtherResponseAsync(req, url);
                     if (otherResponse is not Page page)
-                        return StatusResponse.NotFound;
+                        if (otherResponse is RedirectResponse redirectResponse)
+                            return new SingleEventMessageResponse(JsonSerializer.Serialize(new { type = "Navigate", location = redirectResponse.Location }));
+                        else
+                            return StatusResponse.NotFound;
                     var watcher = WatcherManager.CreateWatcher(page);
                     
                     var response = new EventResponse();

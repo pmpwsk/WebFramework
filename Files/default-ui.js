@@ -13,6 +13,9 @@ if (document.documentElement.hasAttribute("data-wf-url"))
         let change = JSON.parse(event.data);
         switch (change.type)
         {
+            case "Navigate":
+                window.location.assign(change.location);
+                break;
             case "Welcome":
                 watcherId = change.id;
                 break;

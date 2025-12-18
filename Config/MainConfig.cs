@@ -19,13 +19,13 @@ public static partial class Server
         public static List<HandlerDelegate> HandlingLayers { get; set; } =
         [
             Layers.DatabaseLayer,
-            Layers.DynamicPageLayer,
             Layers.LetsEncryptLayer,
             Layers.HttpsRedirectLayer,
             Layers.RedirectLayer,
             Layers.FileLayer,
             Layers.SystemFilesLayer,
             Layers.AuthLayer,
+            Layers.DynamicPageLayer,
             Layers.HandlerLayer
         ];
 
