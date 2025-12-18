@@ -57,7 +57,7 @@ html {
 
 /* Flex */
 
-.wf-col, html, body, main, section, .wf-subsection, footer, aside, .wf-menu, .wf-button.wf-button-is-container {
+.wf-col, html, body, main, section, .wf-subsection, footer, aside, .wf-menu, .wf-dialog, .wf-button.wf-button-is-container {
     display: flex;
     flex-direction: column;
 }
@@ -67,7 +67,7 @@ html {
     flex-direction: row;
 }
 
-html, body, main, .wf-content, .wf-subsection, footer, nav, .wf-nav-island, aside, .wf-menu {
+html, body, main, .wf-content, .wf-subsection, footer, nav, .wf-nav-island, aside, .wf-menu, .wf-dialog {
     gap: var(--s8);
 }
 
@@ -83,7 +83,7 @@ section {
     gap: calc(1rem + var(--s4));
 }
 
-section, .wf-subsection, footer, .wf-checkbox {
+section, .wf-subsection, footer, .wf-checkbox, .wf-dialog {
     align-items: start;
 }
 
@@ -127,7 +127,7 @@ section, .wf-subsection, footer, .wf-checkbox {
     flex: 5 0 auto;
 }
 
-aside, .wf-menu {
+aside, .wf-menu, .wf-dialog {
     flex-grow: 0.2;
     flex-shrink: 1;
     flex-basis: 0;
@@ -146,7 +146,7 @@ aside {
     align-self: flex-start;
 }
 
-.wf-stretch, .wf-button.wf-button-is-container, aside .wf-button, .wf-menu .wf-button, .wf-textbox{
+.wf-stretch, .wf-button.wf-button-is-container, aside .wf-button, .wf-menu .wf-button, .wf-textbox {
     align-self: stretch;
 }
 
@@ -170,7 +170,7 @@ h1.wf-heading {
     z-index: 4;
 }
 
-.wf-overlay-background {
+.wf-menu-background {
     z-index: 5;
 }
 
@@ -178,8 +178,16 @@ aside, .wf-menu {
     z-index: 6;
 }
 
+.wf-dialog {
+    z-index: 12;
+}
+
 nav {
     z-index: 10;
+}
+
+.wf-dialog-background {
+    z-index: 11;
 }
 
 .wf-image.wf-fullscreen {
@@ -190,7 +198,7 @@ nav {
 
 /* Display */
 
-.wf-top-cover, .wf-button, .wf-overlay-background {
+.wf-top-cover, .wf-button, .wf-menu-background, .wf-dialog-background {
     display: block;
 }
 
@@ -210,7 +218,7 @@ nav, h1.wf-heading, h2.wf-heading {
     position: sticky;
 }
 
-aside, .wf-top-cover, aside > .wf-heading, .wf-menu > .wf-heading, .wf-menu, .wf-overlay-background, .wf-image.wf-fullscreen {
+aside, .wf-top-cover, aside > .wf-heading, .wf-menu > .wf-heading, .wf-menu, .wf-dialog, .wf-dialog > .wf-heading, .wf-menu-background, .wf-dialog-background, .wf-image.wf-fullscreen {
     position: fixed;
 }
 
@@ -242,7 +250,7 @@ footer {
     padding: var(--s8) var(--s12);
 }
 
-aside, .wf-menu {
+aside, .wf-menu, .wf-dialog {
     padding: calc(2rem + var(--s8)) var(--s12) var(--s8) var(--s12);
 }
 
@@ -372,7 +380,7 @@ li pre {
 
 /* Overflow */
 
-aside, .wf-menu {
+aside, .wf-menu, .wf-dialog {
     overflow: hidden auto;
 }
 
@@ -419,11 +427,17 @@ aside, .wf-menu {
     height: calc(100dvh - 3rem - var(--s11));
 }
 
-html, .wf-subsection, .wf-image.wf-fullscreen, .wf-overlay-background {
+.wf-dialog {
+    box-sizing: border-box;
+    width: min(calc(100% - 3rem), 25rem);
+    max-height: min(calc(100dvh - 3rem), 25rem);
+}
+
+html, .wf-subsection, .wf-image.wf-fullscreen, .wf-menu-background, .wf-dialog-background {
     width: 100%;
 }
 
-html, .wf-image.wf-fullscreen, .wf-overlay-background {
+html, .wf-image.wf-fullscreen, .wf-menu-background, .wf-dialog-background {
     height: 100dvh;
 }
 
@@ -459,11 +473,19 @@ nav {
     top: var(--s8);
 }
 
+.wf-dialog, .wf-dialog > h2.wf-heading {
+    top: calc(50% - min(calc(100dvh - 3rem), 25rem) / 2);
+}
+
+.wf-dialog {
+    left: calc(50% - min(calc(100% - 3rem), 25rem) / 2);
+}
+
 .wf-checkbox input {
     top: var(--s2);
 }
 
-h1.wf-heading, aside, aside > h2.wf-heading, .wf-menu, .wf-menu > h2.wf-heading, .wf-overlay-background {
+h1.wf-heading, aside, aside > h2.wf-heading, .wf-menu, .wf-menu > h2.wf-heading, .wf-menu-background, .wf-dialog-background {
     top: calc(3rem + var(--s3));
 }
 
@@ -489,7 +511,7 @@ h3.wf-heading {
     right: 0;
 }
 
-.wf-image.wf-fullscreen, .wf-overlay-background {
+.wf-image.wf-fullscreen, .wf-menu-background, .wf-dialog-background {
     left: 0;
     top: 0;
 }
@@ -536,14 +558,28 @@ ul > li::marker {
     visibility 0ms linear;
 }
 
-.wf-overlay-background {
+.wf-dialog {
     opacity: 0;
     visibility: hidden;
     transition: opacity var(--overlay-time) ease-in-out,
     visibility var(--overlay-time) linear;
 }
 
-body:has(aside.wf-is-forced) .wf-overlay-background, body:has(.wf-menu.wf-is-open) .wf-overlay-background {
+.wf-dialog.wf-is-open {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity var(--overlay-time) ease-in-out,
+    visibility 0ms linear;
+}
+
+.wf-menu-background, .wf-dialog-background {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--overlay-time) ease-in-out,
+    visibility var(--overlay-time) linear;
+}
+
+body:has(aside.wf-is-forced) .wf-menu-background, body:has(.wf-menu.wf-is-open) .wf-menu-background, body:has(.wf-dialog.wf-is-open) .wf-dialog-background {
     opacity: 1;
     visibility: visible;
     transition: opacity var(--overlay-time) ease-in-out,
@@ -586,7 +622,7 @@ body:has(aside.wf-is-forced) .wf-overlay-background, body:has(.wf-menu.wf-is-ope
         transition: none;
     }
 
-    body:not(body:has(.wf-menu.wf-is-open)) .wf-overlay-background {
+    body:not(body:has(.wf-menu.wf-is-open, .wf-dialog.wf-is-open)) .wf-menu-background {
         visibility: hidden;
     }
 }

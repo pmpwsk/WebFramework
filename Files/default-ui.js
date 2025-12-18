@@ -101,21 +101,21 @@ document.addEventListener("click", event =>
     if (event.target.matches(".wf-nav-menu-toggle"))
     {
         // Toggle nav menu
-        closeAllMenus();
+        closeAllPopups();
         toggleClass(findAside(), "wf-is-forced");
     }
-    else if (event.target.matches(".wf-menu-toggle"))
+    else if (event.target.matches(".wf-popup-toggle"))
     {
         // Toggle other menu
-        let menu = resolveTarget(event.target);
-        if (menu && menu.matches(".wf-menu"))
-            openMenu(menu);
+        let popup = resolveTarget(event.target);
+        if (popup && popup.matches(".wf-menu, .wf-dialog"))
+            openPopup(popup);
     }
-    else if (event.target.matches(".wf-overlay-background, aside *, .wf-menu *"))
+    else if (event.target.matches(".wf-menu-background, aside .wf-button, .wf-menu .wf-button"))
     {
-        // Close all menus
+        // Close all popups
         removeClass(findAside(), "wf-is-forced");
-        closeAllMenus();
+        closeAllPopups();
     }
     else if (event.target.matches(".wf-image"))
     {
@@ -170,18 +170,18 @@ function findAside()
     return document.querySelector("aside");
 }
 
-function openMenu(menu)
+function openPopup(popup)
 {
     removeClass(findAside(), "wf-is-forced");
-    closeAllMenus(menu);
-    toggleClass(menu, "wf-is-open");
+    closeAllPopups(popup);
+    toggleClass(popup, "wf-is-open");
 }
 
-function closeAllMenus(except)
+function closeAllPopups(except)
 {
-    for (let menu of document.querySelectorAll(".wf-menu"))
-        if (!except || menu !== except)
-            removeClass(menu, "wf-is-open");
+    for (let popup of document.querySelectorAll(".wf-menu, .wf-dialog"))
+        if (!except || popup !== except)
+            removeClass(popup, "wf-is-open");
 }
 
 function toggleClass(target, name)

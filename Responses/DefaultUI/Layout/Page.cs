@@ -119,6 +119,12 @@ public class Page : AbstractWatchablePage
         => BodyContainer.Element.Menus;
     
     /// <summary>
+    /// The available menus.
+    /// </summary>
+    public ListWatchedContainer<Dialog> Dialogs
+        => BodyContainer.Element.Dialogs;
+    
+    /// <summary>
     /// The JavaScript file references.
     /// </summary>
     public ListWatchedContainer<ScriptReference> Scripts
@@ -146,6 +152,28 @@ public class Page : AbstractWatchablePage
     {
         get => BodyContainer.Element.PageContent.Main.Footer;
         set => BodyContainer.Element.PageContent.Main.Footer = value;
+    }
+    
+    /// <summary>
+    /// Adds a simple dialog with the given message and a button to close the dialog, assuming the page is dynamic.
+    /// </summary>
+    public void AddDynamicError(params string[] messages)
+    {
+        foreach (var other in Dialogs.EnumerateTyped().ToList())
+            if (other.Id == "wf-dynamic-error" || other.IsOpen)
+                Dialogs.Remove(other);
+        
+        var dialog = new Dialog
+        (
+            "wf-dynamic-error",
+            "Error",
+            true,
+            [
+                ..messages.Select(message => new Paragraph(message)),
+                new PopupButton("Okay", "wf-dynamic-error")
+            ]
+        );
+        Dialogs.Add(dialog);
     }
     
     public override IEnumerable<string> EnumerateChunks()

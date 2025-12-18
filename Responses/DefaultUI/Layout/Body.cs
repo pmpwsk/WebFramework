@@ -14,9 +14,14 @@ public class Body : WatchedElement
     private readonly RequiredWatchedContainer<CustomElement> TopCoverContainer;
     
     /// <summary>
-    /// The overlay behind pop-ups.
+    /// The overlay behind menus.
     /// </summary>
-    private readonly RequiredWatchedContainer<CustomElement> OverlayBackgroundContainer;
+    private readonly RequiredWatchedContainer<CustomElement> MenuBackgroundContainer;
+    
+    /// <summary>
+    /// The overlay behind dialogs.
+    /// </summary>
+    private readonly RequiredWatchedContainer<CustomElement> DialogBackgroundContainer;
     
     private readonly RequiredWatchedContainer<NavBar> NavBarContainer;
     
@@ -28,6 +33,11 @@ public class Body : WatchedElement
     public readonly ListWatchedContainer<Menu> Menus;
     
     /// <summary>
+    /// The available dialogs.
+    /// </summary>
+    public readonly ListWatchedContainer<Dialog> Dialogs;
+    
+    /// <summary>
     /// The default UI script.
     /// </summary>
     private readonly RequiredWatchedContainer<SystemScriptReference> DefaultScript;
@@ -37,13 +47,15 @@ public class Body : WatchedElement
     /// </summary>
     public readonly ListWatchedContainer<ScriptReference> Scripts;
     
-    public Body(Request req, IEnumerable<Menu>? menus = null, IEnumerable<ScriptReference>? scripts = null)
+    public Body(Request req, IEnumerable<Menu>? menus = null, IEnumerable<Dialog>? dialogs = null, IEnumerable<ScriptReference>? scripts = null)
     {
         TopCoverContainer = new(this, new("span") { Class = "wf-top-cover" });
-        OverlayBackgroundContainer = new(this, new("span") { Class = "wf-overlay-background" });
+        MenuBackgroundContainer = new(this, new("span") { Class = "wf-menu-background" });
+        DialogBackgroundContainer = new(this, new("span") { Class = "wf-dialog-background" });
         NavBarContainer = new(this, new());
         PageContentContainer = new(this, new(req));
         Menus = new(this, menus ?? []);
+        Dialogs = new(this, dialogs ?? []);
         DefaultScript = new(this, new(req));
         Scripts = new(this, scripts ?? []);
     }

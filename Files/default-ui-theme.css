@@ -54,11 +54,11 @@ body, .wf-top-cover {
     background: var(--background);
 }
 
-.wf-heading, nav, section, footer, aside, .wf-menu, .wf-button, .wf-checkbox, .wf-upload, .wf-upload::file-selector-button, select, .wf-textbox {
+.wf-heading, nav, section, footer, aside, .wf-menu, .wf-dialog, .wf-button, .wf-checkbox, .wf-upload, .wf-upload::file-selector-button, select, .wf-textbox {
     background: var(--background-layer);
 }
 
-.wf-heading, .wf-overlay-background {
+.wf-heading, .wf-menu-background, .wf-dialog-background {
     backdrop-filter: blur(var(--s4));
 }
 
@@ -73,7 +73,7 @@ code {
     box-decoration-break: clone;
 }
 
-.wf-overlay-background {
+.wf-menu-background, .wf-dialog-background {
     background: var(--overlay-background);
 }
 
@@ -85,7 +85,7 @@ code {
 
 /* Border radius */
 
-nav, section, footer, aside, .wf-menu {
+nav, section, footer, aside, .wf-menu, .wf-dialog {
     border-radius: var(--s11);
 }
 
@@ -101,7 +101,7 @@ h3.wf-heading, pre {
     border-radius: var(--s5);
 }
 
-h1.wf-heading, aside > h2.wf-heading, .wf-menu > h2.wf-heading {
+h1.wf-heading, aside > h2.wf-heading, .wf-menu > h2.wf-heading, .wf-dialog > h2.wf-heading {
     border-radius: var(--s11) 0;
 }
 
@@ -135,7 +135,7 @@ code, pre {
 
 /* Shadows */
 
-.wf-heading, nav, section, footer, aside, .wf-menu, .wf-image {
+.wf-heading, nav, section, footer, aside, .wf-menu, .wf-dialog, .wf-image {
     box-shadow: 0 0 var(--s4) 0 var(--inset-shadow) inset,
     0 0 var(--s6) var(--s2) var(--outer-shadow),
     0 9rem 3rem -10rem var(--inset-shadow) inset;
