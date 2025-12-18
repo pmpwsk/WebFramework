@@ -194,6 +194,10 @@ nav {
     display: block;
 }
 
+body:not(:has(aside *:not(h2))) .wf-nav-menu-toggle {
+    display: none;
+}
+
 li pre, li .wf-image {
     display: inline-block;
 }
@@ -389,6 +393,10 @@ h1.wf-heading {
     text-wrap: nowrap;
 }
 
+.wf-button {
+    text-wrap: wrap;
+}
+
 
 
 /* Size */
@@ -562,7 +570,7 @@ body:has(aside.wf-is-forced) .wf-overlay-background, body:has(.wf-menu.wf-is-ope
     }
 }
 
-@media (min-width: 45rem) {
+@media (min-width: 50rem) {
     .wf-nav-menu-toggle {
         display: none;
     }
