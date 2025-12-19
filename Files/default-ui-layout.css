@@ -453,6 +453,10 @@ aside, main {
     max-width: 100%;
 }
 
+.wf-button.wf-button-is-container, .wf-textbox {
+    max-width: 30rem;
+}
+
 li pre {
     max-width: calc(100% - 1rem - var(--s10));
 }
