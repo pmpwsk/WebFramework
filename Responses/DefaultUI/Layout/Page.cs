@@ -26,7 +26,7 @@ public class Page : AbstractWatchablePage
         if (dynamic && !req.IsInternal)
         {
             Title = "...";
-            Sections.Add(new("Loading"));
+            Body.LoadingScreen.IsOpen = true;
             throw new ForcedResponse(this);
         }
     }

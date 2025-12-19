@@ -29,6 +29,10 @@
     --action-time: 100ms;
     --overlay-time: 200ms;
 
+    --loading-size: 7rem;
+    --loading-difference: var(--s2);
+    --loading-time: 1000ms;
+
     --font-normal: 'custom-roboto';
     --font-code: 'custom-roboto-mono';
     --background: rgb(34, 32, 36);
@@ -214,6 +218,43 @@ li::marker {
 @-moz-document url-prefix() {
     * {
         scrollbar-color: var(--action) var(--scroll-background);
+    }
+}
+
+
+
+/* Loading screen */
+
+.wf-loading-container {
+    top: 50%;
+    left: 50%;
+}
+
+.wf-loading-screen {
+    background: var(--background);
+}
+
+.wf-loading-container {
+    width: var(--loading-size);
+    height: var(--loading-size);
+    border-radius: calc(var(--loading-size) / 2 + var(--loading-difference)) calc(var(--loading-size) / 2 - var(--loading-difference));
+    background-color: var(--marker);
+    animation: loading-animation var(--loading-time) linear infinite;
+}
+
+.wf-loading-content {
+    width: var(--loading-size);
+    height: var(--loading-size);
+    border-radius: calc(var(--loading-size) / 2 - var(--loading-difference)) calc(var(--loading-size) / 2 + var(--loading-difference));
+    background: var(--background);
+}
+
+@keyframes loading-animation {
+    0% {
+        transform: translate(-50%, -50%) rotate(45deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(405deg);
     }
 }
 

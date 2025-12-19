@@ -37,6 +37,8 @@ public class Body : WatchedElement
     /// </summary>
     public readonly ListWatchedContainer<Dialog> Dialogs;
     
+    private readonly RequiredWatchedContainer<LoadingScreen> LoadingScreenContainer;
+    
     /// <summary>
     /// The default UI script.
     /// </summary>
@@ -56,6 +58,7 @@ public class Body : WatchedElement
         PageContentContainer = new(this, new(req));
         Menus = new(this, menus ?? []);
         Dialogs = new(this, dialogs ?? []);
+        LoadingScreenContainer = new(this, new(false));
         DefaultScript = new(this, new(req));
         Scripts = new(this, scripts ?? []);
     }
@@ -76,6 +79,15 @@ public class Body : WatchedElement
     {
         get => PageContentContainer.Element;
         set => PageContentContainer.Element = value;
+    }
+    
+    /// <summary>
+    /// The page's loading screen.
+    /// </summary>
+    public LoadingScreen LoadingScreen
+    {
+        get => LoadingScreenContainer.Element;
+        set => LoadingScreenContainer.Element = value;
     }
     
     public override string RenderedTag

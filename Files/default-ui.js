@@ -36,7 +36,7 @@ if (document.documentElement.hasAttribute("data-wf-url"))
                     document.head.append(parseElement(html));
 
                 for (let child of [...document.body.children])
-                    if (!matchesSystemId(child, "script"))
+                    if (!matchesSystemId(child, "script") && !matchesSystemId(child, "loading"))
                         child.remove();
                 
                 for (let html of change.beforeScript.reverse())
@@ -46,6 +46,11 @@ if (document.documentElement.hasAttribute("data-wf-url"))
                     document.body.append(parseElement(html));
                 
                 writeAllValuesFromMap(document.body, valueMap);
+                
+                let loadingScreen = getElementByPath(["body", "loading"]);
+                if (loadingScreen)
+                    removeClass(loadingScreen, "wf-is-open");
+                
                 if (focusName)
                     document.getElementsByName(focusName)[0].focus();
                 break;
@@ -201,6 +206,12 @@ function removeClass(target, name)
         target.classList.remove(name);
 }
 
+function addClass(target, name)
+{
+    if (!target.classList.contains(name))
+        target.classList.add(name);
+}
+
 function resolveTarget(element)
 {
     return element.hasAttribute("data-wf-target-id")
@@ -247,6 +258,10 @@ function getSystemPath(element)
 
 function runServerAction(submitter, form)
 {
+    let loadingScreen = getElementByPath(["body", "loading"]);
+    if (loadingScreen)
+        addClass(loadingScreen, "wf-is-open");
+    
     let request = new XMLHttpRequest();
     request.open("POST", `/wf/dyn/submit?id=${watcherId}&path=${encodeURIComponent(JSON.stringify(getSystemPath(submitter)))}`);
     request.onload = () =>
@@ -263,6 +278,9 @@ function runServerAction(submitter, form)
                 console.warn("Unknown action", action);
                 break;
         }
+
+        if (loadingScreen)
+            removeClass(loadingScreen, "wf-is-open");
     }
     let formData = new FormData();
     appendAllToForm(form, formData);

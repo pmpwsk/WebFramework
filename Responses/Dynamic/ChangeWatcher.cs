@@ -48,10 +48,11 @@ public class ChangeWatcher
             if (part != null)
                 if (part is SystemScriptReference s)
                     script = s.Location;
-                else if (script != null)
-                    afterScript.Add(ToCode(part));
-                else
-                    beforeScript.Add(ToCode(part));
+                else if (part is not LoadingScreen)
+                    if (script != null)
+                        afterScript.Add(ToCode(part));
+                    else
+                        beforeScript.Add(ToCode(part));
         if (script == null)
             throw new ForcedResponse(StatusResponse.Teapot);
         WriteChange(new { type = "FullPage", head, beforeScript, afterScript, script }, true);
