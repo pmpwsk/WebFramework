@@ -82,7 +82,7 @@ body, .wf-top-cover {
     background: var(--background-layer);
 }
 
-.wf-heading, .wf-menu-background, .wf-dialog-background {
+.wf-heading, .wf-menu-background, .wf-dialog-background, .wf-image.wf-fullscreen {
     backdrop-filter: blur(var(--s4));
 }
 
@@ -97,12 +97,8 @@ code {
     box-decoration-break: clone;
 }
 
-.wf-menu-background, .wf-dialog-background {
+.wf-menu-background, .wf-dialog-background, .wf-image.wf-fullscreen {
     background: var(--overlay-background);
-}
-
-.wf-image.wf-fullscreen {
-    background: black;
 }
 
 

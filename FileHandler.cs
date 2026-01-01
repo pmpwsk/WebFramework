@@ -27,7 +27,7 @@ public static class SystemFiles
         => relPath switch
         {
             "/default-ui-layout.css" => "639028963863381325",
-            "/default-ui-theme.css" => "639029061663534744",
+            "/default-ui-theme.css" => "639029069165717408",
             "/default-ui.js" => "639017594406297607",
             "/fonts/roboto-mono.eot" => "638993200608997332",
             "/fonts/roboto-mono.otf" => "638993200609177334",
