@@ -39,15 +39,35 @@
     --foreground: rgb(230, 230, 230);
     --background-layer: rgba(68, 64, 72, 0.3);
     --border: rgba(68, 64, 72, 0.7);
-    --code-background: rgba(34, 32, 36, 0.8);
-    --code-foreground: rgba(238, 224, 252, 0.65);
+    --code-background: rgb(34, 32, 36);
+    --code-foreground: rgba(159, 149, 168);
     --action-dark: rgb(136, 128, 252);
+    --action-highlighting: rgb(136, 128, 252);
     --action: rgb(187, 176, 255);
     --inset-shadow: rgba(102, 96, 108, 0.6);
     --outer-shadow: rgba(17, 16, 18, 0.3);
     --overlay-background: rgba(34, 32, 36, 0.6);
-    --scroll-background: rgb(68, 64, 72);
+    --scroll-thumb: rgb(68, 64, 72);
     --marker: rgb(153, 144, 162);
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --background: rgb(155, 155, 155);
+        --foreground: rgb(34, 32, 36);
+        --background-layer: rgba(227, 227, 227, 0.3);
+        --border: rgba(170, 160, 180, 0.7);
+        --code-foreground: rgb(90, 84, 122);
+        --code-background: rgb(195, 195, 195);
+        --action-dark: rgb(113, 105, 153);
+        --action-highlighting: rgba(136, 128, 252, 0.5);
+        --action: rgb(90, 84, 122);
+        --inset-shadow: rgba(227, 227, 227, 0.6);
+        --outer-shadow: rgba(112, 112, 112, 0.2);
+        --overlay-background: rgba(155, 155, 155, 0.6);
+        --scroll-thumb: rgb(195, 195, 195);
+        --marker: rgb(102, 96, 108);
+    }
 }
 
 
@@ -97,7 +117,7 @@ nav, section, footer, aside, .wf-menu, .wf-dialog {
     border-radius: var(--s8);
 }
 
-.wf-image, code {
+.wf-image:not(.wf-fullscreen), code {
     border-radius: var(--s4);
 }
 
@@ -157,7 +177,7 @@ code, pre {
     box-shadow: 0 var(--s2) 0 0 var(--action-dark),
     0 var(--s2) var(--s4) var(--s4) var(--outer-shadow),
     0 0 0 var(--s1) var(--action) inset,
-    0 calc(8rem + var(--s7)) 3rem -10rem var(--action-dark) inset;
+    0 calc(8rem + var(--s7)) 3rem -10rem var(--action-highlighting) inset;
     top: var(--n2);
     transition: box-shadow var(--action-time) ease-in-out,
     top var(--action-time) ease-in-out;
@@ -167,7 +187,7 @@ code, pre {
     box-shadow: 0 0 0 0 var(--action-dark),
     0 var(--s2) var(--s3) var(--s3) var(--outer-shadow),
     0 0 0 var(--s1) var(--action) inset,
-    0 calc(8rem + var(--s7)) 3rem -10rem var(--action-dark) inset;
+    0 calc(8rem + var(--s7)) 3rem -10rem var(--action-highlighting) inset;
     top: 0;
     transition: box-shadow var(--action-time) ease-in-out,
     top var(--action-time) ease-in-out;
@@ -177,7 +197,7 @@ select, select:focus, select:active, .wf-checkbox, .wf-checkbox:focus, .wf-check
     box-shadow: 0 0 0 var(--s1) var(--border) inset,
     0 var(--s1) 0 var(--s1) var(--background) inset,
     0 var(--s1) var(--s4) var(--s1) var(--background) inset,
-    0 calc(7rem + var(--s12)) 3rem -10rem var(--action-dark) inset;
+    0 calc(7rem + var(--s12)) 3rem -10rem var(--action-highlighting) inset;
     transition: box-shadow var(--action-time) ease-in-out;
 }
 
@@ -185,7 +205,7 @@ select, select:focus, select:active, .wf-checkbox, .wf-checkbox:focus, .wf-check
     box-shadow: 0 0 0 var(--s1) var(--marker) inset,
     0 var(--s1) 0 var(--s1) var(--background) inset,
     0 var(--s1) var(--s4) var(--s1) var(--background) inset,
-    0 calc(7rem + var(--s12)) 3rem -10rem var(--action-dark) inset;
+    0 calc(7rem + var(--s12)) 3rem -10rem var(--action-highlighting) inset;
     transition: box-shadow var(--action-time) ease-in-out;
 }
 
@@ -201,23 +221,24 @@ li::marker {
 
 /* Scrollbar */
 
+::-webkit-scrollbar {
+    width: var(--s8);
+    height: var(--s8);
+}
+
 ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner {
-    background-color: var(--scroll-background);
+    background-color: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--action);
+    background: var(--scroll-thumb);
     border-radius: var(--s5);
 
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background-color: var(--action-dark);
-}
-
 @-moz-document url-prefix() {
     * {
-        scrollbar-color: var(--action) var(--scroll-background);
+        scrollbar-color: var(--scroll-thumb) transparent;
     }
 }
 
