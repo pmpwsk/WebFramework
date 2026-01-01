@@ -57,7 +57,7 @@ html {
 
 /* Flex */
 
-.wf-col, html, body, main, section, .wf-subsection, footer, aside, .wf-menu, .wf-dialog, .wf-button.wf-button-is-container {
+.wf-col, html, body, main, section, .wf-subsection, footer, aside, .wf-menu, .wf-dialog, .wf-button.wf-button-is-container, aside form, .wf-menu form {
     display: flex;
     flex-direction: column;
 }
@@ -146,7 +146,7 @@ aside {
     align-self: flex-start;
 }
 
-.wf-stretch, .wf-button.wf-button-is-container, aside .wf-button, .wf-menu .wf-button, .wf-textbox {
+.wf-stretch, .wf-button.wf-button-is-container, aside .wf-button, .wf-menu .wf-button, aside form, .wf-menu form, .wf-textbox {
     align-self: stretch;
 }
 
