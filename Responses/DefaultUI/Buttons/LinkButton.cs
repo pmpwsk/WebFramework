@@ -12,6 +12,7 @@ public class LinkButton : ButtonWithText
     public LinkButton(string text, string target) : base(text)
     {
         TargetAttribute = new(this, "href", target);
+        FixedAttributes.Add(("draggable", "false"));
     }
     
     /// <summary>

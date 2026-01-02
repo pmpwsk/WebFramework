@@ -28,6 +28,7 @@ public class BigLinkButton : OptionalIdElement
         HeaderContainer = new(this, header);
         Paragraphs = new(this, subtexts.Select(subtext => new Paragraph(subtext)));
         FixedAttributes.Add(("class", "wf-button wf-button-is-container"));
+        FixedAttributes.Add(("draggable", "false"));
     }
     
     /// <summary>
