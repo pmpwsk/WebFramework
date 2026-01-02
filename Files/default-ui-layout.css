@@ -31,6 +31,8 @@
     --s13: 0.8125rem;
     --s14: 0.875rem;
     --s15: 0.9375rem;
+
+    --nav-height: calc(2rem + var(--s3));
 }
 
 
@@ -62,7 +64,7 @@ html {
     flex-direction: column;
 }
 
-.wf-row, .wf-content, nav, .wf-nav-island, .wf-checkbox{
+.wf-row, .wf-content, nav, .wf-nav-island, .wf-checkbox, nav .wf-button {
     display: flex;
     flex-direction: row;
 }
@@ -137,7 +139,7 @@ nav {
     justify-content: space-between;
 }
 
-nav, .wf-nav-island {
+nav, .wf-nav-island, nav .wf-button {
     flex-shrink: 0;
     align-items: center;
 }
@@ -418,17 +420,22 @@ h1.wf-heading, h2.wf-heading {
 }
 
 nav, .wf-nav-island {
-    height: calc(2rem + var(--s3));
+    height: var(--nav-height);
+}
+
+nav .wf-button {
+    box-sizing: content-box;
+    height: calc(var(--nav-height) - 1rem);
 }
 
 .wf-top-cover {
-    height: calc(2rem + var(--s11));
+    height: calc(var(--nav-height) + var(--s8));
 }
 
 aside, .wf-menu {
     box-sizing: border-box;
     width: min(calc(100% - 6rem), 15rem);
-    height: calc(100dvh - 3rem - var(--s11));
+    height: calc(100dvh - 1rem - var(--s8) - var(--nav-height));
 }
 
 .wf-dialog {
@@ -494,7 +501,7 @@ nav {
 }
 
 h1.wf-heading, aside, aside > h2.wf-heading, .wf-menu, .wf-menu > h2.wf-heading, .wf-menu-background, .wf-dialog-background {
-    top: calc(3rem + var(--s3));
+    top: calc(1rem + var(--nav-height));
 }
 
 section {
@@ -502,7 +509,7 @@ section {
 }
 
 .wf-subsection > h2.wf-heading {
-    top: calc(5rem + var(--s15));
+    top: calc(3rem + var(--s12) + var(--nav-height));
 }
 
 .wf-subsection {
@@ -616,7 +623,7 @@ body:has(aside.wf-is-forced) .wf-menu-background, body:has(.wf-menu.wf-is-open) 
 
 @media (min-width: 50rem) {
     .wf-nav-menu-toggle {
-        display: none;
+        display: none !important;
     }
 
     aside {

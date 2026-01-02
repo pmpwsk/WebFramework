@@ -26,7 +26,7 @@ public static class SystemFiles
     public static string? GetFileVersion(string relPath)
         => relPath switch
         {
-            "/default-ui-layout.css" => "639028963863381325",
+            "/default-ui-layout.css" => "639029880229986806",
             "/default-ui-theme.css" => "639029179011468788",
             "/default-ui.js" => "639017594406297607",
             "/fonts/roboto-mono.eot" => "638993200608997332",
