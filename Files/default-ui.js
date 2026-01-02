@@ -106,37 +106,38 @@ if (document.documentElement.hasAttribute("data-wf-url"))
 
 document.addEventListener("click", event =>
 {
-    if (event.target.matches(".wf-nav-menu-toggle"))
+    let target = getClickReceiver(event.target)
+    if (target.matches(".wf-nav-menu-toggle"))
     {
         // Toggle nav menu
         closeAllPopups();
         toggleClass(findAside(), "wf-is-forced");
     }
-    else if (event.target.matches(".wf-popup-toggle"))
+    else if (target.matches(".wf-popup-toggle"))
     {
         // Toggle other menu
-        let popup = resolveTarget(event.target);
+        let popup = resolveTarget(target);
         if (popup && popup.matches(".wf-menu, .wf-dialog"))
             openPopup(popup);
     }
-    else if (event.target.matches(".wf-menu-background, aside .wf-button, .wf-menu .wf-button"))
+    else if (target.matches(".wf-menu-background, aside .wf-button, .wf-menu .wf-button"))
     {
         // Close all popups
         removeClass(findAside(), "wf-is-forced");
         closeAllPopups();
     }
-    else if (event.target.matches(".wf-image"))
+    else if (target.matches(".wf-image"))
     {
         // Toggle image fullscreen
-        if (event.target.matches(".wf-fullscreen"))
+        if (target.matches(".wf-fullscreen"))
         {
             // Remove fullscreen image
-            event.target.remove();
+            target.remove();
         }
         else
         {
             // Add fullscreen image
-            let fullscreenImage = event.target.cloneNode();
+            let fullscreenImage = target.cloneNode();
             fullscreenImage.classList.add("wf-fullscreen");
             document.body.append(fullscreenImage);
         }
@@ -172,6 +173,19 @@ document.addEventListener("change", event =>
     if (value !== undefined)
         event.target.setAttribute("data-wf-modified", "");
 });
+
+function getClickReceiver(target)
+{
+    let element = target;
+    while (element)
+    {
+        if (element.matches(".wf-button"))
+            return element;
+        element = element.parentElement;
+    }
+
+    return target;
+}
 
 function findAside()
 {

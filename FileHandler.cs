@@ -28,7 +28,7 @@ public static class SystemFiles
         {
             "/default-ui-layout.css" => "639029881193630161",
             "/default-ui-theme.css" => "639029881241461248",
-            "/default-ui.js" => "639017594406297607",
+            "/default-ui.js" => "639029911275614019",
             "/fonts/roboto-mono.eot" => "638993200608997332",
             "/fonts/roboto-mono.otf" => "638993200609177334",
             "/fonts/roboto-mono.svg" => "638993200584362885",
