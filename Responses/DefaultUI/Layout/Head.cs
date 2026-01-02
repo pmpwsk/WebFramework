@@ -21,6 +21,8 @@ public class Head : WatchedElement
     /// </summary>
     private readonly RequiredWatchedContainer<Charset> CharsetContainer;
     
+    private readonly RequiredWatchedContainer<ColorScheme> ColorSchemeContainer;
+    
     private readonly OptionalWatchedContainer<CanonicalReference> CanonicalContainer;
     
     private readonly OptionalWatchedContainer<Favicon> FaviconContainer;
@@ -40,6 +42,7 @@ public class Head : WatchedElement
         DescriptionContainer = new(this, null);
         ViewportSettingsContainer = new(this, new("viewport", "width=device-width, initial-scale=1.0, interactive-widget=resizes-content"));
         CharsetContainer = new(this, new());
+        ColorSchemeContainer = new(this, new(ColorSchemeOption.LightOrDark));
         var canonicalUrl = req.CanonicalUrl;
         CanonicalContainer = new(this, canonicalUrl == null ? null : new(canonicalUrl));
         FaviconContainer = new(this, null);
@@ -72,6 +75,15 @@ public class Head : WatchedElement
             else
                 DescriptionContainer.Element.Content = value;
         }
+    }
+    
+    /// <summary>
+    /// The page's color scheme.
+    /// </summary>
+    public ColorSchemeOption ColorScheme
+    {
+        get => ColorSchemeContainer.Element.Value;
+        set => ColorSchemeContainer.Element.Value = value;
     }
     
     /// <summary>

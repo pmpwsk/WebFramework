@@ -25,6 +25,8 @@
 /* Variables */
 
 :root {
+    color-scheme: dark;
+    
     --max-width: 100rem;
     --action-time: 100ms;
     --overlay-time: 200ms;
@@ -53,6 +55,8 @@
 
 @media (prefers-color-scheme: light) {
     :root {
+        color-scheme: light;
+        
         --background: rgb(155, 155, 155);
         --foreground: rgb(34, 32, 36);
         --background-layer: rgba(227, 227, 227, 0.3);

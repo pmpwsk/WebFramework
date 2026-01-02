@@ -71,6 +71,15 @@ public class Page : AbstractWatchablePage
     }
     
     /// <summary>
+    /// The page's color scheme.
+    /// </summary>
+    public ColorSchemeOption ColorScheme
+    {
+        get => HeadContainer.Element.ColorScheme;
+        set => HeadContainer.Element.ColorScheme = value;
+    }
+    
+    /// <summary>
     /// The page's icon file.
     /// </summary>
     public Favicon? Favicon
