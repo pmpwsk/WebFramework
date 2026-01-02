@@ -31,8 +31,6 @@
     --s13: 0.8125rem;
     --s14: 0.875rem;
     --s15: 0.9375rem;
-
-    --nav-height: calc(2rem + var(--s3));
 }
 
 

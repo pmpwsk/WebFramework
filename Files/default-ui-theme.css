@@ -35,6 +35,8 @@
     --loading-difference: var(--s2);
     --loading-time: 1000ms;
 
+    --nav-height: calc(2rem + var(--s3));
+
     --font-normal: 'custom-roboto';
     --font-code: 'custom-roboto-mono';
     --background: rgb(34, 32, 36);
