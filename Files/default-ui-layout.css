@@ -57,7 +57,7 @@ html {
 
 /* Flex */
 
-.wf-col, html, body, main, section, .wf-subsection, footer, aside, .wf-menu, .wf-dialog, .wf-button.wf-button-is-container, aside form, .wf-menu form {
+.wf-col, html, body, main, section, .wf-subsection, footer, aside, .wf-menu, .wf-dialog, .wf-button.wf-button-is-container, aside form, .wf-menu form, .wf-row-when-wide {
     display: flex;
     flex-direction: column;
 }
@@ -67,7 +67,7 @@ html {
     flex-direction: row;
 }
 
-html, body, main, .wf-content, .wf-subsection, footer, nav, .wf-nav-island, aside, .wf-menu, .wf-dialog {
+html, body, main, .wf-content, .wf-subsection, footer, nav, .wf-nav-island, aside, .wf-menu, .wf-dialog, .wf-row-when-wide {
     gap: var(--s8);
 }
 
@@ -637,6 +637,14 @@ body:has(aside.wf-is-forced) .wf-menu-background, body:has(.wf-menu.wf-is-open) 
 
     body:not(body:has(.wf-menu.wf-is-open, .wf-dialog.wf-is-open)) .wf-menu-background {
         visibility: hidden;
+    }
+
+    .wf-row-when-wide {
+        flex-direction: row;
+    }
+
+    .wf-row-when-wide > * {
+        flex: 1 1 0;
     }
 }
 
