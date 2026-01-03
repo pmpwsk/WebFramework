@@ -470,6 +470,10 @@ li .wf-image:not(.wf-image.wf-fullscreen) {
     max-width: calc(100% - 2rem);
 }
 
+.wf-image.wf-fullscreen {
+    max-width: unset !important;
+}
+
 .wf-subsection > * {
     box-sizing: border-box;
 }
