@@ -433,7 +433,14 @@ nav .wf-button {
 aside, .wf-menu {
     box-sizing: border-box;
     width: min(calc(100% - 6rem), 15rem);
+}
+
+aside {
     height: calc(100dvh - 1rem - var(--s8) - var(--nav-height));
+}
+
+.wf-menu {
+    max-height: calc(100dvh - 1rem - var(--s8) - var(--nav-height));
 }
 
 .wf-dialog {
