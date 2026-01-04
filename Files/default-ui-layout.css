@@ -514,7 +514,7 @@ h1.wf-heading, aside, aside > h2.wf-heading, .wf-menu, .wf-menu > h2.wf-heading,
 }
 
 section {
-    scroll-margin-top: calc(3rem + var(--s3));
+    scroll-margin-top: calc(1rem + var(--nav-height));
 }
 
 .wf-subsection > h2.wf-heading {
@@ -522,7 +522,7 @@ section {
 }
 
 .wf-subsection {
-    scroll-margin-top: calc(5rem + var(--s14));
+    scroll-margin-top: calc(3rem + var(--s12) + var(--nav-height));
 }
 
 h3.wf-heading {
