@@ -288,6 +288,9 @@ function runServerAction(submitter, form)
             case "Navigate":
                 window.location.assign(action.location);
                 break;
+            case "Reload":
+                window.location.reload();
+                break;
             default:
                 console.warn("Unknown action", action);
                 break;
