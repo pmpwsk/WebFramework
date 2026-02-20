@@ -13,11 +13,6 @@ public class FileDownloadResponse(string path, string filename, string? timestam
     
     public bool DeleteAfter = false;
     
-    public FileDownloadResponse(string path, string? timestamp)
-        : this(path, new FileInfo(path).Name, timestamp)
-    {
-    }
-    
     public override string? Extension
         => Filename.Contains('.') ? Filename.Remove(0, Filename.LastIndexOf('.')) : null;
     
