@@ -227,11 +227,11 @@ public class Password3
                         HashLength = hashLength,
                         ClearPassword = true
                     };
-                    using var secureHash = new Argon2(config).Hash();
+                    using var argon2 = new Argon2(config);
+                    using var secureHash = argon2.Hash();
                     byte[] hash = new byte[secureHash.Buffer.Length];
                     for (int i = 0; i < hash.Length; i++)
                         hash[i] = secureHash[i];
-                    secureHash.Dispose();
                     return hash;
                 }
             default:
