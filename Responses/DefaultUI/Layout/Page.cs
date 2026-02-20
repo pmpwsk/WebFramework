@@ -166,7 +166,7 @@ public class Page : AbstractWatchablePage
     /// <summary>
     /// Adds a simple dialog with the given message and a button to close the dialog, assuming the page is dynamic.
     /// </summary>
-    public void AddDynamicError(params string[] messages)
+    public void AddDynamicPopup(string heading, params string[] messages)
     {
         foreach (var other in Dialogs.EnumerateTyped().ToList())
             if (other.Id == "wf-dynamic-error" || other.IsOpen)
@@ -175,7 +175,7 @@ public class Page : AbstractWatchablePage
         var dialog = new Dialog
         (
             "wf-dynamic-error",
-            "Error",
+            heading,
             true,
             [
                 ..messages.Select(message => new Paragraph(message)),

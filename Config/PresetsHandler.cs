@@ -2,6 +2,7 @@
 using System.Web;
 using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
+using uwap.WebFramework.Responses.Base;
 using uwap.WebFramework.Responses.DefaultUI;
 
 namespace uwap.WebFramework;
@@ -141,6 +142,26 @@ public class PresetsHandler
             new Elements.Heading("2FA code / recovery:", styles: twoFactorStyle),
             new Elements.TextBox("Enter the current code...", twoFactorText, "code", Elements.TextBoxRole.NoSpellcheck, "Continue()", styles: twoFactorStyle)
         }));
+    }
+
+    /// <summary>
+    /// Creates elements to allow for password (and 2FA if present) verification.
+    /// </summary>
+    public virtual Presets.AuthElements CreateAuthElements(Request req)
+    {
+        if (!req.LoggedIn)
+            throw new Exception("Not logged in.");
+        User user = req.User;
+        
+        var passwordHeading = new Heading3("Password");
+        var passwordInput = new TextBox("password", "Enter your password...", null, TextBoxRole.CurrentPassword);
+        
+        if (!user.TwoFactor.TOTPEnabled())
+            return new([passwordHeading, passwordInput], passwordInput, null);
+        
+        var codeHeading = new Heading3("2FA code / recovery");
+        var codeInput = new TextBox("code", "Enter the current code...", null, TextBoxRole.NoSpellcheck);
+        return new([passwordHeading, passwordInput, codeHeading, codeInput], passwordInput, codeInput);
     }
 
     /// <summary>

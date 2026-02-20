@@ -1,6 +1,8 @@
 ﻿using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Mail;
 using uwap.WebFramework.Responses;
+using uwap.WebFramework.Responses.Actions;
+using uwap.WebFramework.Responses.Base;
 using uwap.WebFramework.Responses.DefaultUI;
 
 namespace uwap.WebFramework;
@@ -135,6 +137,12 @@ public static class Presets
     /// </summary>
     public static void AddAuthElements(Elements.Page page, Request req)
         => Handler.AddAuthElements(page, req);
+    
+    /// <summary>
+    /// Creates elements to allow for password (and 2FA if present) verification.
+    /// </summary>
+    public static AuthElements CreateAuthElements(Request req)
+        => Handler.CreateAuthElements(req);
 
     /// <summary>
     /// Checks whether the given password (and 2FA code if necessary) provided in the query (keys 'password' and 'code') is correct for the given user.<br/>
@@ -154,6 +162,14 @@ public static class Presets
             throw new ForcedResponse(new TextResponse("no"));
         }
     }
+    
+    /// <summary>
+    /// Checks whether the given dynamic authentication inputs (password and 2FA code if necessary) are correct for the requesting user.<br/>
+    /// If it is incorrect, the user is reported for failed authentication.
+    /// </summary>
+    public static async Task<bool> ValidateAuth(Request req, AuthElements auth)
+        => await req.UserTable.ValidatePasswordAsync(req.User.Id, auth.PasswordInput.Value, req)
+            && (!req.User.TwoFactor.TOTPEnabled() || (auth.CodeInput != null && await req.UserTable.ValidateTOTPAsync(req.User.Id, auth.CodeInput.Value, req, true)));
 
     /// <summary>
     /// The path of the login page.<br/>
@@ -167,4 +183,37 @@ public static class Presets
     /// </summary>
     public static void ModifyPage(Request req, Page page)
         => Handler.ModifyPage(req, page);
+    
+    /// <summary>
+    /// Adds a dynamic dialog with the given heading and message lines to the given page and returns an empty action response.
+    /// </summary>
+    public static Nothing DynamicPopupAction(this Page page, string heading, params string[] messages)
+    {
+        page.AddDynamicPopup(heading, messages);
+        return new Nothing();
+    }
+    
+    /// <summary>
+    /// Adds a dynamic error popup with the given message lines to the given page and returns an empty action response.
+    /// </summary>
+    public static Nothing DynamicErrorAction(this Page page, params string[] messages)
+        => page.DynamicPopupAction("Error", messages);
+    
+    /// <summary>
+    /// Adds a dynamic info popup with the given message lines to the given page and returns an empty action response.
+    /// </summary>
+    public static Nothing DynamicInfoAction(this Page page, params string[] messages)
+        => page.DynamicPopupAction("Info", messages);
+    
+    public class AuthElements(List<AbstractElement> elements, TextBox passwordInput, TextBox? codeInput)
+    {
+        public readonly List<AbstractElement> Elements = elements;
+        
+        public readonly TextBox PasswordInput = passwordInput;
+        
+        public readonly TextBox? CodeInput = codeInput;
+        
+        public bool AnyEmpty
+            => string.IsNullOrEmpty(PasswordInput.Value) || (CodeInput != null && string.IsNullOrEmpty(CodeInput.Value));
+    }
 }
