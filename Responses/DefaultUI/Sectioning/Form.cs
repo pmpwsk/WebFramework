@@ -10,7 +10,7 @@ public class Form : AbstractSubsection
 {
     private readonly RequiredWatchedAttribute ActionAttribute;
     
-    public Form(string? heading, string action, IEnumerable<AbstractElement>? content = null) : base(heading, content)
+    public Form(IconAndText? heading, string action, IEnumerable<AbstractElement>? content = null) : base(heading, content)
     {
         ActionAttribute = new(this, "action", action);
         FixedAttributes.Add(("method", "post"));

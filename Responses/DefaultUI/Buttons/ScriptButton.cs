@@ -9,7 +9,7 @@ public class ScriptButton : ButtonWithText
 {
     private readonly RequiredWatchedAttribute OnClickAttribute;
     
-    public ScriptButton(string text, string onClick) : base(text)
+    public ScriptButton(IconAndText content, string onClick) : base(content)
     {
         OnClickAttribute = new(this, "onclick", onClick);
         FixedAttributes.Add(("type", "button"));

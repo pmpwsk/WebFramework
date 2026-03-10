@@ -11,10 +11,10 @@ public class PostButton : AbstractButton
     
     private readonly RequiredWatchedContainer<SubmitButton> SubmitContainer;
     
-    public PostButton(string text, string action)
+    public PostButton(IconAndText content, string action)
     {
         ActionAttribute = new(this, "action", action);
-        SubmitContainer = new(this, new(text));
+        SubmitContainer = new(this, new(content));
         FixedAttributes.Add(("method", "post"));
         FixedAttributes.Add(("enctype", "multipart/form-data"));
     }
@@ -40,10 +40,10 @@ public class PostButton : AbstractButton
     /// <summary>
     /// The button's text.
     /// </summary>
-    public string Text
+    public IconAndText Content
     {
-        get => Submit.Text;
-        set => Submit.Text = value;
+        get => Submit.Content;
+        set => Submit.Content = value;
     }
     
     public override string RenderedTag

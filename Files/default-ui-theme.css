@@ -144,7 +144,7 @@ h1.wf-heading, aside > h2.wf-heading, .wf-menu > h2.wf-heading, .wf-dialog > h2.
     font-family: var(--font-normal), sans-serif;
 }
 
-.wf-button, p a, li a, .wf-button:active, p a:active, .wf-button:focus, p a:focus, .wf-button h3, .wf-upload::file-selector-button {
+.wf-button, .wf-button:not(.wf-button-is-container) *, p a, li a, .wf-button:active, p a:active, .wf-button:focus, p a:focus, .wf-button h3, .wf-button h3 *, .wf-upload::file-selector-button {
     color: var(--action);
 }
 

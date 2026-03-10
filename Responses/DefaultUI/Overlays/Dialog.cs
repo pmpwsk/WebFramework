@@ -17,7 +17,7 @@ public class Dialog : RequiredIdElement
     /// </summary>
     public readonly ListWatchedContainer<AbstractElement> Items;
     
-    public Dialog(string id, string heading, bool isOpen, IEnumerable<AbstractElement>? items = null) : base(id)
+    public Dialog(string id, IconAndText heading, bool isOpen, IEnumerable<AbstractElement>? items = null) : base(id)
     {
         HeaderContainer = new(this, new(heading));
         IsOpenAttribute = new(this, "class", isOpen ? "wf-is-open" : null);

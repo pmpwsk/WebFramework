@@ -5,22 +5,19 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// <summary>
 /// A default UI button that submits a form.
 /// </summary>
-public class SubmitButton : AbstractButton
+public class SubmitButton : ButtonWithText
 {
     private readonly OptionalWatchedAttribute OverrideActionAttribute;
     
-    private readonly RequiredWatchedAttribute TextAttribute;
-    
-    public SubmitButton(string text, string? overrideAction = null)
+    public SubmitButton(IconAndText content, string? overrideAction = null) : base(content)
     {
         OverrideActionAttribute = new(this, "formaction", overrideAction);
-        TextAttribute = new(this, "value", text);
         FixedAttributes.Add(("class", "wf-button"));
         FixedAttributes.Add(("type", "submit"));
     }
     
     public override string RenderedTag
-        => "input";
+        => "button";
     
     /// <summary>
     /// The URL of the action to use instead of the form's action.
@@ -29,14 +26,5 @@ public class SubmitButton : AbstractButton
     {
         get => OverrideActionAttribute.Value;
         set => OverrideActionAttribute.Value = value;
-    }
-    
-    /// <summary>
-    /// The button's text.
-    /// </summary>
-    public string Text
-    {
-        get => TextAttribute.Value;
-        set => TextAttribute.Value = value;
     }
 }

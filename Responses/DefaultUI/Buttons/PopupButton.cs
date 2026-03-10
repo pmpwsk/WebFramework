@@ -9,7 +9,7 @@ public class PopupButton : ButtonWithText
 {
     private readonly RequiredWatchedAttribute PopupIdAttribute;
     
-    public PopupButton(string text, string popupId) : base(text)
+    public PopupButton(IconAndText content, string popupId) : base(content)
     {
         PopupIdAttribute = new(this, "data-wf-target-id", popupId);
         FixedAttributes.Add(("type", "button"));

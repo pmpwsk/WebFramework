@@ -1,5 +1,4 @@
 using uwap.WebFramework.Responses.Base;
-using uwap.WebFramework.Responses.Dynamic;
 
 namespace uwap.WebFramework.Responses.DefaultUI;
 
@@ -8,20 +7,20 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// </summary>
 public abstract class AbstractHeading : OptionalIdElement
 {
-    private readonly RequiredWatchedContainer<MarkdownText> ContentContainer;
+    private readonly IconAndTextContainer ContentContainer;
     
-    protected AbstractHeading(string text)
+    protected AbstractHeading(IconAndText content)
     {
-        ContentContainer = new(this, new(text));
+        ContentContainer = new(this, content);
         FixedAttributes.Add(("class", "wf-heading"));
     }
     
     /// <summary>
-    /// The heading's text.
+    /// The heading's content.
     /// </summary>
-    public string Text
+    public IconAndText Content
     {
-        get => ContentContainer.Element.Text;
-        set => ContentContainer.Element = new(value);
+        get => ContentContainer.Content;
+        set => ContentContainer.Content = value;
     }
 }

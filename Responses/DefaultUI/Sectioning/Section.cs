@@ -15,7 +15,7 @@ public class Section : OptionalIdElement
     /// </summary>
     public readonly ListWatchedContainer<AbstractSubsection> Subsections;
     
-    public Section(string heading, IEnumerable<AbstractSubsection>? subsections = null)
+    public Section(IconAndText heading, IEnumerable<AbstractSubsection>? subsections = null)
     {
         HeaderContainer = new(this, new(heading));
         Subsections = new(this, subsections ?? []);

@@ -12,9 +12,9 @@ public class ServerActionButton : AbstractButton, IActionHaver
     
     private readonly RequiredWatchedContainer<SubmitButton> SubmitContainer;
     
-    public ServerActionButton(string text, ActionHandler action)
+    public ServerActionButton(IconAndText content, ActionHandler action)
     {
-        SubmitContainer = new(this, new(text));
+        SubmitContainer = new(this, new(content));
         Action = action;
         FixedAttributes.Add(("class", "wf-server-form"));
         FixedAttributes.Add(("method", "post"));
@@ -34,10 +34,10 @@ public class ServerActionButton : AbstractButton, IActionHaver
     /// <summary>
     /// The button's text.
     /// </summary>
-    public string Text
+    public IconAndText Content
     {
-        get => Submit.Text;
-        set => Submit.Text = value;
+        get => Submit.Content;
+        set => Submit.Content = value;
     }
     
     public override string RenderedTag

@@ -7,31 +7,19 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// <summary>
 /// A default UI button that submits a form while overriding the action with an action executed on the server.
 /// </summary>
-public class ServerSubmitButton : AbstractButton, IActionHaver
+public class ServerSubmitButton : ButtonWithText, IActionHaver
 {
     public ActionHandler Action { get; set; }
     
-    private readonly RequiredWatchedAttribute TextAttribute;
-    
-    public ServerSubmitButton(string text, ActionHandler action)
+    public ServerSubmitButton(IconAndText content, ActionHandler action) : base(content)
     {
-        TextAttribute = new(this, "value", text);
         Action = action;
         FixedAttributes.Add(("class", "wf-button wf-server-form-override"));
         FixedAttributes.Add(("type", "submit"));
     }
     
     public override string RenderedTag
-        => "input";
-    
-    /// <summary>
-    /// The button's text.
-    /// </summary>
-    public string Text
-    {
-        get => TextAttribute.Value;
-        set => TextAttribute.Value = value;
-    }
+        => "button";
 
     /// <summary>
     /// Finds the form this element is part of.

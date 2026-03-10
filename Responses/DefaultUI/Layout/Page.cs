@@ -113,6 +113,15 @@ public class Page : AbstractWatchablePage
     }
     
     /// <summary>
+    /// Whether the page uses any icons from Bootstrap Icons.
+    /// </summary>
+    public bool IncludeBootstrapIcons
+    {
+        get => HeadContainer.Element.IncludeBootstrapIcons;
+        set => HeadContainer.Element.IncludeBootstrapIcons = value;
+    }
+    
+    /// <summary>
     /// The navigation bar.
     /// </summary>
     public NavBar NavBar

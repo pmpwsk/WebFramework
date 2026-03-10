@@ -11,20 +11,20 @@ public abstract class ButtonWithText : AbstractButton
     /// <summary>
     /// The object describing the button's text.
     /// </summary>
-    private readonly RequiredWatchedContainer<MarkdownText> ContentContainer;
+    private readonly IconAndTextContainer ContentContainer;
     
-    protected ButtonWithText(string text)
+    protected ButtonWithText(IconAndText content)
     {
-        ContentContainer = new(this, new(text));
+        ContentContainer = new(this, content);
         FixedAttributes.Add(("class", "wf-button"));
     }
     
     /// <summary>
     /// The button's text.
     /// </summary>
-    public string Text
+    public IconAndText Content
     {
-        get => ContentContainer.Element.Text;
-        set => ContentContainer.Element = new(value);
+        get => ContentContainer.Content;
+        set => ContentContainer.Content = value;
     }
 }

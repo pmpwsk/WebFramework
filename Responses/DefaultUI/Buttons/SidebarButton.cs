@@ -5,7 +5,7 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// </summary>
 public class SidebarButton : ButtonWithText
 {
-    public SidebarButton() : base("Go to")
+    public SidebarButton() : base(new("bi bi-journal-bookmark", "Go to"))
     {
         FixedAttributes.Add(("type", "button"));
         FixedAttributes.Add(("class", "wf-nav-menu-toggle"));

@@ -62,7 +62,7 @@ html {
     flex-direction: column;
 }
 
-.wf-row, .wf-content, nav, .wf-nav-island, .wf-checkbox, nav .wf-button {
+.wf-row, .wf-content, nav, .wf-nav-island, .wf-checkbox {
     display: flex;
     flex-direction: row;
 }
@@ -139,6 +139,9 @@ nav {
 
 nav, .wf-nav-island, nav .wf-button {
     flex-shrink: 0;
+}
+
+nav, .wf-nav-island {
     align-items: center;
 }
 
@@ -342,17 +345,17 @@ html {
     font-size: 16px;
 }
 
-h1 {
+h1, h1 * {
     font-size: calc(1rem + var(--s8));
     line-height: calc(2rem + var(--s4));
 }
 
-h2 {
+h2, h2 * {
     font-size: calc(1rem + var(--s4));
     line-height: 2rem;
 }
 
-h3 {
+h3, h3 * {
     font-size: calc(1rem + var(--s2));
 }
 

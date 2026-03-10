@@ -31,6 +31,9 @@ public class Head : WatchedElement
     
     private readonly RequiredWatchedContainer<StyleReference> ThemeStyleContainer;
     
+    private readonly BootstrapIconsReference BootstrapIconsReference;
+    private readonly OptionalWatchedContainer<BootstrapIconsReference> BootstrapIconsContainer;
+    
     /// <summary>
     /// The CSS file references.
     /// </summary>
@@ -48,6 +51,8 @@ public class Head : WatchedElement
         FaviconContainer = new(this, null);
         LayoutStyleContainer = new(this, new(req, $"{Server.Layers.SystemFilesLayerPrefix}/default-ui-layout.css"));
         ThemeStyleContainer = new(this, new(req, $"{Server.Layers.SystemFilesLayerPrefix}/default-ui-theme.css"));
+        BootstrapIconsReference = new(req);
+        BootstrapIconsContainer = new(this, BootstrapIconsReference);
         Styles = new(this, styles ?? []);
     }
     
@@ -111,6 +116,15 @@ public class Head : WatchedElement
     {
         get => ThemeStyleContainer.Element;
         set => ThemeStyleContainer.Element = value;
+    }
+    
+    /// <summary>
+    /// Whether the page uses any icons from Bootstrap Icons.
+    /// </summary>
+    public bool IncludeBootstrapIcons
+    {
+        get => BootstrapIconsContainer.Element != null;
+        set => BootstrapIconsContainer.Element = value ? BootstrapIconsReference : null;
     }
     
     public override string RenderedTag

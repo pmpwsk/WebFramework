@@ -9,7 +9,7 @@ public class LinkButton : ButtonWithText
 {
     private readonly RequiredWatchedAttribute TargetAttribute;
     
-    public LinkButton(string text, string target) : base(text)
+    public LinkButton(IconAndText content, string target) : base(content)
     {
         TargetAttribute = new(this, "href", target);
         FixedAttributes.Add(("draggable", "false"));

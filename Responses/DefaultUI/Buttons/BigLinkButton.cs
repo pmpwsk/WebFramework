@@ -20,7 +20,7 @@ public class BigLinkButton : OptionalIdElement
     /// </summary>
     public readonly ListWatchedContainer<Paragraph> Paragraphs;
     
-    public BigLinkButton(string text, IEnumerable<string> subtexts, string target)
+    public BigLinkButton(IconAndText text, IEnumerable<string> subtexts, string target)
     {
         TargetAttribute = new(this, "href", target);
         var header = new Heading3(text);
@@ -34,10 +34,10 @@ public class BigLinkButton : OptionalIdElement
     /// <summary>
     /// The button's text.
     /// </summary>
-    public string Text
+    public IconAndText Text
     {
-        get => HeaderContainer.Element.Text;
-        set => HeaderContainer.Element.Text = value;
+        get => HeaderContainer.Element.Content;
+        set => HeaderContainer.Element.Content = value;
     }
     
     /// <summary>
