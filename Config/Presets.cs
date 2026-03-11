@@ -97,6 +97,12 @@ public static class Presets
         => Handler.AddSupportButton(req, page);
 
     /// <summary>
+    /// Creates a button to contact customer support.
+    /// </summary>
+    public static AbstractElement CreateSupportButton(Request req)
+        => Handler.CreateSupportButton(req);
+
+    /// <summary>
     /// The default error script.
     /// </summary>
     public static IScript ErrorScript
