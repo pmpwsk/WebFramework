@@ -12,10 +12,16 @@ public class Link : OptionalIdElement
     
     private readonly RequiredWatchedAttribute TargetAttribute;
     
+    private readonly OptionalWatchedAttribute NewTabAttribute;
+    
+    private readonly OptionalWatchedAttribute NoFollowAttribute;
+    
     public Link(string text, string target)
     {
         ContentContainer = new(this, new(text));
         TargetAttribute = new(this, "href", target);
+        NewTabAttribute = new(this, "target", null);
+        NoFollowAttribute = new(this, "rel", null);
     }
     
     /// <summary>
@@ -34,6 +40,24 @@ public class Link : OptionalIdElement
     {
         get => TargetAttribute.Value;
         set => TargetAttribute.Value = value;
+    }
+    
+    /// <summary>
+    /// Whether the link should be opened in a new tab.
+    /// </summary>
+    public bool NewTab
+    {
+        get => NewTabAttribute.Value != null;
+        set => NewTabAttribute.Value = value ? "_blank" : null;
+    }
+    
+    /// <summary>
+    /// Whether the link should be followed by bots analyzing the page.
+    /// </summary>
+    public bool NoFollow
+    {
+        get => NoFollowAttribute.Value != null;
+        set => NoFollowAttribute.Value = value ? "nofollow" : null;
     }
     
     public override string RenderedTag

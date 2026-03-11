@@ -10,6 +10,10 @@ public class BigLinkButton : OptionalIdElement
 {
     private readonly RequiredWatchedAttribute TargetAttribute;
     
+    private readonly OptionalWatchedAttribute NewTabAttribute;
+    
+    private readonly OptionalWatchedAttribute NoFollowAttribute;
+    
     /// <summary>
     /// The object describing the button's header text.
     /// </summary>
@@ -23,6 +27,8 @@ public class BigLinkButton : OptionalIdElement
     public BigLinkButton(IconAndText text, IEnumerable<string> subtexts, string target)
     {
         TargetAttribute = new(this, "href", target);
+        NewTabAttribute = new(this, "target", null);
+        NoFollowAttribute = new(this, "rel", null);
         var header = new Heading3(text);
         header.FixedAttributes.Remove(("class", "wf-heading"));
         HeaderContainer = new(this, header);
@@ -47,6 +53,24 @@ public class BigLinkButton : OptionalIdElement
     {
         get => TargetAttribute.Value;
         set => TargetAttribute.Value = value;
+    }
+    
+    /// <summary>
+    /// Whether the link should be opened in a new tab.
+    /// </summary>
+    public bool NewTab
+    {
+        get => NewTabAttribute.Value != null;
+        set => NewTabAttribute.Value = value ? "_blank" : null;
+    }
+    
+    /// <summary>
+    /// Whether the link should be followed by bots analyzing the page.
+    /// </summary>
+    public bool NoFollow
+    {
+        get => NoFollowAttribute.Value != null;
+        set => NoFollowAttribute.Value = value ? "nofollow" : null;
     }
     
     public override string RenderedTag
