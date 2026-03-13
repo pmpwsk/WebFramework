@@ -132,16 +132,16 @@ public class UserTable(string name) : Table<User>(name)
     public async Task<User> RegisterAsync(string username, string mailAddress, string? password)
     {
         if (!AccountManager.CheckUsernameFormat(username))
-            throw new Exception("Invalid username format.");
+            throw new Exception("Usernames must be at least 3 characters long and only contain lowercase letters, digits, dashes, dots and underscores. The first and last characters can only be letters or digits.");
         if (!AccountManager.CheckMailAddressFormat(mailAddress))
-            throw new Exception("Invalid mail address format.");
+            throw new Exception("The provided email address is invalid.");
         if (password != null && !AccountManager.CheckPasswordFormat(password))
-            throw new Exception("Invalid password format.");
+            throw new Exception("Passwords must be at least 8 characters long and contain at least one uppercase letter, lowercase letter, digit and special character.");
 
         if (await FindByUsernameAsync(username) != null)
-            throw new Exception("Another user with the provided username already exists.");
+            throw new Exception("This username is already being used by another account.");
         if (await FindByMailAddressAsync(mailAddress) != null)
-            throw new Exception("Another user with the provided email address already exists.");
+            throw new Exception("This email address is already being used by another account.");
         
         User newUser = new(username, mailAddress, password);
         
@@ -192,11 +192,11 @@ public class UserTable(string name) : Table<User>(name)
         {
             var oldUsername = t.Value.Username;
             if (!AccountManager.CheckUsernameFormat(username))
-                throw new Exception("Invalid username format.");
+                throw new Exception("Usernames must be at least 3 characters long and only contain lowercase letters, digits, dashes, dots and underscores. The first and last characters can only be letters or digits.");
             if (oldUsername == username)
                 throw new Exception("The provided username is the same as the old one.");
             if (await FindByUsernameAsync(username) != null)
-                throw new Exception("Another user with the provided username already exists.");
+                throw new Exception("This username is already being used by another account.");
             
             t.Value.Username = username;
         });
@@ -209,11 +209,11 @@ public class UserTable(string name) : Table<User>(name)
         {
             var oldAddress = t.Value.MailAddress;
             if (!AccountManager.CheckMailAddressFormat(mailAddress))
-                throw new Exception("Invalid mail address format.");
+                throw new Exception("The provided email address is invalid.");
             if (oldAddress == mailAddress)
-                throw new Exception("The provided mail address is the same as the old one.");
+                throw new Exception("The provided email address is the same as the old one.");
             if (await FindByMailAddressAsync(mailAddress) != null)
-                throw new Exception("Another user with the provided mail address already exists.");
+                throw new Exception("This email address is already being used by another account.");
             
             t.Value.MailAddress = mailAddress;
         });
@@ -231,7 +231,7 @@ public class UserTable(string name) : Table<User>(name)
             else
             {
                 if (!ignoreRules && !AccountManager.CheckPasswordFormat(password))
-                    throw new Exception("Invalid password format.");
+                    throw new Exception("Passwords must be at least 8 characters long and contain at least one uppercase letter, lowercase letter, digit and special character.");
                 if (!allowSame && await ValidatePasswordAsync(id, password, null, t.Value))
                     throw new Exception("The provided password is the same as the old one.");
 
