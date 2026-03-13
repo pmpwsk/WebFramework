@@ -220,6 +220,6 @@ public static class Presets
         public readonly TextBox? CodeInput = codeInput;
         
         public bool AnyEmpty
-            => string.IsNullOrEmpty(PasswordInput.Value) || (CodeInput != null && string.IsNullOrEmpty(CodeInput.Value));
+            => PasswordInput.IsEmpty || (CodeInput != null && CodeInput.IsEmpty);
     }
 }

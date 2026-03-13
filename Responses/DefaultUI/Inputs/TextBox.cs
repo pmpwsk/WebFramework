@@ -86,6 +86,12 @@ public class TextBox : AbstractInput
 
     public override string RenderedTag
         => "input";
+    
+    /// <summary>
+    /// Whether the current value is unknown or empty.
+    /// </summary>
+    public bool IsEmpty
+        => string.IsNullOrEmpty(Value);
 
     /// <summary>
     /// The input's name, used for browser suggestions.
