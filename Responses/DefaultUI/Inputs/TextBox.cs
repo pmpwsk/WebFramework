@@ -88,10 +88,13 @@ public class TextBox : AbstractInput
         => "input";
     
     /// <summary>
-    /// Whether the current value is unknown or empty.
+    /// Returns whether the current value is unknown or empty, and returns the value as an out parameter.
     /// </summary>
-    public bool IsEmpty
-        => string.IsNullOrEmpty(Value);
+    public bool IsEmpty(out string value)
+    {
+        value = Value;
+        return string.IsNullOrEmpty(Value);
+    }
 
     /// <summary>
     /// The input's name, used for browser suggestions.
