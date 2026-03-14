@@ -366,7 +366,25 @@ public class UserTable(string name) : Table<User>(name)
         //recovery code?
         if (tolerateRecovery && totp.RecoveryCodes.Contains(code))
         {
-            await TransactionAsync(id, t => t.Value.TwoFactor.TOTP?.RemoveRecoveryCode(code));
+            await TransactionAsync(id, t =>
+            {
+                t.Value.TwoFactor.TOTP?.RemoveRecoveryCode(code);
+                
+                //does an auth token even exist? (this should be the case, but you never know)
+                if (req != null && req.Cookies.TryGetValue("AuthToken", out var combinedToken))
+                {
+                    //get and decode the auth token
+                    string tokenId = combinedToken.Remove(12);
+                    string authToken = combinedToken.Remove(0, 12);
+                    if (t.Value.Id == tokenId && t.Value.Auth.TryGetValue(authToken, out var data))
+                    {
+                        //renew
+                        if (Server.Config.Log.AuthTokenRenewed)
+                            Console.WriteLine($"Renewed a token after 2FA for user {t.Value.Id}.");
+                        AccountManager.AddAuthTokenCookie(t.Value.Id + RenewTokenInTransaction(t.Value, authToken, data), req, false);
+                    }
+                }
+            });
             return true;
         }
 
