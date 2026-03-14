@@ -1,32 +1,6 @@
-/* Font faces */
-
-@font-face {
-    font-family: 'custom-roboto';
-    font-style: normal;
-    font-weight: 400;
-    font-display: block;
-    src: url('fonts/roboto.woff2') format('woff2'), url('fonts/roboto.woff') format('woff'), url('fonts/roboto.ttf') format('truetype'), url('fonts/roboto.otf') format('otf'), url('fonts/roboto.eot') format('embedded-opentype'), url('fonts/roboto.svg') format('svg');
-    unicode-range: U+000-5FF;
-    size-adjust: 100%;
-}
-
-@font-face {
-    font-family: 'custom-roboto-mono';
-    font-style: normal;
-    font-weight: 400;
-    font-display: block;
-    src: url('fonts/roboto-mono.woff2') format('woff2'), url('fonts/roboto-mono.woff') format('woff'), url('fonts/roboto-mono.ttf') format('truetype'), url('fonts/roboto-mono.otf') format('otf'), url('fonts/roboto-mono.eot') format('embedded-opentype'), url('fonts/roboto-mono.svg') format('svg');
-    unicode-range: U+000-5FF;
-    size-adjust: 87%;
-}
-
-
-
 /* Variables */
 
 :root {
-    color-scheme: dark;
-    
     --max-width: 100rem;
     --action-time: 100ms;
     --overlay-time: 200ms;
@@ -36,44 +10,6 @@
     --loading-time: 1000ms;
 
     --nav-height: calc(2rem + var(--s3));
-
-    --font-normal: 'custom-roboto';
-    --font-code: 'custom-roboto-mono';
-    --background: rgb(34, 32, 36);
-    --foreground: rgb(230, 230, 230);
-    --background-layer: rgba(68, 64, 72, 0.3);
-    --border: rgba(68, 64, 72, 0.7);
-    --code-background: rgb(34, 32, 36);
-    --code-foreground: rgba(159, 149, 168);
-    --action-dark: rgb(136, 128, 252);
-    --action-highlighting: rgb(136, 128, 252);
-    --action: rgb(187, 176, 255);
-    --inset-shadow: rgba(102, 96, 108, 0.6);
-    --outer-shadow: rgba(17, 16, 18, 0.3);
-    --overlay-background: rgba(34, 32, 36, 0.6);
-    --scroll-thumb: rgb(68, 64, 72);
-    --marker: rgb(153, 144, 162);
-}
-
-@media (prefers-color-scheme: light) {
-    :root {
-        color-scheme: light;
-        
-        --background: rgb(155, 155, 155);
-        --foreground: rgb(34, 32, 36);
-        --background-layer: rgba(227, 227, 227, 0.3);
-        --border: rgba(170, 160, 180, 0.7);
-        --code-foreground: rgb(90, 84, 122);
-        --code-background: rgb(195, 195, 195);
-        --action-dark: rgb(113, 105, 153);
-        --action-highlighting: rgba(136, 128, 252, 0.5);
-        --action: rgb(90, 84, 122);
-        --inset-shadow: rgba(227, 227, 227, 0.6);
-        --outer-shadow: rgba(112, 112, 112, 0.2);
-        --overlay-background: rgba(155, 155, 155, 0.6);
-        --scroll-thumb: rgb(195, 195, 195);
-        --marker: rgb(102, 96, 108);
-    }
 }
 
 

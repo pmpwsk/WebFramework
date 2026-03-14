@@ -95,33 +95,6 @@ public class Page : AbstractWatchablePage
         => HeadContainer.Element.Styles;
     
     /// <summary>
-    /// The layout CSS file.
-    /// </summary>
-    public StyleReference LayoutStyle
-    {
-        get => HeadContainer.Element.LayoutStyle;
-        set => HeadContainer.Element.LayoutStyle = value;
-    }
-    
-    /// <summary>
-    /// The theme CSS file.
-    /// </summary>
-    public StyleReference ThemeStyle
-    {
-        get => HeadContainer.Element.ThemeStyle;
-        set => HeadContainer.Element.ThemeStyle = value;
-    }
-    
-    /// <summary>
-    /// Whether the page uses any icons from Bootstrap Icons.
-    /// </summary>
-    public bool IncludeBootstrapIcons
-    {
-        get => HeadContainer.Element.IncludeBootstrapIcons;
-        set => HeadContainer.Element.IncludeBootstrapIcons = value;
-    }
-    
-    /// <summary>
     /// The navigation bar.
     /// </summary>
     public NavBar NavBar

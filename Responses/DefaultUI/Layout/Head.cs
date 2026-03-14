@@ -27,19 +27,12 @@ public class Head : WatchedElement
     
     private readonly OptionalWatchedContainer<Favicon> FaviconContainer;
     
-    private readonly RequiredWatchedContainer<StyleReference> LayoutStyleContainer;
-    
-    private readonly RequiredWatchedContainer<StyleReference> ThemeStyleContainer;
-    
-    private readonly BootstrapIconsReference BootstrapIconsReference;
-    private readonly OptionalWatchedContainer<BootstrapIconsReference> BootstrapIconsContainer;
-    
     /// <summary>
     /// The CSS file references.
     /// </summary>
     public readonly ListWatchedContainer<StyleReference> Styles;
     
-    public Head(Request req, IEnumerable<StyleReference>? styles = null)
+    public Head(Request req, IEnumerable<StyleReference>? additionalStyles = null)
     {
         TitleContainer = new(this, new("Untitled", Server.Config.Domains.TitleExtensions.GetValueAny(req.Domains)));
         DescriptionContainer = new(this, null);
@@ -49,11 +42,14 @@ public class Head : WatchedElement
         var canonicalUrl = req.CanonicalUrl;
         CanonicalContainer = new(this, canonicalUrl == null ? null : new(canonicalUrl));
         FaviconContainer = new(this, null);
-        LayoutStyleContainer = new(this, new(req, $"{Server.Layers.SystemFilesLayerPrefix}/default-ui-layout.css"));
-        ThemeStyleContainer = new(this, new(req, $"{Server.Layers.SystemFilesLayerPrefix}/default-ui-theme.css"));
-        BootstrapIconsReference = new(req);
-        BootstrapIconsContainer = new(this, BootstrapIconsReference);
-        Styles = new(this, styles ?? []);
+        Styles = new(this,
+        [
+            new(req, $"{Server.Layers.SystemFilesLayerPrefix}/default-ui-settings.css"),
+            new(req, $"{Server.Layers.SystemFilesLayerPrefix}/default-ui-theme.css"),
+            new(req, $"{Server.Layers.SystemFilesLayerPrefix}/default-ui-layout.css"),
+            new(req, $"{Server.Layers.SystemFilesLayerPrefix}/bootstrap-icons/bootstrap-icons.min.css"),
+            ..additionalStyles ?? []
+        ]);
     }
     
     /// <summary>
@@ -98,33 +94,6 @@ public class Head : WatchedElement
     {
         get => FaviconContainer.Element;
         set => FaviconContainer.Element = value;
-    }
-    
-    /// <summary>
-    /// The layout CSS file.
-    /// </summary>
-    public StyleReference LayoutStyle
-    {
-        get => LayoutStyleContainer.Element;
-        set => LayoutStyleContainer.Element = value;
-    }
-    
-    /// <summary>
-    /// The theme CSS file.
-    /// </summary>
-    public StyleReference ThemeStyle
-    {
-        get => ThemeStyleContainer.Element;
-        set => ThemeStyleContainer.Element = value;
-    }
-    
-    /// <summary>
-    /// Whether the page uses any icons from Bootstrap Icons.
-    /// </summary>
-    public bool IncludeBootstrapIcons
-    {
-        get => BootstrapIconsContainer.Element != null;
-        set => BootstrapIconsContainer.Element = value ? BootstrapIconsReference : null;
     }
     
     public override string RenderedTag
