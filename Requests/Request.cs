@@ -269,6 +269,12 @@ public class Request
     {
         set => (HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>() ?? throw new Exception("IHttpMaxRequestBodySizeFeature is not supported.")).MaxRequestBodySize = value;
     }
+    
+    public string? AccessControlAllowOrigin
+    {
+        get => HttpContext.Response.Headers.AccessControlAllowOrigin;
+        set => HttpContext.Response.Headers.AccessControlAllowOrigin = value;
+    }
 
     /// <summary>
     /// Throws a BadMethodSignal (status 405) if the HTTP method is something other than GET.
