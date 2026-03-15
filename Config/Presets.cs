@@ -217,6 +217,28 @@ public static class Presets
     public static Nothing DynamicInfoAction(this Page page, params string[] messages)
         => page.DynamicPopupAction("Info", messages);
     
+    /// <summary>
+    /// Creates a list of elements based on the given enumerable, while creating a placeholder if no items are present.
+    /// </summary>
+    public static IEnumerable<AbstractElement> ToElements<T>(this IEnumerable<T> enumerable, Func<IEnumerable<AbstractElement>> notEmptyFunction, Func<T,IEnumerable<AbstractElement>> itemFunction, Func<IEnumerable<AbstractElement>> emptyFunction)
+    {
+        var list =  enumerable.ToList();
+        if (list.Count != 0)
+        {
+            foreach (var element in notEmptyFunction())
+                yield return element;
+            
+            foreach (var item in list)
+                foreach (var element in itemFunction(item))
+                    yield return element;
+        }
+        else
+        {
+            foreach (var element in emptyFunction())
+                yield return element;
+        }
+    }
+    
     public class AuthElements(List<AbstractElement> elements, TextBox passwordInput, TextBox? codeInput)
     {
         public readonly List<AbstractElement> Elements = elements;
