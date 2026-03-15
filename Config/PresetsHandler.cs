@@ -193,6 +193,64 @@ public class PresetsHandler
     /// </summary>
     public virtual void ModifyPage(Request req, Page page)
     {
+        var favicon = Favicon(req);
+        if (favicon != null)
+            page.Favicon = new(req, favicon);
+        
+        page.Menus.Add(new Menu("wf-menu", "Menu", AuthButtons(req)));
+
         page.NavBar.Islands.Add(new([new LinkButton("Home", "/")]));
+        page.NavBar.Islands.Add(new([new PopupButton(new("bi bi-list", "Menu"), "wf-menu")]));
+    }
+    
+    /// <summary>
+    /// Returns a list of appropriate authentication buttons for the given request.
+    /// </summary>
+    public virtual AbstractButton[] AuthButtons(Request req)
+    {
+        string usersPluginPath = UsersPluginPath(req);
+        return req.LoginState switch
+        {
+            LoginState.LoggedIn =>
+                [
+                    new LinkButton(new("bi bi-person", "Account"), $"{usersPluginPath}/"),
+                    new LinkButton(new("bi bi-box-arrow-left", "Logout"), $"{usersPluginPath}/logout")
+                ],
+            LoginState.Banned =>
+                [
+                ],
+            LoginState.Needs2FA =>
+                [
+                    new LinkButton(new("bi bi-box-arrow-left", "Logout"), AccountPathMatches("/2fa")
+                        ? $"{usersPluginPath}/logout{req.CurrentRedirectQuery}"
+                        : $"{usersPluginPath}/2fa{req.CurrentRedirectQuery}"
+                    )
+                ],
+            LoginState.NeedsMailVerification =>
+                [
+                    new LinkButton(new("bi bi-box-arrow-left", "Logout"), AccountPathMatches("/verify")
+                        ? $"{usersPluginPath}/logout{req.CurrentRedirectQuery}"
+                        : $"{usersPluginPath}/verify{req.CurrentRedirectQuery}"
+                    )
+                ],
+            _ =>
+                [
+                    new LinkButton(new("bi bi-key", "Login"), AccountPathMatches("/login") || AccountPathMatches("/register") || AccountPathMatches("/recovery", true)
+                        ? $"{usersPluginPath}/login{req.CurrentRedirectQuery}"
+                        : $"{usersPluginPath}/login?redirect={HttpUtility.UrlEncode(req.ProtoHostPathQuery)}"
+                    ),
+                    new LinkButton(new("bi bi-person-vcard", "Register"), AccountPathMatches("/login") || AccountPathMatches("/register") || AccountPathMatches("/recovery", true)
+                        ? $"{usersPluginPath}/register{req.CurrentRedirectQuery}"
+                        : $"{usersPluginPath}/register?redirect={HttpUtility.UrlEncode(req.ProtoHostPathQuery)}"
+                    )
+                ]
+        };
+
+        bool AccountPathMatches(string relPath, bool allowPrefix = false)
+        {
+            string wantedPath = usersPluginPath + relPath;
+            string testPath = wantedPath.StartsWith("http") ? req.ProtoHostPath : req.FullPath;
+            return wantedPath == testPath || (allowPrefix && testPath.StartsWith(wantedPath + '/'));
+        }
     }
 }

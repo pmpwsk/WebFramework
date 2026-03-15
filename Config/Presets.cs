@@ -191,6 +191,12 @@ public static class Presets
         => Handler.ModifyPage(req, page);
     
     /// <summary>
+    /// Returns a list of appropriate authentication buttons for the given request.
+    /// </summary>
+    public static AbstractButton[] AuthButtons(Request req)
+        => Handler.AuthButtons(req);
+    
+    /// <summary>
     /// Adds a dynamic dialog with the given heading and message lines to the given page and returns an empty action response.
     /// </summary>
     public static Nothing DynamicPopupAction(this Page page, string heading, params string[] messages)
