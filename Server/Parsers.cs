@@ -994,4 +994,13 @@ public static class Parsers
         path = string.Join('/', segments);
         return (proto, host, path, query);
     }
+    
+    /// <summary>
+    /// Saves the given input using the out parameter and returns the same value.
+    /// </summary>
+    public static T Save<T>(this T obj, out T output)
+    {
+        output = obj;
+        return obj;
+    }
 }
