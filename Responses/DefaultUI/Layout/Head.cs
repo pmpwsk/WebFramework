@@ -32,9 +32,9 @@ public class Head : WatchedElement
     /// </summary>
     public readonly ListWatchedContainer<StyleReference> Styles;
     
-    public Head(Request req, IEnumerable<StyleReference>? additionalStyles = null)
+    public Head(Request req, string? title, IEnumerable<StyleReference>? additionalStyles = null)
     {
-        TitleContainer = new(this, new("Untitled", Server.Config.Domains.TitleExtensions.GetValueAny(req.Domains)));
+        TitleContainer = new(this, new(title ?? "Untitled", Server.Config.Domains.TitleExtensions.GetValueAny(req.Domains)));
         DescriptionContainer = new(this, null);
         ViewportSettingsContainer = new(this, new("viewport", "width=device-width, initial-scale=1.0, interactive-widget=resizes-content"));
         CharsetContainer = new(this, new());

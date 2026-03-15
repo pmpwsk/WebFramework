@@ -11,7 +11,7 @@ public class ServerForm : AbstractSubsection, IActionHaver
 {
     public ActionHandler Action { get; set; }
 
-    public ServerForm(IconAndText? heading, ActionHandler action, IEnumerable<AbstractElement>? content = null) : base(heading, content)
+    public ServerForm(IconAndText? heading, IEnumerable<AbstractElement> content, ActionHandler action) : base(heading, content)
     {
         Action = action;
         FixedAttributes.Add(("class", "wf-server-form"));

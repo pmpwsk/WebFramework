@@ -26,10 +26,7 @@ public static class MarkdownParser
         foreach (string domain in domains)
             if (Server.Cache.TryGetValue(domain + path, out Server.CacheEntry? entry) && entry.IsPublic)
             {
-                var page = new Page(req, false)
-                {
-                    Title = entry.Key.After('/').RemoveLast(5).CapitalizeFirstLetter()
-                };
+                var page = new Page(req, false, entry.Key.After('/').RemoveLast(5).CapitalizeFirstLetter());
                 Apply(req, page, entry.EnumerateTextLines());
                 return page;
             }

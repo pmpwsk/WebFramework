@@ -18,9 +18,9 @@ public class Page : AbstractWatchablePage
     /// </summary>
     private readonly RequiredWatchedContainer<Body> BodyContainer;
     
-    public Page(Request req, bool dynamic) : base(req, dynamic)
+    public Page(Request req, bool dynamic, string? title) : base(req, dynamic)
     {
-        HeadContainer = new(this, new(req));
+        HeadContainer = new(this, new(req, title));
         BodyContainer = new(this, new(req));
         Presets.ModifyPage(req, this);
         if (dynamic && !req.IsInternal)
@@ -29,6 +29,12 @@ public class Page : AbstractWatchablePage
             Body.LoadingScreen.IsOpen = true;
             throw new ForcedResponse(this);
         }
+    }
+    
+    public Page(Request req, bool dynamic, string? title, IEnumerable<Section> sections) : this(req, dynamic, title)
+    {
+        foreach (var section in sections)
+            Sections.Add(section);
     }
     
     /// <summary>
