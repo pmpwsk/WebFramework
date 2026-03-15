@@ -57,7 +57,7 @@ html {
 
 /* Flex */
 
-.wf-col, html, body, main, section, .wf-subsection, footer, aside, .wf-menu, .wf-dialog, .wf-button.wf-button-is-container, aside form, .wf-menu form, .wf-row-when-wide {
+.wf-col, html, body, main, section, .wf-subsection, footer, aside, .wf-menu, .wf-dialog, .wf-button.wf-button-is-container, form:has(.wf-button-is-container), aside form, .wf-menu form, .wf-row-when-wide {
     display: flex;
     flex-direction: column;
 }
@@ -149,7 +149,7 @@ aside {
     align-self: flex-start;
 }
 
-.wf-stretch, .wf-button.wf-button-is-container, aside .wf-button, .wf-menu .wf-button, aside form, .wf-menu form, .wf-textbox {
+.wf-stretch, .wf-button.wf-button-is-container, form:has(.wf-button-is-container), aside .wf-button, .wf-menu .wf-button, aside form, .wf-menu form, .wf-textbox {
     align-self: stretch;
 }
 
@@ -468,7 +468,7 @@ aside, main {
     max-width: 100%;
 }
 
-.wf-button.wf-button-is-container, .wf-textbox {
+.wf-button.wf-button-is-container, form:has(.wf-button-is-container), .wf-textbox {
     max-width: 30rem;
 }
 
