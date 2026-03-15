@@ -162,7 +162,7 @@ public class Page : AbstractWatchablePage
     /// <summary>
     /// Closes the current dynamic popup if one is present.
     /// </summary>
-    public void CloseDynamicPopup()
+    public void CloseDynamicDialog()
     {
         if (DynamicDialog != null && DynamicDialog.IsOpen)
         {
@@ -174,7 +174,7 @@ public class Page : AbstractWatchablePage
     /// <summary>
     /// Opens a dialog with the given elements, assuming the page is dynamic.
     /// </summary>
-    public void OpenDynamicPopup(IconAndText heading, IEnumerable<AbstractElement> elements)
+    public void OpenDynamicDialog(IconAndText heading, IEnumerable<AbstractElement> elements)
     {
         if (DynamicDialog == null)
             throw new Exception("There is no dynamic dialog.");
@@ -189,12 +189,12 @@ public class Page : AbstractWatchablePage
     /// <summary>
     /// Adds a simple dialog with the given message and a button to close the dialog, assuming the page is dynamic.
     /// </summary>
-    public void OpenDynamicPopup(IconAndText heading, params string[] messages)
-        => OpenDynamicPopup(heading, [
+    public void OpenDynamicDialog(IconAndText heading, params string[] messages)
+        => OpenDynamicDialog(heading, [
             ..messages.Select(message => new Paragraph(message)),
             new ServerActionButton("Okay", _ =>
             {
-                CloseDynamicPopup();
+                CloseDynamicDialog();
                 return Task.FromResult<IActionResponse>(new Nothing());
             })
         ]);
