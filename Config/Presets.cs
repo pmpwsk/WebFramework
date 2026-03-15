@@ -197,22 +197,31 @@ public static class Presets
         => Handler.AuthButtons(req);
     
     /// <summary>
-    /// Adds a dynamic dialog with the given heading and message lines to the given page and returns an empty action response.
+    /// Opens a dynamic dialog with the given heading and message lines to the given page and returns an empty action response.
     /// </summary>
-    public static Nothing DynamicPopupAction(this Page page, string heading, params string[] messages)
+    public static Nothing DynamicPopupAction(this Page page, IconAndText heading, IEnumerable<AbstractElement> elements)
     {
-        page.AddDynamicPopup(heading, messages);
+        page.OpenDynamicPopup(heading, elements);
         return new Nothing();
     }
     
     /// <summary>
-    /// Adds a dynamic error popup with the given message lines to the given page and returns an empty action response.
+    /// Opens a dynamic dialog with the given heading and message lines to the given page and returns an empty action response.
+    /// </summary>
+    public static Nothing DynamicPopupAction(this Page page, IconAndText heading, params string[] messages)
+    {
+        page.OpenDynamicPopup(heading, messages);
+        return new Nothing();
+    }
+    
+    /// <summary>
+    /// Opens a dynamic error popup with the given message lines to the given page and returns an empty action response.
     /// </summary>
     public static Nothing DynamicErrorAction(this Page page, params string[] messages)
         => page.DynamicPopupAction("Error", messages);
     
     /// <summary>
-    /// Adds a dynamic info popup with the given message lines to the given page and returns an empty action response.
+    /// Opens a dynamic info popup with the given message lines to the given page and returns an empty action response.
     /// </summary>
     public static Nothing DynamicInfoAction(this Page page, params string[] messages)
         => page.DynamicPopupAction("Info", messages);

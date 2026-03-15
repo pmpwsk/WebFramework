@@ -37,6 +37,8 @@ public class Body : WatchedElement
     /// </summary>
     public readonly ListWatchedContainer<Dialog> Dialogs;
     
+    private readonly OptionalWatchedContainer<Dialog> DynamicDialogContainer;
+    
     private readonly RequiredWatchedContainer<LoadingScreen> LoadingScreenContainer;
     
     /// <summary>
@@ -49,7 +51,7 @@ public class Body : WatchedElement
     /// </summary>
     public readonly ListWatchedContainer<ScriptReference> Scripts;
     
-    public Body(Request req, IEnumerable<Menu>? menus = null, IEnumerable<Dialog>? dialogs = null, IEnumerable<ScriptReference>? scripts = null)
+    public Body(Request req, bool dynamic, IEnumerable<Menu>? menus = null, IEnumerable<Dialog>? dialogs = null, IEnumerable<ScriptReference>? scripts = null)
     {
         TopCoverContainer = new(this, new("span") { Class = "wf-top-cover" });
         MenuBackgroundContainer = new(this, new("span") { Class = "wf-menu-background" });
@@ -58,6 +60,7 @@ public class Body : WatchedElement
         PageContentContainer = new(this, new(req));
         Menus = new(this, menus ?? []);
         Dialogs = new(this, dialogs ?? []);
+        DynamicDialogContainer = new(this, dynamic ? new Dialog("wf-dynamic-dialog", "Dynamic dialog", false) : null);
         LoadingScreenContainer = new(this, new(false));
         DefaultScript = new(this, new(req));
         Scripts = new(this, scripts ?? []);
@@ -79,6 +82,15 @@ public class Body : WatchedElement
     {
         get => PageContentContainer.Element;
         set => PageContentContainer.Element = value;
+    }
+    
+    /// <summary>
+    /// The page's dynamic dialog.
+    /// </summary>
+    public Dialog? DynamicDialog
+    {
+        get => DynamicDialogContainer.Element;
+        set => DynamicDialogContainer.Element = value;
     }
     
     /// <summary>

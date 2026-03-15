@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Http;
+using uwap.WebFramework.Responses.Actions;
+using uwap.WebFramework.Responses.Base;
 using uwap.WebFramework.Responses.Dynamic;
 
 namespace uwap.WebFramework.Responses.DefaultUI;
@@ -21,7 +23,7 @@ public class Page : AbstractWatchablePage
     public Page(Request req, bool dynamic, string? title) : base(req, dynamic)
     {
         HeadContainer = new(this, new(req, title));
-        BodyContainer = new(this, new(req));
+        BodyContainer = new(this, new(req, dynamic));
         Presets.ModifyPage(req, this);
         if (dynamic && !req.IsInternal)
         {
@@ -122,6 +124,12 @@ public class Page : AbstractWatchablePage
         => BodyContainer.Element.Dialogs;
     
     /// <summary>
+    /// The page's dynamic dialog.
+    /// </summary>
+    public Dialog? DynamicDialog
+        => BodyContainer.Element.DynamicDialog;
+    
+    /// <summary>
     /// The JavaScript file references.
     /// </summary>
     public ListWatchedContainer<ScriptReference> Scripts
@@ -152,26 +160,44 @@ public class Page : AbstractWatchablePage
     }
     
     /// <summary>
+    /// Closes the current dynamic popup if one is present.
+    /// </summary>
+    public void CloseDynamicPopup()
+    {
+        if (DynamicDialog != null && DynamicDialog.IsOpen)
+        {
+            DynamicDialog.IgnoreActions = true;
+            DynamicDialog.IsOpen = false;
+        }
+    }
+    
+    /// <summary>
+    /// Opens a dialog with the given elements, assuming the page is dynamic.
+    /// </summary>
+    public void OpenDynamicPopup(IconAndText heading, IEnumerable<AbstractElement> elements)
+    {
+        if (DynamicDialog == null)
+            throw new Exception("There is no dynamic dialog.");
+        
+        DynamicDialog.Header.Content = heading;
+        DynamicDialog.Items.ReplaceAll(elements.ToList());
+        DynamicDialog.IgnoreActions = false;
+        if (!DynamicDialog.IsOpen)
+            DynamicDialog.IsOpen = true;
+    }
+    
+    /// <summary>
     /// Adds a simple dialog with the given message and a button to close the dialog, assuming the page is dynamic.
     /// </summary>
-    public void AddDynamicPopup(string heading, params string[] messages)
-    {
-        foreach (var other in Dialogs.EnumerateTyped().ToList())
-            if (other.Id == "wf-dynamic-error" || other.IsOpen)
-                Dialogs.Remove(other);
-        
-        var dialog = new Dialog
-        (
-            "wf-dynamic-error",
-            heading,
-            true,
-            [
-                ..messages.Select(message => new Paragraph(message)),
-                new PopupButton("Okay", "wf-dynamic-error")
-            ]
-        );
-        Dialogs.Add(dialog);
-    }
+    public void OpenDynamicPopup(IconAndText heading, params string[] messages)
+        => OpenDynamicPopup(heading, [
+            ..messages.Select(message => new Paragraph(message)),
+            new ServerActionButton("Okay", _ =>
+            {
+                CloseDynamicPopup();
+                return Task.FromResult<IActionResponse>(new Nothing());
+            })
+        ]);
     
     public override IEnumerable<string> EnumerateChunks()
     {

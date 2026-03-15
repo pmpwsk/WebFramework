@@ -6,35 +6,14 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// <summary>
 /// A default UI dialog.
 /// </summary>
-public class Dialog : RequiredIdElement
+public class Dialog : AbstractOverlay
 {
-    private readonly RequiredWatchedContainer<Heading2> HeaderContainer;
-    
     private readonly OptionalWatchedAttribute IsOpenAttribute;
     
-    /// <summary>
-    /// The menu's items.
-    /// </summary>
-    public readonly ListWatchedContainer<AbstractElement> Items;
-    
-    public Dialog(string id, IconAndText heading, bool isOpen, IEnumerable<AbstractElement>? items = null) : base(id)
+    public Dialog(string id, IconAndText heading, bool isOpen, IEnumerable<AbstractElement>? items = null) : base(id, heading, items)
     {
-        HeaderContainer = new(this, new(heading));
         IsOpenAttribute = new(this, "class", isOpen ? "wf-is-open" : null);
-        Items = new(this, items ?? []);
         FixedAttributes.Add(("class", "wf-dialog"));
-    }
-    
-    public override string RenderedTag
-        => "div";
-    
-    /// <summary>
-    /// The menu's heading element.
-    /// </summary>
-    public Heading2 Header
-    {
-        get => HeaderContainer.Element;
-        set => HeaderContainer.Element = value;
     }
     
     /// <summary>

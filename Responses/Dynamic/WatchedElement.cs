@@ -1,4 +1,5 @@
 using uwap.WebFramework.Responses.Base;
+using uwap.WebFramework.Responses.DefaultUI;
 
 namespace uwap.WebFramework.Responses.Dynamic;
 
@@ -58,6 +59,13 @@ public abstract class WatchedElement : AbstractElement, IWatchedParent
         else
             return [ SystemId ];
     }
+    
+    /// <summary>
+    /// Returns whether actions within this element should be ignored.
+    /// </summary>
+    public bool HasActionIgnoringParent
+        => (this is AbstractOverlay overlay && overlay.IgnoreActions)
+                || (ParentContainer != null && SystemId != null && ParentContainer.Parent is WatchedElement watchedParent && watchedParent.HasActionIgnoringParent);
 
     public override IEnumerable<(string Name, string? Value)> RenderedAttributes
         => [

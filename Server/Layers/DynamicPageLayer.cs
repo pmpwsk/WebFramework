@@ -77,6 +77,9 @@ public static partial class Server
                             return StatusResponse.BadRequest;
                     }
                     
+                    if (element.HasActionIgnoringParent)
+                        return new TextResponse(JsonSerializer.Serialize(new Nothing().Generate(req)));
+                    
                     foreach (var (encodedKey, stringValues) in req.Form.Data)
                     {
                         var key = Uri.UnescapeDataString(encodedKey);
