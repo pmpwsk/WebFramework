@@ -281,14 +281,17 @@ function runServerAction(submitter, form)
     request.onload = () =>
     {
         let action = JSON.parse(request.responseText);
+        let stopLoading = true;
         switch (action.type)
         {
             case "Nothing":
                 break;
             case "Navigate":
+                stopLoading = false;
                 window.location.assign(action.location);
                 break;
             case "Reload":
+                stopLoading = false;
                 window.location.reload();
                 break;
             default:
@@ -296,7 +299,7 @@ function runServerAction(submitter, form)
                 break;
         }
 
-        if (loadingScreen)
+        if (stopLoading && loadingScreen)
             removeClass(loadingScreen, "wf-is-open");
     }
     let formData = new FormData();
