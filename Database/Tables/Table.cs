@@ -754,7 +754,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
         ModifyTransactionData modify = new();
         ReadyWaiter waiter = new();
         T? newValue = null;
-        _ = AsyncTransactionNullableAsync(value.Id, async transaction =>
+        modify.Task = AsyncTransactionNullableAsync(value.Id, async transaction =>
         {
             transaction.FileActions = modify.FileActions;
             newValue = transaction.Value ?? throw new DatabaseEntryMissingException();

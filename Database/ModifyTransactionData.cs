@@ -15,6 +15,11 @@ public class ModifyTransactionData : IDisposable, IAsyncDisposable
     public readonly ReadyWaiter Waiter = new();
     
     /// <summary>
+    /// The transaction task.
+    /// </summary>
+    internal Task? Task = null;
+    
+    /// <summary>
     /// Waits for the transaction to complete.
     /// </summary>
     public Task WaitAsync()
@@ -27,6 +32,8 @@ public class ModifyTransactionData : IDisposable, IAsyncDisposable
     {
         GC.SuppressFinalize(this);
         await Waiter.ReadyAsync();
+        if (Task != null)
+            await Task;
         Waiter.Dispose();
     }
 
