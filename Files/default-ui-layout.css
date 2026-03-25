@@ -395,7 +395,7 @@ pre {
     overflow: auto hidden;
 }
 
-html {
+html, body {
     overflow-x: hidden;
 }
 
