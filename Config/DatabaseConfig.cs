@@ -25,7 +25,7 @@ public static partial class Server
             /// <summary>
             /// The list of nodes in the cluster.
             /// </summary>
-            public static List<ClusterNode> Cluster { get; set; } = [];
+            public static List<ClusterNode> ClusterNodes { get; set; } = [];
 
             /// <summary>
             /// The domain key for the certificate to use when connecting to other nodes in the cluster.

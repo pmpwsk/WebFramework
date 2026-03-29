@@ -6,13 +6,38 @@ namespace uwap.WebFramework.Database;
 /// <summary>
 /// Contains the table functionality that doesn't require knowledge of the stored type.
 /// </summary>
-public abstract class AbstractTable(string name)
+public abstract class AbstractTable
 {
     /// <summary>
     /// The name of the table.
     /// </summary>
-    public readonly string Name = name;
+    public readonly string Name;
     
+    /// <summary>
+    /// The cluster nodes the table should be shared with.<br/>
+    /// Operations should use <c>GetReachableNodes()</c> instead since it filters out known-disconnected nodes and shuffles the nodes each time.
+    /// </summary>
+    internal List<ClusterNode> ClusterNodes;
+
+    protected AbstractTable(string name, List<ClusterNode> clusterNodes)
+    {
+        if (!clusterNodes.All(node => Server.Config.Database.ClusterNodes.Contains(node)))
+            throw new Exception("The table's cluster nodes must be present in Server.Config.Database.ClusterNodes.");
+        
+        Name = name;
+        ClusterNodes = clusterNodes;
+    }
+    
+    /// <summary>
+    /// Lists the nodes that are reachable for this table.
+    /// </summary>
+    internal ClusterNode[] GetReachableNodes()
+    {
+        var nodes = ClusterNodes.Where(node => node.IsReachable).ToArray();
+        Random.Shared.Shuffle(nodes);
+        return nodes;
+    }
+
     /// <summary>
     /// The iteration of the stored type, used for migration.<br/>
     /// The value cannot be zero.
@@ -34,11 +59,6 @@ public abstract class AbstractTable(string name)
     /// Checks and fixes any issues with the table, like memory or disk corruption.
     /// </summary>
     internal abstract Task CheckAndFixAsync();
-    
-    /// <summary>
-    /// Lists the nodes that are reachable for this table.
-    /// </summary>
-    internal abstract ClusterNode[] GetReachableNodes();
     
     /// <summary>
     /// Creates a new locked table entry with the given ID and returns it as an abstract entry.

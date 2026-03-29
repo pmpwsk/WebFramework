@@ -13,10 +13,10 @@ public static partial class Server
         {
             if (!(req.Query.TryGetValue("table", out var tableName) && req.Query.TryGetValue("iteration", out var typeIterationString) && ulong.TryParse(typeIterationString, out var typeIteration)))
                 throw new ForcedResponse(StatusResponse.BadRequest);
-            if (node.TableNames != null && !node.TableNames.Contains(tableName))
-                throw new ForcedResponse(StatusResponse.Forbidden);
             if (!Tables.Dictionary.TryGetValue(tableName, out var table))
                 throw new ForcedResponse(StatusResponse.NotFound);
+            if (!table.ClusterNodes.Contains(node))
+                throw new ForcedResponse(StatusResponse.Forbidden);
             if (table.TypeIteration == typeIteration)
                 throw new ForcedResponse(StatusResponse.Teapot);
             return table;
@@ -36,7 +36,7 @@ public static partial class Server
             if (cert == null)
                 return StatusResponse.NotAuthenticated;
 
-            var node = req.Query.TryGetValue("host", out var host) ? Config.Database.Cluster.FirstOrDefault(n => n.Host == host) : null;
+            var node = req.Query.TryGetValue("host", out var host) ? Config.Database.ClusterNodes.FirstOrDefault(n => n.Host == host) : null;
             if (node == null || !node.CertificateValidators.Any(v => v.Validate(cert, node.Host.Before(':'))))
                 return StatusResponse.Forbidden;
 

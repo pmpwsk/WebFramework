@@ -8,17 +8,12 @@ namespace uwap.WebFramework.Database;
 /// <summary>
 /// Describes a node in a WebFramework database cluster.
 /// </summary>
-public class ClusterNode(string host, List<string>? tableNames, List<ICertificateValidator> certificateValidators, bool isReachable)
+public class ClusterNode(string host, List<ICertificateValidator> certificateValidators, bool isReachable)
 {
     /// <summary>
     /// The node's hostname. This can be either an IP address or a domain name, and may include a port like <c>uwap.org:443</c>.
     /// </summary>
     public string Host = host;
-
-    /// <summary>
-    /// The tables that should be shared with this node or null to include all tables.
-    /// </summary>
-    public List<string>? TableNames = tableNames;
     
     /// <summary>
     /// The validator to use in order to validate this node's certificate (server and client certificate).
@@ -103,7 +98,7 @@ public class ClusterNode(string host, List<string>? tableNames, List<ICertificat
         IsConnected = true;
         Console.WriteLine($"Connected to database node: {Host}");
         if (IsReachable)
-            foreach (var table in Tables.Dictionary.Values.Where(table => TableNames == null || TableNames.Contains(table.Name)))
+            foreach (var table in Tables.Dictionary.Values.Where(table => table.ClusterNodes.Contains(this)))
             {
                 var state = await PullStateAsync(table);
                 if (state != null)

@@ -241,22 +241,22 @@ public static class Tables
     /// </summary>
     public static async Task MarkSelf()
     {
-        if (Server.Config.Database.Cluster.Count == 0)
+        if (Server.Config.Database.ClusterNodes.Count == 0)
             return;
 
         if (Server.GetCertificate(Server.Config.Database.CertificateDomain) == null)
         {
             Console.WriteLine($"No certificate found for database (domain \"{Server.Config.Database.CertificateDomain}\"), database will not connect to the cluster.");
-            Server.Config.Database.Cluster = [];
+            Server.Config.Database.ClusterNodes = [];
             return;
         }
 
-        await Task.WhenAll(Server.Config.Database.Cluster.Select(node => node.MarkSelfAsync()));
+        await Task.WhenAll(Server.Config.Database.ClusterNodes.Select(node => node.MarkSelfAsync()));
         
         if (_Self == null)
         {
             Console.WriteLine("Could not identify any node as this process, database will not connect to the cluster.");
-            Server.Config.Database.Cluster = [];
+            Server.Config.Database.ClusterNodes = [];
         }
     }
     
@@ -265,7 +265,7 @@ public static class Tables
     /// </summary>
     public static void StartMonitoringConnections()
     {
-        foreach (var node in Server.Config.Database.Cluster.Where(node => node.IsReachable))
+        foreach (var node in Server.Config.Database.ClusterNodes.Where(node => node.IsReachable))
             _ = node.MonitorConnection();
     }
     
@@ -274,7 +274,7 @@ public static class Tables
     /// </summary>
     public static void StopMonitoringConnections()
     {
-        foreach (var node in Server.Config.Database.Cluster.Where(node => node.IsReachable))
+        foreach (var node in Server.Config.Database.ClusterNodes.Where(node => node.IsReachable))
             node.StopMonitoringConnection();
     }
 }

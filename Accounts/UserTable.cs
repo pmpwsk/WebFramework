@@ -8,7 +8,7 @@ namespace uwap.WebFramework.Accounts;
 /// <summary>
 /// A database table to save and manage users.
 /// </summary>
-public class UserTable(string name) : Table<User>(name)
+public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User>(name, clusterNodes)
 {
     /// <summary>
     /// Index to find users by their username.
@@ -22,8 +22,8 @@ public class UserTable(string name) : Table<User>(name)
 
     protected override IEnumerable<ITableIndex<User>> Indices => [ UsernameIndex, MailAddressIndex ];
 
-    public static UserTable Import(string name)
-        => Tables.Dictionary.TryGetValue(name, out AbstractTable? existingTable) ? (UserTable)existingTable : new UserTable(name);
+    public new static UserTable Import(string name, List<ClusterNode> clusterNodes)
+        => Tables.Dictionary.TryGetValue(name, out AbstractTable? existingTable) ? (UserTable)existingTable : new UserTable(name, clusterNodes);
 
     public override ulong TypeIteration
         => 1;

@@ -48,14 +48,14 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     /// <summary>
     /// Returns the table with the given name, or loads/creates it if it isn't present already.
     /// </summary>
-    public static Table<T> Import(string name, ulong typeIteration, AbstractSerializer serializer)
-        => Tables.Dictionary.TryGetValue(name, out AbstractTable? existingTable) ? (Table<T>)existingTable : new Table<T>(name);
+    public static Table<T> Import(string name, List<ClusterNode> clusterNodes)
+        => Tables.Dictionary.TryGetValue(name, out AbstractTable? existingTable) ? (Table<T>)existingTable : new Table<T>(name, clusterNodes);
     
     /// <summary>
     /// Creates a new table object with the given name and loads the entries.
     /// </summary>
-    protected Table(string name)
-        : base(name)
+    protected Table(string name, List<ClusterNode> clusterNodes)
+        : base(name, clusterNodes)
     {
         Tables.Dictionary[name] = this;
         try
@@ -488,13 +488,6 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
         var holder = await entry.Lock.WaitWriteAsync();
         Data[id] = entry;
         return (entry, holder);
-    }
-    
-    internal override ClusterNode[] GetReachableNodes()
-    {
-        var nodes = Server.Config.Database.Cluster.Where(node => node.IsReachable && (node.TableNames == null || node.TableNames.Contains(Name))).ToArray();
-        Random.Shared.Shuffle(nodes);
-        return nodes;
     }
     
     /// <summary>
