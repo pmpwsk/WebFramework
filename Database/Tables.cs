@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework.Database;
@@ -34,6 +35,21 @@ public static class Tables
     {
         foreach (var t in Dictionary)
             await t.Value.CheckAndFixAsync();
+    }
+    
+    /// <summary>
+    /// Attempts to find the loaded table with the given name and table type.
+    /// </summary>
+    public static T? TryGetTable<T>(string name) where T : AbstractTable
+        => Dictionary.TryGetValue(name, out var abstractTable) && abstractTable is T typedTable ? typedTable : null;
+    
+    /// <summary>
+    /// Attempts to find the loaded table with the given name and table type.
+    /// </summary>
+    public static bool TryGetTable<T>(string name, [MaybeNullWhen(false)] out T table) where T : AbstractTable
+    {
+        table = TryGetTable<T>(name);
+        return table != null;
     }
     
     /// <summary>

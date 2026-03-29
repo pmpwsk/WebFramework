@@ -49,7 +49,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     /// Returns the table with the given name, or loads/creates it if it isn't present already.
     /// </summary>
     public static Table<T> Import(string name, List<ClusterNode> clusterNodes)
-        => Tables.Dictionary.TryGetValue(name, out AbstractTable? existingTable) ? (Table<T>)existingTable : new Table<T>(name, clusterNodes);
+        => Tables.TryGetTable<Table<T>>(name) ?? new Table<T>(name, clusterNodes);
     
     /// <summary>
     /// Creates a new table object with the given name and loads the entries.
