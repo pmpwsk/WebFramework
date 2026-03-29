@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Net.Http.Headers;
 
 namespace uwap.WebFramework.Responses;
 
@@ -19,7 +20,9 @@ public class ByteArrayDownloadResponse(byte[] bytes, string filename, string? ti
 
     protected override async Task WriteTo(HttpContext context)
     {
-        context.Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{Filename}\"");
+        var contentDisposition = new ContentDispositionHeaderValue("attachment");
+        contentDisposition.SetHttpFileName(Filename);
+        context.Response.Headers.Append("Content-Disposition", contentDisposition.ToString());
         await context.Response.BodyWriter.WriteAsync(Bytes);
     }
 }

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Net.Http.Headers;
 
 namespace uwap.WebFramework.Responses;
 
@@ -21,7 +22,9 @@ public class FileDownloadResponse(string path, string filename, string? timestam
 
     protected override async Task WriteTo(HttpContext context)
     {
-        context.Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{Filename}\"");
+        var contentDisposition = new ContentDispositionHeaderValue("attachment");
+        contentDisposition.SetHttpFileName(Filename);
+        context.Response.Headers.Append("Content-Disposition", contentDisposition.ToString());
         await context.Response.SendFileAsync(Path);
     }
 
