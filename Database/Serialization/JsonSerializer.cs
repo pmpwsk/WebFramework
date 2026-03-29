@@ -16,7 +16,6 @@ public class JsonSerializer(JsonSerializerOptions options) : AbstractSerializer
         WriteIndented = true,
         IncludeFields = true,
         IgnoreReadOnlyProperties = true,
-        IgnoreReadOnlyFields = true,
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         DefaultIgnoreCondition = JsonIgnoreCondition.Never,
         Converters =
