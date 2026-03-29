@@ -1,6 +1,5 @@
 using uwap.WebFramework.Responses.Actions;
 using uwap.WebFramework.Responses.Base;
-using uwap.WebFramework.Responses.Dynamic;
 
 namespace uwap.WebFramework.Responses.DefaultUI;
 
