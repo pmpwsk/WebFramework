@@ -38,11 +38,17 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     /// Returns the list of indices to update.
     /// </summary>
     protected virtual IEnumerable<ITableIndex<T>> Indices => [];
+
+    public override ulong TypeIteration
+        => 1;
     
+    public override AbstractSerializer Serializer
+        => Serializers.DataContractJson;
+
     /// <summary>
     /// Returns the table with the given name, or loads/creates it if it isn't present already.
     /// </summary>
-    public static Table<T> Import(string name)
+    public static Table<T> Import(string name, ulong typeIteration, AbstractSerializer serializer)
         => Tables.Dictionary.TryGetValue(name, out AbstractTable? existingTable) ? (Table<T>)existingTable : new Table<T>(name);
     
     /// <summary>
@@ -52,7 +58,15 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
         : base(name)
     {
         Tables.Dictionary[name] = this;
-        Initialize().GetAwaiter().GetResult();
+        try
+        {
+            Initialize().GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            Tables.Dictionary.Remove(name);
+            throw new Exception($"Failed to load table '{Name}': {ex.Message}", ex);
+        }
     }
 
     /// <summary>
@@ -60,6 +74,9 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     /// </summary>
     private async Task Initialize()
     {
+        if (TypeIteration == 0)
+            throw new Exception("The type iteration cannot be zero.");
+        
         string path = "../Database/" + Name.ToBase64PathSafe();
         string oldPath = "../Database/" + Name;
         string oldBuffer = "../Database/Buffer/" + Name;
@@ -114,17 +131,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
             foreach (var keyFile in new DirectoryInfo(oldPath).GetFiles("*.json", SearchOption.TopDirectoryOnly))
             {
                 string id = keyFile.Name[..^5];
-                byte[] serialized = await File.ReadAllBytesAsync(keyFile.FullName);
-                var value = Serialization.Deserialize<T>(this, id, serialized);
-                if (value == null)
-                {
-                    Console.WriteLine($"Failed to deserialize old database entry \"{Name} / {id}\" for migration.");
-                    continue;
-                }
-                serialized = Serialization.Serialize(value);
-                string targetPath = $"{path}/Entries/{id.ToBase64PathSafe()}.json";
-                await File.WriteAllBytesAsync(targetPath, serialized);
-                keyFile.Delete();
+                File.Move(keyFile.FullName, $"{path}/Entries/{id.ToBase64PathSafe()}.json");
             }
             
             if (new DirectoryInfo(oldPath).GetFiles("*", SearchOption.AllDirectories).Length == 0)
@@ -136,8 +143,55 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
         if (Directory.Exists("../Database/Buffer") && new DirectoryInfo("../Database/Buffer").GetDirectories("*", SearchOption.TopDirectoryOnly).Length == 0)
             Directory.Delete("../Database/Buffer", true);
 
-        // load entries
-        foreach (var keyFile in new DirectoryInfo(path + "/Entries").GetFiles("*.json", SearchOption.TopDirectoryOnly))
+        // migrate and load entries
+        string entryDir = path + "/Entries";
+        var entryFiles = new DirectoryInfo(entryDir).GetFiles("*.json", SearchOption.TopDirectoryOnly);
+        var statePath = path + "/State.json";
+        TableState state = File.Exists(statePath)
+            ? Serializers.DataContractJson.DeserializeNullable<TableState>(await File.ReadAllBytesAsync(statePath))
+              ?? throw new Exception("Failed to deserialize table state.")
+            : new(0);
+        
+        string entryBackup = path + "/Entries_Backup";
+        if (state.TypeIteration != TypeIteration)
+        {
+            if (entryFiles.Length == 0)
+                state.TypeIteration = TypeIteration;
+            else
+            {
+                try
+                {
+                    // migrate entries
+                    if (Directory.Exists(entryBackup))
+                        throw new Exception($"A previous table migration was aborted, please manually review the state and ensure that path '{entryBackup}' no longer exists.");
+                    Directory.Move(entryDir, entryBackup);
+                    Directory.CreateDirectory(entryDir);
+                    
+                    foreach (var keyFile in entryFiles)
+                    {
+                        string id = keyFile.Name[..^5].FromBase64PathSafe();
+                        byte[] serialized = await File.ReadAllBytesAsync($"{entryBackup}/{keyFile.Name}");
+                        
+                        while (state.TypeIteration != TypeIteration)
+                            (serialized, state.TypeIteration) = UpgradeStep(id, (serialized, state.TypeIteration))
+                                                                ?? throw new Exception($"Could not upgrade table '{Name}' from version '{state.TypeIteration}'.");
+                        if (!Serializer.Deserialize<MinimalTableValue>(serialized).Deleted)
+                            Serializer.Deserialize<T>(serialized);
+                        await File.WriteAllBytesAsync(keyFile.FullName, serialized);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Directory.Delete(entryDir, true);
+                    Directory.Move(entryBackup, entryDir);
+                    throw new Exception($"Failed to migrate and load table '{Name}': {ex.Message}", ex);
+                }
+            }
+            
+            await File.WriteAllBytesAsync(statePath, Serializers.DataContractJson.Serialize(state));
+        }
+        
+        foreach (var keyFile in entryFiles)
         {
             string id = keyFile.Name[..^5].FromBase64PathSafe();
             byte[] serialized = await File.ReadAllBytesAsync(keyFile.FullName);
@@ -146,7 +200,17 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
             
             await UpdateIndicesAsync(entry);
         }
+        
+        if (Directory.Exists(entryBackup))
+            Directory.Delete(entryBackup, true);
     }
+    
+    /// <summary>
+    /// Migrates the given serialized table entry with the given type iteration to any higher type iteration.<br/>
+    /// The serialized value might be a placeholder for a deleted entry instead of the expected type, that might still need to be re-serialized.
+    /// </summary>
+    protected virtual (byte[] Serialized, ulong TypeIteration)? UpgradeStep(string id, (byte[] Serialized, ulong TypeIteration) current)
+        => null;
 
     internal override Dictionary<string, MinimalTableValue> GetState()
         => Data.ToDictionary(x => x.Key, x => x.Value.EntryInfo);
@@ -293,7 +357,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     
     internal override async Task UpdateEntryAsync(ClusterNode node, string id, byte[] serialized)
     {
-        var remoteInfo = Serialization.Deserialize<MinimalTableValue>(this, id, serialized);
+        var remoteInfo = Serializer.DeserializeNullable<MinimalTableValue>(serialized);
         if (remoteInfo == null)
         {
             Console.WriteLine($"Failed to deserialize pulled entry: \"{Name} / {id}\"");
@@ -420,7 +484,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     {
         using var h = await CreationLock.WaitAsync();
         
-        var entry = new TableEntry<T>(this, id, Serialization.Serialize(new MinimalTableValue { Deleted = true, Timestamp = 0 }));
+        var entry = new TableEntry<T>(this, id, Serializer.Serialize(new MinimalTableValue { Deleted = true, Timestamp = 0 }));
         var holder = await entry.Lock.WaitWriteAsync();
         Data[id] = entry;
         return (entry, holder);
@@ -432,12 +496,6 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
         Random.Shared.Shuffle(nodes);
         return nodes;
     }
-    
-    public override Version GetTypeVersion()
-        => Tables.GetTypeVersion(typeof(T));
-    
-    public override Version GetMinVersion()
-        => new(0, 0, 0, 0);
     
     /// <summary>
     /// Returns whether the table contains an entry with the given ID.
@@ -672,18 +730,16 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
                 foreach (var fileAction in transaction.FileActions)
                     fileAction.Commit(transaction.Value, timestamp);
                 
-                transaction.Value.AssemblyVersion = GetTypeVersion();
                 transaction.Value.Timestamp = timestamp;
-                serialized = Serialization.Serialize(transaction.Value);
+                serialized = Serializer.Serialize(transaction.Value);
             }
             else
             {
                 entry?.DeleteFileDirectories();
                 
-                serialized = Serialization.Serialize(new MinimalTableValue
+                serialized = Serializer.Serialize(new MinimalTableValue
                 {
                     Deleted = true,
-                    AssemblyVersion = GetTypeVersion(),
                     Timestamp = timestamp
                 });
             }

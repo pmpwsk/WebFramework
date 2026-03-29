@@ -12,22 +12,23 @@ public abstract class AbstractTable(string name)
     /// The name of the table.
     /// </summary>
     public readonly string Name = name;
+    
+    /// <summary>
+    /// The iteration of the stored type, used for migration.<br/>
+    /// The value cannot be zero.
+    /// </summary>
+    public abstract ulong TypeIteration { get; }
+    
+    /// <summary>
+    /// The serializer to use.
+    /// </summary>
+    public abstract AbstractSerializer Serializer { get; }
 
     /// <summary>
     /// Returns a dictionary containing each entry's ID and its value's basic value information. 
     /// </summary>
     /// <returns></returns>
     internal abstract Dictionary<string, MinimalTableValue> GetState();
-    
-    /// <summary>
-    /// Returns the version of the stored type.
-    /// </summary>
-    public abstract Version GetTypeVersion();
-    
-    /// <summary>
-    /// Returns the minimum type version another cluster node needs to communicate with this server.
-    /// </summary>
-    public abstract Version GetMinVersion();
     
     /// <summary>
     /// Checks and fixes any issues with the table, like memory or disk corruption.

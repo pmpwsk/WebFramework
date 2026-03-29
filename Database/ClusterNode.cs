@@ -125,45 +125,45 @@ public class ClusterNode(string host, List<string>? tableNames, List<ICertificat
     /// <summary>
     /// Creates a URL query part to specific the table name and version information depending on whether it's a reading or writing request.
     /// </summary>
-    private static string TableQuery(AbstractTable table, bool readingRequest)
-        => $"table={HttpUtility.UrlEncode(table.Name)}&{(readingRequest ? "" : "min-")}version={(readingRequest ? table.GetTypeVersion() : table.GetMinVersion()).ToString()}";
+    private static string TableQuery(AbstractTable table)
+        => $"table={HttpUtility.UrlEncode(table.Name)}&iteration={table.TypeIteration.ToString()}";
     
     /// <summary>
     /// Sends a lock request while receiving the node's list of existing lock requests.
     /// </summary>
     internal Task<string?> SendLockAsync(AbstractTable table, string id, long timestamp, string randomness)
-        => GetStringAsync($"/lock?{TableQuery(table, false)}&id={HttpUtility.UrlEncode(id)}&timestamp={timestamp}&randomness={randomness}", Server.Config.Database.RequestTimeout);
+        => GetStringAsync($"/lock?{TableQuery(table)}&id={HttpUtility.UrlEncode(id)}&timestamp={timestamp}&randomness={randomness}", Server.Config.Database.RequestTimeout);
     
     /// <summary>
     /// Requests to cancel a lock request.
     /// </summary>
     internal Task<string?> SendCancelAsync(AbstractTable table, string id, long timestamp, string randomness)
-        => GetStringAsync($"/cancel?{TableQuery(table, false)}&id={HttpUtility.UrlEncode(id)}&timestamp={timestamp}&randomness={randomness}", Server.Config.Database.RequestTimeout);
+        => GetStringAsync($"/cancel?{TableQuery(table)}&id={HttpUtility.UrlEncode(id)}&timestamp={timestamp}&randomness={randomness}", Server.Config.Database.RequestTimeout);
     
     /// <summary>
     /// Pushes a table entry update along with the transaction's lock request.
     /// </summary>
     internal Task PushChangeAsync(AbstractTable table, string id, long timestamp, string randomness, byte[] serialized)
-        => PostBytesAsync($"/change?{TableQuery(table, false)}&id={HttpUtility.UrlEncode(id)}&timestamp={timestamp}&randomness={randomness}", serialized, Server.Config.Database.RequestTimeout * 4);
+        => PostBytesAsync($"/change?{TableQuery(table)}&id={HttpUtility.UrlEncode(id)}&timestamp={timestamp}&randomness={randomness}", serialized, Server.Config.Database.RequestTimeout * 4);
     
     /// <summary>
     /// Pulls the serialized value from an entry.
     /// </summary>
     internal Task<byte[]?> PullEntryAsync(AbstractTable table, string id)
-        => GetBytesAsync($"/entry?{TableQuery(table, true)}&id={HttpUtility.UrlEncode(id)}");
+        => GetBytesAsync($"/entry?{TableQuery(table)}&id={HttpUtility.UrlEncode(id)}");
     
     /// <summary>
     /// Pulls the file contents of an attached file to the given path and returns whether the operation was successful.
     /// </summary>
     internal Task<bool> PullFileAsync(AbstractTable table, string id, string fileId, string targetFilePath)
-        => DownloadAsync($"/file?{TableQuery(table, true)}&id={HttpUtility.UrlEncode(id)}&file={HttpUtility.UrlEncode(fileId)}", targetFilePath);
+        => DownloadAsync($"/file?{TableQuery(table)}&id={HttpUtility.UrlEncode(id)}&file={HttpUtility.UrlEncode(fileId)}", targetFilePath);
     
     /// <summary>
     /// Pulls the state of a table asynchronously.
     /// </summary>
     internal async Task<Dictionary<string, MinimalTableValue>?> PullStateAsync(AbstractTable table)
     {
-        var serialized = await GetBytesAsync($"/state?{TableQuery(table, true)}");
+        var serialized = await GetBytesAsync($"/state?{TableQuery(table)}");
         if (serialized == null)
             return null;
 
@@ -175,7 +175,7 @@ public class ClusterNode(string host, List<string>? tableNames, List<ICertificat
             {
                 var id = kv.GetProperty("Key").GetString() ?? throw new Exception("Key-value pair without key found.");
                 var serializedInfo = Encoding.UTF8.GetBytes(kv.GetProperty("Value").GetRawText());
-                state[id] = Serialization.Deserialize<MinimalTableValue>(table, id, serializedInfo) ?? throw new Exception($"Failed to deserialize entry with ID \"{id}\"");
+                state[id] = Serializers.DataContractJson.DeserializeNullable<MinimalTableValue>(serializedInfo) ?? throw new Exception($"Failed to deserialize entry with ID \"{id}\"");
             }
             return state;
         }

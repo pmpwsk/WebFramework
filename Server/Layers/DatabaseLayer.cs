@@ -9,15 +9,15 @@ public static partial class Server
     {
         private const string DatabaseLayerPrefix = "/wf/db";
         
-        private static AbstractTable ValidateTableQuery(Request req, ClusterNode node, bool readingRequest)
+        private static AbstractTable ValidateTableQuery(Request req, ClusterNode node)
         {
-            if (!(req.Query.TryGetValue("table", out var tableName) && req.Query.TryGetValue(readingRequest ? "version" : "min-version", out var versionString) && Version.TryParse(versionString, out var version)))
+            if (!(req.Query.TryGetValue("table", out var tableName) && req.Query.TryGetValue("iteration", out var typeIterationString) && ulong.TryParse(typeIterationString, out var typeIteration)))
                 throw new ForcedResponse(StatusResponse.BadRequest);
             if (node.TableNames != null && !node.TableNames.Contains(tableName))
                 throw new ForcedResponse(StatusResponse.Forbidden);
             if (!Tables.Dictionary.TryGetValue(tableName, out var table))
                 throw new ForcedResponse(StatusResponse.NotFound);
-            if (readingRequest ? version < table.GetMinVersion() : table.GetTypeVersion() < version)
+            if (table.TypeIteration == typeIteration)
                 throw new ForcedResponse(StatusResponse.Teapot);
             return table;
         }
@@ -46,17 +46,17 @@ public static partial class Server
                 {
                     req.ForceGET();
                     
-                    var table = ValidateTableQuery(req, node, true);
+                    var table = ValidateTableQuery(req, node);
                     
                     var result = table.GetState();
-                    return new ByteArrayResponse(Serialization.Serialize(result), null, false, null);
+                    return new ByteArrayResponse(Serializers.DataContractJson.Serialize(result), null, false, null);
                 }
                 
                 case "/entry":
                 {
                     req.ForceGET();
                     
-                    var table = ValidateTableQuery(req, node, true);
+                    var table = ValidateTableQuery(req, node);
                     if (!req.Query.TryGetValue("id", out var id))
                         return StatusResponse.BadRequest;
                     if (!table.TryGetAbstractEntry(id, out var entry))
@@ -70,7 +70,7 @@ public static partial class Server
                 {
                     req.ForceGET();
                     
-                    var table = ValidateTableQuery(req, node, true);
+                    var table = ValidateTableQuery(req, node);
                     if (!(req.Query.TryGetValue("id", out var id) && req.Query.TryGetValue("file", out var fileId)))
                         return StatusResponse.BadRequest;
                     if (!(table.TryGetAbstractEntry(id, out var entry) && entry.EntryInfo.Files.ContainsKey(fileId)))
@@ -84,7 +84,7 @@ public static partial class Server
                 {
                     req.ForcePOST();
                     
-                    var table = ValidateTableQuery(req, node, false);
+                    var table = ValidateTableQuery(req, node);
                     var id = req.Query.GetOrThrow("id");
                     var timestamp = req.Query.GetOrThrow<long>("timestamp");
                     var randomness = req.Query.GetOrThrow("randomness");
@@ -114,7 +114,7 @@ public static partial class Server
                 {
                     req.ForceGET();
                     
-                    var table = ValidateTableQuery(req, node, false);
+                    var table = ValidateTableQuery(req, node);
                     if (!(req.Query.TryGetValue("id", out var id) && req.Query.TryGetValue("timestamp", out long timestamp) && req.Query.TryGetValue("randomness", out var randomness)))
                         return StatusResponse.BadRequest;
                     if (!table.TryGetAbstractEntry(id, out var entry))
@@ -128,7 +128,7 @@ public static partial class Server
                 {
                     req.ForceGET();
                     
-                    var table = ValidateTableQuery(req, node, false);
+                    var table = ValidateTableQuery(req, node);
                     if (!(req.Query.TryGetValue("id", out var id) && req.Query.TryGetValue("timestamp", out long timestamp) && req.Query.TryGetValue("randomness", out var randomness)))
                         return StatusResponse.BadRequest;
                     if (!table.TryGetAbstractEntry(id, out var entry))

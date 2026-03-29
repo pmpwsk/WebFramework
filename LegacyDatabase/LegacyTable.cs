@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.Serialization;
 
 namespace uwap.WebFramework.Database;
 
@@ -80,10 +79,10 @@ public class LegacyTable<T> : ILegacyTable, IEnumerable<KeyValuePair<string,T>> 
             byte[] json = File.ReadAllBytes(file.FullName);
             try
             {
-                T value = Serialization.Deserialize<T>(json) ?? throw new SerializationException();
-                if (Server.Config.Database.WriteBackOnLoad)
+                T value = Serializers.DataContractJson.Deserialize<T>(json);
+                if (Server.Config.Database.WriteBackOnLegacyLoad)
                 {
-                    byte[] newJson = Serialization.Serialize(value);
+                    byte[] newJson = Serializers.DataContractJson.Serialize(value);
                     if (!newJson.SequenceEqual(json))
                     {
                         File.WriteAllBytes(file.FullName, newJson);
@@ -182,7 +181,7 @@ public class LegacyTable<T> : ILegacyTable, IEnumerable<KeyValuePair<string,T>> 
     /// This shouldn't really be trusted as other errors can exist.
     /// </summary>
     public bool Check(string key)
-        => Serialization.Serialize(Data[key].Value).SequenceEqual(Data[key].Json);
+        => Serializers.DataContractJson.Serialize(Data[key].Value).SequenceEqual(Data[key].Json);
 
     /// <summary>
     /// Checks all entries for errors and attempts to fix them.<br/>
@@ -209,7 +208,7 @@ public class LegacyTable<T> : ILegacyTable, IEnumerable<KeyValuePair<string,T>> 
                 entry.SetValue(value);
             else
             {
-                byte[] json = Serialization.Serialize(value);
+                byte[] json = Serializers.DataContractJson.Serialize(value);
                 entry = new LegacyTableEntry<T>(Name, key, value, json);
                 entry.Serialize();
                 Data[key] = entry;

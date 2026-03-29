@@ -30,13 +30,13 @@ public abstract class AbstractTableValue
     /// The timestamp ticks of the last write time.
     /// </summary>
     [DataMember]
-    internal long Timestamp = 0;
+    public long Timestamp { get; internal set; } = 0;
 
     /// <summary>
     /// Whether the entry has been marked as deleted.
     /// </summary>
     [DataMember]
-    internal bool Deleted = false;
+    public bool Deleted { get; internal set; } = false;
 
     /// <summary>
     /// The type's version at the last write time, or the current version for actively deserialized objects.
@@ -51,26 +51,34 @@ public abstract class AbstractTableValue
     internal Dictionary<string, DatabaseFileData> Files = [];
     
     /// <summary>
-    /// Action to execute after deserializing the value, to migrate entries to a new version and set the type's current version.
+    /// Ensures that the fields in <c>AbstractTableValue</c> exist and sets them to default values if they don't.<br/>
+    /// This should be called in migrations from type iteration '0'.<br/>
+    /// Returns <c>true</c> if the value has been changed, otherwise <c>false</c>.
     /// </summary>
-    internal void AfterDeserialization(AbstractTable table, string id, byte[] serialized)
+    public bool EnsureMinimalTableValue()
     {
-        Migrate(table, id, serialized);
+        bool dirty = false;
         
-        AssemblyVersion = Tables.GetTypeVersion(GetType());
-    }
-    
-    /// <summary>
-    /// Migrates the value to the current version, if necessary.
-    /// </summary>
-    protected virtual void Migrate(AbstractTable table, string id, byte[] serialized)
-    {
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (AssemblyVersion == null)
+        {
+            dirty = true;
+            AssemblyVersion = new Version(0, 0, 0, 0);
+        }
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (Files == null)
+        {
+            dirty = true;
+            Files = [];
+        }
+        
+        return dirty;
     }
     
     /// <summary>
     /// Migrates a file from the legacy database to the new database.
     /// </summary>
-    protected void MigrateLegacyFile(AbstractTable table, string id, string fileId, string path)
+    public void MigrateLegacyFile(AbstractTable table, string id, string fileId, string path)
     {
         var length = new FileInfo(path).Length;
         var fileBasePath = $"../Database/{table.Name.ToBase64PathSafe()}/Files/{id.ToBase64PathSafe()}";

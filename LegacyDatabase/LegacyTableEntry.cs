@@ -1,4 +1,3 @@
-using System.Runtime.Serialization;
 using Microsoft.AspNetCore.Http;
 
 namespace uwap.WebFramework.Database;
@@ -164,7 +163,7 @@ public class LegacyTableEntry<T>(string table, string key, T value, byte[] json)
             try
             {
                 //attempt to serialize the object
-                objectJson = Serialization.Serialize(Value);
+                objectJson = Serializers.DataContractJson.Serialize(Value);
             }
             catch
             {
@@ -232,7 +231,7 @@ public class LegacyTableEntry<T>(string table, string key, T value, byte[] json)
     /// </summary>
     public void Serialize()
     {
-        Json = Serialization.Serialize(Value);
+        Json = Serializers.DataContractJson.Serialize(Value);
 
         if (!Directory.Exists("../Database/Buffer/" + Table))
             Directory.CreateDirectory("../Database/Buffer/" + Table);
@@ -250,7 +249,7 @@ public class LegacyTableEntry<T>(string table, string key, T value, byte[] json)
     /// </summary>
     private void Restore()
     {
-        Value = Serialization.Deserialize<T>(Json) ?? throw new SerializationException();
+        Value = Serializers.DataContractJson.Deserialize<T>(Json);
         Value.ContainingEntry = this;
     }
 }

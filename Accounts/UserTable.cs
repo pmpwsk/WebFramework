@@ -22,8 +22,40 @@ public class UserTable(string name) : Table<User>(name)
 
     protected override IEnumerable<ITableIndex<User>> Indices => [ UsernameIndex, MailAddressIndex ];
 
-    public new static UserTable Import(string name)
+    public static UserTable Import(string name)
         => Tables.Dictionary.TryGetValue(name, out AbstractTable? existingTable) ? (UserTable)existingTable : new UserTable(name);
+
+    public override ulong TypeIteration
+        => 1;
+    
+    public override AbstractSerializer Serializer
+        => Serializers.DataContractJson;
+
+    protected override (byte[] Serialized, ulong TypeIteration)? UpgradeStep(string id, (byte[] Serialized, ulong TypeIteration) current)
+    {
+        switch (current.TypeIteration)
+        {
+            case 0:
+            {
+                byte[] serialized;
+                var minimal = Serializers.DataContractJson.Deserialize<MinimalTableValue>(current.Serialized);
+                if (minimal.Deleted)
+                    serialized = current.Serialized;
+                else
+                {
+                    var user = Serializers.DataContractJson.Deserialize<User>(current.Serialized);
+                    var dirty1 = user.EnsureMinimalTableValue();
+                    var dirty2 = user.MigrateFromPrevious(current.Serialized);
+                    serialized = dirty1 || dirty2
+                        ? Serializers.DataContractJson.Serialize(user)
+                        : current.Serialized;
+                }
+                return (serialized, 1);
+            }
+            default:
+                return null;
+        }
+    }
 
     /// <summary>
     /// Returns the user with the given username or null if none have been found.

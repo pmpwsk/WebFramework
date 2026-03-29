@@ -1,4 +1,3 @@
-using System.Runtime.Serialization;
 using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework.Database;
@@ -30,13 +29,14 @@ public class TableEntry<T>(Table<T> table, string id, byte[] serialized)
             if (EntryInfo.Deleted)
                 return null;
         
-            var value = Serialization.Deserialize<T>(Table, Id, GetBytes());
+            var value = Table.Serializer.DeserializeNullable<T>(GetBytes());
             if (value != null)
                 value.ContainingEntry = this;
             return value;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"Deserialization failed for table '{Table.Name}' and ID '{Id}': {ex.Message}");
             return null;
         }
     }
@@ -54,7 +54,7 @@ public class TableEntry<T>(Table<T> table, string id, byte[] serialized)
         if (File.Exists(TrashPath))
             File.Delete(TrashPath);
         SerializedValue = Server.Config.Database.CacheEntries ? new(serialized) : null;
-        EntryInfo = entryInfo ?? Serialization.Deserialize<MinimalTableValue>(Table, Id, serialized) ?? throw new SerializationException();
+        EntryInfo = entryInfo ?? Table.Serializer.Deserialize<MinimalTableValue>(serialized);
     }
 
     /// <summary>

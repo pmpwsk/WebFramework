@@ -1,4 +1,3 @@
-using System.Reflection;
 using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework.Database;
@@ -27,15 +26,6 @@ public static class Tables
         get => _Self ?? throw new Exception("No cluster node was identified as this server instance.");
         internal set => _Self = value;
     }
-
-    /// <summary>
-    /// Returns the version of the given type.
-    /// </summary>
-    internal static Version GetTypeVersion(Type type)
-    {
-        var assembly = Assembly.GetAssembly(type);
-        return assembly?.GetName().Version ?? new Version("1.0.0.0");
-    }
     
     /// <summary>
     /// Checks all tables for issues and attempts to fix any issues.
@@ -53,21 +43,26 @@ public static class Tables
     {
         var stateDir = $"{Server.Config.Backup.Directory}{id}/Database";
         Directory.CreateDirectory(stateDir);
-        var state = previousId != null ? Serialization.Deserialize<BackupState>(await File.ReadAllBytesAsync($"{Server.Config.Backup.Directory}{previousId}/Database/State.json")) ?? new() : new();
+        var state = previousId != null ? Serializers.DataContractJson.DeserializeNullable<BackupState>(await File.ReadAllBytesAsync($"{Server.Config.Backup.Directory}{previousId}/Database/State.json")) ?? new() : new();
         
         // list tables
         HashSet<string> currentTables = [];
-        foreach (var tableKV in Dictionary)
+        foreach (var (tableName, table) in Dictionary)
         {
-            var tableDir = $"{stateDir}/{tableKV.Key.ToBase64PathSafe()}";
-            currentTables.Add(tableKV.Key);
-            var tableState = state.Tables.GetValueOrAdd(tableKV.Key, () => new());
+            var tableDir = $"{stateDir}/{tableName.ToBase64PathSafe()}";
+            var entriesDir = $"{tableDir}/Entries";
+            Directory.CreateDirectory(entriesDir);
+            
+            var tableConfigSource = $"../Database/{table.Name.ToBase64PathSafe()}/State.json";
+            if (File.Exists(tableConfigSource))
+                File.Copy(tableConfigSource, $"{tableDir}/State.json");
+            
+            currentTables.Add(tableName);
+            var tableState = state.Tables.GetValueOrAdd(tableName, () => new());
             
             // list entries
             HashSet<string> currentEntries = [];
-            bool entriesDirCreated = false;
-            var entriesDir = $"{tableDir}/Entries";
-            foreach (var entry in tableKV.Value.ListAbstractEntries())
+            foreach (var entry in table.ListAbstractEntries())
             {
                 currentEntries.Add(entry.Id);
                 var entryState = tableState.Entries.GetValueOrDefault(entry.Id);
@@ -78,11 +73,6 @@ public static class Tables
                     continue;
                 
                 // entry changed
-                if (!entriesDirCreated)
-                {
-                    Directory.CreateDirectory(entriesDir);
-                    entriesDirCreated = true;
-                }
                 if (entryState == null)
                 {
                     entryState = new(id, entry.EntryInfo.Timestamp);
@@ -99,11 +89,11 @@ public static class Tables
                 HashSet<string> currentFiles = [];
                 bool filesDirCreated = false;
                 var filesDir = $"{tableDir}/Files/{entry.Id.ToBase64PathSafe()}";
-                foreach (var fileKV in entry.EntryInfo.Files)
+                foreach (var (fileName, fileData) in entry.EntryInfo.Files)
                 {
-                    currentFiles.Add(fileKV.Key);
-                    var fileState = entryState.Files.GetValueOrDefault(fileKV.Key);
-                    if (fileState != null && fileState.Timestamp == fileKV.Value.Timestamp)
+                    currentFiles.Add(fileName);
+                    var fileState = entryState.Files.GetValueOrDefault(fileName);
+                    if (fileState != null && fileState.Timestamp == fileData.Timestamp)
                         continue;
                     
                     // file changed
@@ -114,15 +104,15 @@ public static class Tables
                     }
                     if (fileState == null)
                     {
-                        fileState = new(id, fileKV.Value.Timestamp);
-                        entryState.Files[fileKV.Key] = fileState;
+                        fileState = new(id, fileData.Timestamp);
+                        entryState.Files[fileName] = fileState;
                     }
                     else
                     {
-                        fileState.Timestamp = fileKV.Value.Timestamp;
+                        fileState.Timestamp = fileData.Timestamp;
                         fileState.Origin = id;
                     }
-                    File.Copy(entry.GetFilePath(fileKV.Key), $"{filesDir}/{fileKV.Key.ToBase64PathSafe()}");
+                    File.Copy(entry.GetFilePath(fileName), $"{filesDir}/{fileName.ToBase64PathSafe()}");
                 }
                 
                 // mark missing files as deleted
@@ -142,7 +132,7 @@ public static class Tables
             if (!currentTables.Contains(tableName))
                 state.Tables.Remove(tableName);
         
-        await File.WriteAllBytesAsync($"{stateDir}/State.json", Serialization.Serialize(state));
+        await File.WriteAllBytesAsync($"{stateDir}/State.json", Serializers.DataContractJson.Serialize(state));
     }
     
     /// <summary>
@@ -150,56 +140,66 @@ public static class Tables
     /// </summary>
     public static async Task RestoreAllAsync(string id)
     {
-        var state = Serialization.Deserialize<BackupState>(await File.ReadAllBytesAsync($"{Server.Config.Backup.Directory}{id}/Database/State.json")) ?? throw new Exception("Failed to deserialize backup state");
+        var state = Serializers.DataContractJson.DeserializeNullable<BackupState>(await File.ReadAllBytesAsync($"{Server.Config.Backup.Directory}{id}/Database/State.json")) ?? throw new Exception("Failed to deserialize backup state");
         
         // list tables
-        foreach (var tableKV in state.Tables)
+        foreach (var (tableName, tableData) in state.Tables)
         {
-            var tableDir = $"../Database/{tableKV.Key.ToBase64PathSafe()}";
-            var table = Dictionary.GetValueOrDefault(tableKV.Key);
+            var tableDir = $"../Database/{tableName.ToBase64PathSafe()}";
+            Directory.CreateDirectory(tableDir);
+            
+            var tableConfigSource = $"{Server.Config.Backup.Directory}{id}/Database/{tableName.ToBase64PathSafe()}/State.json";
+            var tableConfigTarget = $"{tableDir}/State.json";
+            if (File.Exists(tableConfigTarget))
+                File.Delete(tableConfigTarget);
+            if (File.Exists(tableConfigSource))
+                File.Copy(tableConfigSource, tableConfigTarget);
+            
+            var table = Dictionary.GetValueOrDefault(tableName);
             if (table == null)
             {
                 // restore table in the raw file system
                 Directory.Delete(tableDir, true);
                 Directory.CreateDirectory($"{tableDir}/Entries");
                 Directory.CreateDirectory($"{tableDir}/Files");
-                foreach (var entryKV in tableKV.Value.Entries)
+                
+                foreach (var (entryId, entryData) in tableData.Entries)
                 {
-                    File.Copy($"{Server.Config.Backup.Directory}{entryKV.Value.Origin}/Database/{tableKV.Key.ToBase64PathSafe()}/Entries/{entryKV.Key.ToBase64PathSafe()}.json", $"{tableDir}/Entries/{entryKV.Key.ToBase64PathSafe()}.json");
+                    File.Copy($"{Server.Config.Backup.Directory}{entryData.Origin}/Database/{tableName.ToBase64PathSafe()}/Entries/{entryId.ToBase64PathSafe()}.json", $"{tableDir}/Entries/{entryId.ToBase64PathSafe()}.json");
                     bool filesDirCreated = false;
-                    var filesDir = $"{tableDir}/Files/{entryKV.Key.ToBase64PathSafe()}";
-                    foreach (var fileKV in entryKV.Value.Files)
+                    var filesDir = $"{tableDir}/Files/{entryId.ToBase64PathSafe()}";
+                    foreach (var (fileName, fileData) in entryData.Files)
                     {
                         if (!filesDirCreated)
                         {
                             Directory.CreateDirectory(filesDir);
                             filesDirCreated = true;
                         }
-                        File.Copy($"{Server.Config.Backup.Directory}{fileKV.Value.Origin}/Database/{tableKV.Key.ToBase64PathSafe()}/Files/{entryKV.Key.ToBase64PathSafe()}/{fileKV.Key.ToBase64PathSafe()}", $"{filesDir}/{fileKV.Key.ToBase64PathSafe()}");
+                        File.Copy($"{Server.Config.Backup.Directory}{fileData.Origin}/Database/{tableName.ToBase64PathSafe()}/Files/{entryId.ToBase64PathSafe()}/{fileName.ToBase64PathSafe()}", $"{filesDir}/{fileName.ToBase64PathSafe()}");
                     }
                 }
             }
             else
             {
                 // restore table efficiently
-                foreach (var entryKV in tableKV.Value.Entries)
+                foreach (var (entryId, entryData) in tableData.Entries)
                 {
                     AsyncReaderWriterLockHolder locker;
-                    if (table.TryGetAbstractEntry(entryKV.Key, out var entry))
+                    if (table.TryGetAbstractEntry(entryId, out var entry))
                         locker = await entry.Lock.WaitWriteAsync();
                     else
-                        (entry, locker) = await table.CreateAndLockBlankAbstractEntryAsync(entryKV.Key);
+                        (entry, locker) = await table.CreateAndLockBlankAbstractEntryAsync(entryId);
                     
                     await using (locker)
                     {
-                        if (entry.EntryInfo.Timestamp == entryKV.Value.Timestamp)
+                        if (entry.EntryInfo.Timestamp == entryData.Timestamp)
                             continue;
                     
                         bool filesDirCreated = false;
-                        var filesDir = $"{tableDir}/Files/{entryKV.Key.ToBase64PathSafe()}";
-                        foreach (var fileKV in entryKV.Value.Files)
+                        var filesDir = $"{tableDir}/Files/{entryId.ToBase64PathSafe()}";
+                        foreach (var (fileName, fileData) in entryData.Files)
                         {
-                            if (entry.EntryInfo.Files.TryGetValue(fileKV.Key, out var fileData) && fileData.Timestamp == entryKV.Value.Timestamp)
+                            if (entry.EntryInfo.Files.TryGetValue(fileName, out var fd) && fd.Timestamp == entryData.Timestamp)
                                 continue;
                             
                             if (!filesDirCreated)
@@ -207,22 +207,22 @@ public static class Tables
                                 Directory.CreateDirectory(filesDir);
                                 filesDirCreated = true;
                             }
-                            if (File.Exists($"{filesDir}/{fileKV.Key.ToBase64PathSafe()}"))
-                                File.Delete($"{filesDir}/{fileKV.Key.ToBase64PathSafe()}");
-                            File.Copy($"{Server.Config.Backup.Directory}{fileKV.Value.Origin}/Database/{tableKV.Key.ToBase64PathSafe()}/Files/{entryKV.Key.ToBase64PathSafe()}/{fileKV.Key.ToBase64PathSafe()}", $"{filesDir}/{fileKV.Key.ToBase64PathSafe()}");
+                            if (File.Exists($"{filesDir}/{fileName.ToBase64PathSafe()}"))
+                                File.Delete($"{filesDir}/{fileName.ToBase64PathSafe()}");
+                            File.Copy($"{Server.Config.Backup.Directory}{fileData.Origin}/Database/{tableName.ToBase64PathSafe()}/Files/{entryId.ToBase64PathSafe()}/{fileName.ToBase64PathSafe()}", $"{filesDir}/{fileName.ToBase64PathSafe()}");
                         }
                         
                         foreach (var fileId in entry.EntryInfo.Files.Keys.ToList())
-                            if (!entryKV.Value.Files.ContainsKey(fileId))
+                            if (!entryData.Files.ContainsKey(fileId))
                                 File.Delete($"{filesDir}/{fileId.ToBase64PathSafe()}");
                         
-                        entry.SetBytes(await File.ReadAllBytesAsync($"{Server.Config.Backup.Directory}{entryKV.Value.Origin}/Database/{tableKV.Key.ToBase64PathSafe()}/Entries/{entryKV.Key.ToBase64PathSafe()}.json"));
+                        entry.SetBytes(await File.ReadAllBytesAsync($"{Server.Config.Backup.Directory}{entryData.Origin}/Database/{tableName.ToBase64PathSafe()}/Entries/{entryId.ToBase64PathSafe()}.json"));
                     }
                 }
                 
                 // delete remaining entries
                 foreach (var entry in table.ListAbstractEntries())
-                    if (!tableKV.Value.Entries.ContainsKey(entry.Id))
+                    if (!tableData.Entries.ContainsKey(entry.Id))
                         await table.DeleteAsync(entry.Id);
             }
         }

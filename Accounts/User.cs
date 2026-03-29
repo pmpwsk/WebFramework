@@ -67,13 +67,13 @@ public partial class User : AbstractTableValue
     /// </summary>
     [DataMember] public DateTime Signup { get; private set; } = DateTime.UtcNow;
 
-    protected override void Migrate(AbstractTable table, string id, byte[] serialized)
+    internal bool MigrateFromPrevious(byte[] serialized)
     {
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (Username != null)
-            return;
+            return false;
         
-        var old = Serialization.Deserialize<User_Old2>(serialized) ?? throw new SerializationException();
+        var old = Serializers.DataContractJson.Deserialize<User_Old2>(serialized);
         Username = old._Username;
         _MailAddress = old._MailAddress;
         _AccessLevel = old._AccessLevel;
@@ -83,5 +83,6 @@ public partial class User : AbstractTableValue
         _TwoFactor = new(old._TwoFactor);
         _AuthTokens = old._AuthTokens;
         _Settings = old._Settings;
+        return true;
     }
 }

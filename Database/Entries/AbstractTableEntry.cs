@@ -1,4 +1,3 @@
-using System.Runtime.Serialization;
 using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework.Database;
@@ -65,7 +64,7 @@ public abstract class AbstractTableEntry : IDisposable
     {
         Id = id;
         SerializedValue = Server.Config.Database.CacheEntries ? new(serialized) : null;
-        _EntryInfo = Serialization.Deserialize<MinimalTableValue>(table, id, serialized) ?? throw new SerializationException();
+        _EntryInfo = table.Serializer.Deserialize<MinimalTableValue>(serialized);
         _EntryInfo.ContainingEntry = this;
     }
     
