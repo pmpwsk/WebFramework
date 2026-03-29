@@ -820,6 +820,8 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     public void Dispose()
     {
         GC.SuppressFinalize(this);
+        if (Tables.Dictionary.TryGetValue(Name, out var table) && table == this)
+            Tables.Dictionary.Remove(Name);
         CreationLock.Dispose();
         foreach (var index in Indices)
             index.Dispose();
