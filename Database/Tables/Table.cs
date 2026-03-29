@@ -491,6 +491,12 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     }
     
     /// <summary>
+    /// The number of stored entries in the table.
+    /// </summary>
+    public int Count
+        => Data.Count;
+    
+    /// <summary>
     /// Returns whether the table contains an entry with the given ID.
     /// </summary>
     public bool ContainsId(string id)
@@ -793,6 +799,23 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
         var id = GenerateId(idLength);
         await TransactionNullableAsync(id, transaction => transaction.Value = value);
         return value;
+    }
+    
+    /// <summary>
+    /// Creates a new entry with a random non-existing ID of a dynamic length, and stores the given value in it.
+    /// </summary>
+    public Task<T> CreateAsync(T value)
+        => CreateAsync(CalculateIdLength(), value);
+    
+    /// <summary>
+    /// Calculates the length of the next ID so the collision chance is up to <c>10^-9</c>.
+    /// </summary>
+    private int CalculateIdLength()
+    {
+        if (Count == 0)
+            return 1;
+        var result = (Math.Log(Count) - Math.Log(1e-9d)) / Math.Log(62);
+        return result < 1 ? 1 : Convert.ToInt32(Math.Ceiling(result));
     }
     
     /// <summary>
