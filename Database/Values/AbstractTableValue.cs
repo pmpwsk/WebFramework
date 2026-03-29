@@ -39,12 +39,6 @@ public abstract class AbstractTableValue
     public bool Deleted { get; internal set; } = false;
 
     /// <summary>
-    /// The type's version at the last write time, or the current version for actively deserialized objects.
-    /// </summary>
-    [DataMember]
-    public Version AssemblyVersion { get; internal set; } = new();
-
-    /// <summary>
     /// Information about the attached files, indexed by their file IDs.
     /// </summary>
     [DataMember]
@@ -59,12 +53,6 @@ public abstract class AbstractTableValue
     {
         bool dirty = false;
         
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (AssemblyVersion == null)
-        {
-            dirty = true;
-            AssemblyVersion = new Version(0, 0, 0, 0);
-        }
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (Files == null)
         {
