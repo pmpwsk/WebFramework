@@ -155,9 +155,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
         string entryBackup = path + "/Entries_Backup";
         if (state.TypeIteration != TypeIteration)
         {
-            if (entryFiles.Length == 0)
-                state.TypeIteration = TypeIteration;
-            else
+            if (entryFiles.Length > 0)
             {
                 try
                 {
@@ -172,9 +170,10 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
                         string id = keyFile.Name[..^5].FromBase64PathSafe();
                         byte[] serialized = await File.ReadAllBytesAsync($"{entryBackup}/{keyFile.Name}");
                         
-                        while (state.TypeIteration != TypeIteration)
-                            (serialized, state.TypeIteration) = UpgradeStep(id, (serialized, state.TypeIteration))
-                                                                ?? throw new Exception($"Could not upgrade table '{Name}' from version '{state.TypeIteration}'.");
+                        var iteration = state.TypeIteration;
+                        while (iteration != TypeIteration)
+                            (serialized, iteration) = UpgradeStep(id, (serialized, iteration))
+                                                      ?? throw new Exception($"Could not upgrade table '{Name}' from version '{iteration}'.");
                         if (!Serializer.Deserialize<MinimalTableValue>(serialized).Deleted)
                             Serializer.Deserialize<T>(serialized);
                         await File.WriteAllBytesAsync(keyFile.FullName, serialized);
@@ -186,6 +185,8 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
                     Directory.Move(entryBackup, entryDir);
                     throw new Exception($"Failed to migrate and load table '{Name}': {ex.Message}", ex);
                 }
+                
+                state.TypeIteration = TypeIteration;
             }
             
             await File.WriteAllBytesAsync(statePath, Serializers.DataContractJson.Serialize(state));
