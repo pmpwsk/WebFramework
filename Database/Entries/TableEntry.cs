@@ -26,7 +26,7 @@ public class TableEntry<T>(Table<T> table, string id, byte[] serialized)
     {
         try
         {
-            if (EntryInfo.Deleted)
+            if (EntryInfo.State.Deleted)
                 return null;
         
             var value = Table.Serializer.DeserializeNullable<T>(GetBytes());

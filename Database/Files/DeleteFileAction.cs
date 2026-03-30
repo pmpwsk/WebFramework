@@ -28,6 +28,6 @@ public class DeleteFileAction(string fileId) : IFileAction
         if (File.Exists(trashFilePath))
             File.Delete(trashFilePath);
         
-        value.Files.Remove(FileId);
+        value.State.Files.Remove(FileId);
     }
 }

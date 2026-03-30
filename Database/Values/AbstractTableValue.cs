@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace uwap.WebFramework.Database;
 
@@ -27,40 +28,53 @@ public abstract class AbstractTableValue
     public string Id => IdNullable ?? throw new Exception("Containing entry was not set.");
     
     /// <summary>
-    /// The timestamp ticks of the last write time.
+    /// Moved to <c>State.Timestamp</c>.
     /// </summary>
-    [DataMember]
-    public long Timestamp { get; internal set; } = 0;
+    [DataMember(EmitDefaultValue = false, Name = "Timestamp")]
+    private long TimestampOld = default;
 
     /// <summary>
-    /// Whether the entry has been marked as deleted.
+    /// Moved to <c>State.Deleted</c>.
     /// </summary>
-    [DataMember]
-    public bool Deleted { get; internal set; } = false;
+    [DataMember(EmitDefaultValue = false, Name = "Deleted")]
+    private bool DeletedOld = default;
 
     /// <summary>
-    /// Information about the attached files, indexed by their file IDs.
+    /// Moved to <c>State.Files</c>.
     /// </summary>
+    [DataMember(EmitDefaultValue = false, Name = "Files")]
+    private Dictionary<string, DatabaseFileData>? FilesOld = default;
+    
+    /// <summary>
+    /// The entry's metadata.
+    /// </summary>
+    [JsonInclude]
     [DataMember]
-    internal Dictionary<string, DatabaseFileData> Files = [];
+    public EntryState State = new(0, false, []);
     
     /// <summary>
     /// Ensures that the fields in <c>AbstractTableValue</c> exist and sets them to default values if they don't.<br/>
-    /// This should be called in migrations from type iteration '0'.<br/>
-    /// Returns <c>true</c> if the value has been changed, otherwise <c>false</c>.
+    /// This method also migrates the properties to <c>State</c> if necessary.
     /// </summary>
-    public bool EnsureMinimalTableValue()
+    public void EnsureMinimalTableValue()
     {
-        bool dirty = false;
-        
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (Files == null)
+        if (State == null)
         {
-            dirty = true;
-            Files = [];
+            if (FilesOld == null)
+            {
+                // legacy
+                State = new(TimestampOld, DeletedOld, []);
+            }
+            else
+            {
+                // no separate state yet
+                State = new(TimestampOld, DeletedOld, FilesOld);
+                TimestampOld = default;
+                DeletedOld = default;
+                FilesOld = default;
+            }
         }
-        
-        return dirty;
     }
     
     /// <summary>
@@ -72,7 +86,7 @@ public abstract class AbstractTableValue
         var fileBasePath = $"../Database/{table.Name.ToBase64PathSafe()}/Files/{id.ToBase64PathSafe()}";
         Directory.CreateDirectory(fileBasePath);
         File.Move(path, $"{fileBasePath}/{fileId.ToBase64PathSafe()}");
-        Files[fileId] = new(Timestamp, length);
+        State.Files[fileId] = new(State.Timestamp, length);
     }
     
     /// <summary>
@@ -80,25 +94,25 @@ public abstract class AbstractTableValue
     /// </summary>
     /// <returns></returns>
     public List<string> ListFileIds()
-        => Files.Keys.ToList();
+        => State.Files.Keys.ToList();
     
     /// <summary>
     /// Returns whether an attached file with the given file ID exists.
     /// </summary>
     public bool ContainsFile(string fileId)
-        => Files.ContainsKey(fileId);
+        => State.Files.ContainsKey(fileId);
     
     /// <summary>
     /// Finds the file metadata for the attached file with the given file ID.
     /// </summary>
     public bool TryGetFileInfo(string fileId, [MaybeNullWhen(false)] out DatabaseFileData info)
-        => Files.TryGetValue(fileId, out info);
+        => State.Files.TryGetValue(fileId, out info);
     
     /// <summary>
     /// Returns the file metadata for the attached file with the given file ID, or null if no such file exists.
     /// </summary>
     public DatabaseFileData? GetFileInfo(string fileId)
-        => Files.GetValueOrDefault(fileId);
+        => State.Files.GetValueOrDefault(fileId);
     
     /// <summary>
     /// Finds the file path for the attached file with the given file ID.
@@ -109,7 +123,7 @@ public abstract class AbstractTableValue
             throw new Exception("Containing entry was not set.");
         
         var p = ContainingEntry.GetFilePath(fileId);
-        if (Files.ContainsKey(fileId) && File.Exists(p))
+        if (State.Files.ContainsKey(fileId) && File.Exists(p))
         {
             path = p;
             return true;

@@ -39,16 +39,13 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
             {
                 byte[] serialized;
                 var minimal = Serializers.DataContractJson.Deserialize<MinimalTableValue>(current.Serialized);
-                if (minimal.Deleted)
+                if (minimal.State.Deleted)
                     serialized = current.Serialized;
                 else
                 {
                     var user = Serializers.DataContractJson.Deserialize<User>(current.Serialized);
-                    var dirty1 = user.EnsureMinimalTableValue();
-                    var dirty2 = user.MigrateFromPrevious(current.Serialized);
-                    serialized = dirty1 || dirty2
-                        ? Serializers.DataContractJson.Serialize(user)
-                        : current.Serialized;
+                    user.MigrateFromPrevious(current.Serialized);
+                    serialized = Serializers.DataContractJson.Serialize(user);
                 }
                 return (serialized, 1);
             }

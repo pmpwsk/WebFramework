@@ -50,6 +50,6 @@ public class SetFileAction(string fileId, SetFileDelegate writer) : IFileAction
             File.Move(bufferFilePath, filePath);
         
         // metadata
-        value.Files[FileId] = new(timestamp, new FileInfo(filePath).Length);
+        value.State.Files[FileId] = new(timestamp, new FileInfo(filePath).Length);
     }
 }

@@ -23,7 +23,10 @@ public class DataContractJsonSerializer : AbstractSerializer
         {
             Base serializer = new(typeof(T));
             using MemoryStream stream = new(json);
-            return (T?)serializer.ReadObject(stream);
+            var result = (T?)serializer.ReadObject(stream);
+            if (result is AbstractTableValue tableValue)
+                tableValue.EnsureMinimalTableValue();
+            return result;
         }
         catch (Exception ex)
         {

@@ -49,7 +49,7 @@ public class MoveFileAction(string oldFileId, string newFileId) : IFileAction
             File.Move(bufferFilePath, filePath);
         
         // metadata
-        value.Files[NewFileId] = new(timestamp, new FileInfo(filePath).Length);
-        value.Files.Remove(OldFileId);
+        value.State.Files[NewFileId] = new(timestamp, new FileInfo(filePath).Length);
+        value.State.Files.Remove(OldFileId);
     }
 }

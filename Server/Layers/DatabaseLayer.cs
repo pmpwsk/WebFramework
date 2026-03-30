@@ -73,7 +73,7 @@ public static partial class Server
                     var table = ValidateTableQuery(req, node);
                     if (!(req.Query.TryGetValue("id", out var id) && req.Query.TryGetValue("file", out var fileId)))
                         return StatusResponse.BadRequest;
-                    if (!(table.TryGetAbstractEntry(id, out var entry) && entry.EntryInfo.Files.ContainsKey(fileId)))
+                    if (!(table.TryGetAbstractEntry(id, out var entry) && entry.EntryInfo.State.Files.ContainsKey(fileId)))
                         return StatusResponse.NotFound;
                     
                     var result = await entry.GetFileBytes(fileId);
