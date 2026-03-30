@@ -156,7 +156,7 @@ public class ClusterNode(string host, List<ICertificateValidator> certificateVal
     /// <summary>
     /// Pulls the state of a table asynchronously.
     /// </summary>
-    internal async Task<Dictionary<string, MinimalTableValue>?> PullStateAsync(AbstractTable table)
+    internal async Task<Dictionary<string, EntryState>?> PullStateAsync(AbstractTable table)
     {
         var serialized = await GetBytesAsync($"/state?{TableQuery(table)}");
         if (serialized == null)
@@ -165,12 +165,12 @@ public class ClusterNode(string host, List<ICertificateValidator> certificateVal
         try
         {
             using var document = JsonDocument.Parse(serialized);
-            Dictionary<string, MinimalTableValue> state = [];
+            Dictionary<string, EntryState> state = [];
             foreach (var kv in document.RootElement.EnumerateArray())
             {
                 var id = kv.GetProperty("Key").GetString() ?? throw new Exception("Key-value pair without key found.");
                 var serializedInfo = Encoding.UTF8.GetBytes(kv.GetProperty("Value").GetRawText());
-                state[id] = Serializers.DataContractJson.DeserializeNullable<MinimalTableValue>(serializedInfo) ?? throw new Exception($"Failed to deserialize entry with ID \"{id}\"");
+                state[id] = Serializers.DataContractJson.DeserializeNullable<EntryState>(serializedInfo) ?? throw new Exception($"Failed to deserialize entry with ID \"{id}\"");
             }
             return state;
         }

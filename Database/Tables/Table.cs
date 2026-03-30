@@ -213,8 +213,8 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     protected virtual (byte[] Serialized, ulong TypeIteration)? UpgradeStep(string id, (byte[] Serialized, ulong TypeIteration) current)
         => null;
 
-    internal override Dictionary<string, MinimalTableValue> GetState()
-        => Data.ToDictionary(x => x.Key, x => x.Value.EntryInfo);
+    internal override Dictionary<string, EntryState> GetState()
+        => Data.ToDictionary(x => x.Key, x => x.Value.Metadata);
 
     internal override async Task CheckAndFixAsync()
     {
@@ -280,7 +280,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
         }
         
         // collect possibly deletable entries
-        var idsToDelete = Data.Values.Where(entry => entry.EntryInfo.State.Deleted).Select(entry => entry.Id).ToList();
+        var idsToDelete = Data.Values.Where(entry => entry.Metadata.Deleted).Select(entry => entry.Id).ToList();
         
         // sync with other nodes
         foreach (var node in nodes)
@@ -289,7 +289,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
             if (state != null)
             {
                 await SyncFromAsync(node, state);
-                idsToDelete = idsToDelete.Where(id => !state.TryGetValue(id, out var info) || info.State.Deleted).ToList();
+                idsToDelete = idsToDelete.Where(id => !state.TryGetValue(id, out var info) || info.Deleted).ToList();
             }
             else idsToDelete = [];
         }
@@ -312,14 +312,14 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
             foreach (var filesDir in new DirectoryInfo($"../Database/{Name.ToBase64PathSafe()}/{directoryPrefix}Files").GetDirectories("*", SearchOption.TopDirectoryOnly))
             {
                 var id = filesDir.Name.FromBase64PathSafe();
-                if (Data.TryGetValue(id, out var entry) && entry.EntryInfo.State.Files.Count > 0)
+                if (Data.TryGetValue(id, out var entry) && entry.Metadata.Files.Count > 0)
                 {
                     await using var h = await entry.Lock.WaitWriteAsync();
                     
                     foreach (var file in filesDir.GetFiles("*", SearchOption.TopDirectoryOnly))
                     {
                         var fileId = file.Name.FromBase64PathSafe();
-                        if (!entry.EntryInfo.State.Files.ContainsKey(fileId))
+                        if (!entry.Metadata.Files.ContainsKey(fileId))
                             file.Delete();
                     }
                     continue;
@@ -329,12 +329,12 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
             }
     }
     
-    internal override async Task SyncFromAsync(ClusterNode node, Dictionary<string, MinimalTableValue> state)
+    internal override async Task SyncFromAsync(ClusterNode node, Dictionary<string, EntryState> state)
     {
         foreach (var (id, stateInfo) in state)
         {
             // create or update entry
-            if (!Data.TryGetValue(id, out var entry) || stateInfo.State.Timestamp > entry.EntryInfo.State.Timestamp)
+            if (!Data.TryGetValue(id, out var entry) || stateInfo.Timestamp > entry.Metadata.Timestamp)
             {
                 var serialized = await node.PullEntryAsync(this, id);
                 if (serialized == null)
@@ -343,13 +343,13 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
             }
             
             // download missing files
-            if (Data.TryGetValue(id, out entry) && entry.EntryInfo.State.Files.Keys.Any(fileId => !File.Exists(entry.GetFilePath(fileId))))
+            if (Data.TryGetValue(id, out entry) && entry.Metadata.Files.Keys.Any(fileId => !File.Exists(entry.GetFilePath(fileId))))
             {
                 await using var h = await entry.Lock.WaitWriteAsync();
                 
                 Directory.CreateDirectory(entry.FileBasePath);
                 Directory.CreateDirectory(entry.BufferFileBasePath);
-                foreach (var fileId in entry.EntryInfo.State.Files.Keys.Where(fileId => !File.Exists(entry.GetFilePath(fileId))))
+                foreach (var fileId in entry.Metadata.Files.Keys.Where(fileId => !File.Exists(entry.GetFilePath(fileId))))
                     if (await node.PullFileAsync(this, id, fileId, entry.GetBufferFilePath(fileId)))
                         File.Move(entry.GetBufferFilePath(fileId), entry.GetFilePath(fileId));
             }
@@ -371,7 +371,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
         {
             // out of date
             locker = await entry.Lock.WaitWriteAsync();
-            if (remoteInfo.State.Timestamp <= entry.EntryInfo.State.Timestamp)
+            if (remoteInfo.State.Timestamp <= entry.Metadata.Timestamp)
             {
                 await locker.DisposeAsync();
                 return;
@@ -389,7 +389,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
             entry.CreateFileDirectories();
 
             // move deleted and outdated files to trash
-            foreach (var (fileId, fileInfo) in entry.EntryInfo.State.Files)
+            foreach (var (fileId, fileInfo) in entry.Metadata.Files)
                 if (!remoteInfo.State.Files.TryGetValue(fileId, out var remoteFile) || remoteFile.Timestamp != fileInfo.Timestamp)
                 {
                     var filePath = entry.GetFilePath(fileId);
@@ -440,7 +440,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     /// </summary>
     private async Task<bool> DownloadAllFilesAsync(ClusterNode node, TableEntry<T> entry)
     {
-        if (entry.EntryInfo.State.Files.Count == 0)
+        if (entry.Metadata.Files.Count == 0)
             return true;
         
         bool success = true;
@@ -448,7 +448,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
         entry.DeleteFileDirectories();
         entry.CreateFileDirectories();
         
-        foreach (var fileId in entry.EntryInfo.State.Files.Keys)
+        foreach (var fileId in entry.Metadata.Files.Keys)
         {
             var filePath = entry.GetFilePath(fileId);
             var bufferFilePath = entry.GetBufferFilePath(fileId);
@@ -571,7 +571,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
         {
             await using var h = await entry.Lock.WaitReadAsync();
             
-            if (!entry.EntryInfo.State.Deleted)
+            if (!entry.Metadata.Deleted)
             {
                 var value = entry.Deserialize();
                 if (value != null)

@@ -85,18 +85,18 @@ public static class Tables
                 
                 await using var h = await entry.Lock.WaitReadAsync();
                 
-                if (entryState != null && entryState.Timestamp == entry.EntryInfo.State.Timestamp)
+                if (entryState != null && entryState.Timestamp == entry.Metadata.Timestamp)
                     continue;
                 
                 // entry changed
                 if (entryState == null)
                 {
-                    entryState = new(id, entry.EntryInfo.State.Timestamp);
+                    entryState = new(id, entry.Metadata.Timestamp);
                     tableState.Entries[entry.Id] = entryState;
                 }
                 else
                 {
-                    entryState.Timestamp = entry.EntryInfo.State.Timestamp;
+                    entryState.Timestamp = entry.Metadata.Timestamp;
                     entryState.Origin = id;
                 }
                 File.Copy(entry.Path, $"{entriesDir}/{entry.Id.ToBase64PathSafe()}.json");
@@ -105,7 +105,7 @@ public static class Tables
                 HashSet<string> currentFiles = [];
                 bool filesDirCreated = false;
                 var filesDir = $"{tableDir}/Files/{entry.Id.ToBase64PathSafe()}";
-                foreach (var (fileName, fileData) in entry.EntryInfo.State.Files)
+                foreach (var (fileName, fileData) in entry.Metadata.Files)
                 {
                     currentFiles.Add(fileName);
                     var fileState = entryState.Files.GetValueOrDefault(fileName);
@@ -208,14 +208,14 @@ public static class Tables
                     
                     await using (locker)
                     {
-                        if (entry.EntryInfo.State.Timestamp == entryData.Timestamp)
+                        if (entry.Metadata.Timestamp == entryData.Timestamp)
                             continue;
                     
                         bool filesDirCreated = false;
                         var filesDir = $"{tableDir}/Files/{entryId.ToBase64PathSafe()}";
                         foreach (var (fileName, fileData) in entryData.Files)
                         {
-                            if (entry.EntryInfo.State.Files.TryGetValue(fileName, out var fd) && fd.Timestamp == entryData.Timestamp)
+                            if (entry.Metadata.Files.TryGetValue(fileName, out var fd) && fd.Timestamp == entryData.Timestamp)
                                 continue;
                             
                             if (!filesDirCreated)
@@ -228,7 +228,7 @@ public static class Tables
                             File.Copy($"{Server.Config.Backup.Directory}{fileData.Origin}/Database/{tableName.ToBase64PathSafe()}/Files/{entryId.ToBase64PathSafe()}/{fileName.ToBase64PathSafe()}", $"{filesDir}/{fileName.ToBase64PathSafe()}");
                         }
                         
-                        foreach (var fileId in entry.EntryInfo.State.Files.Keys.ToList())
+                        foreach (var fileId in entry.Metadata.Files.Keys.ToList())
                             if (!entryData.Files.ContainsKey(fileId))
                                 File.Delete($"{filesDir}/{fileId.ToBase64PathSafe()}");
                         

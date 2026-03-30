@@ -26,7 +26,7 @@ public class TableEntry<T>(Table<T> table, string id, byte[] serialized)
     {
         try
         {
-            if (EntryInfo.State.Deleted)
+            if (Metadata.Deleted)
                 return null;
         
             var value = Table.Serializer.DeserializeNullable<T>(GetBytes());
@@ -54,7 +54,7 @@ public class TableEntry<T>(Table<T> table, string id, byte[] serialized)
         if (File.Exists(TrashPath))
             File.Delete(TrashPath);
         SerializedValue = Server.Config.Database.CacheEntries ? new(serialized) : null;
-        EntryInfo = entryInfo ?? Table.Serializer.Deserialize<MinimalTableValue>(serialized);
+        Metadata = entryInfo?.State ?? Table.Serializer.Deserialize<MinimalTableValue>(serialized).State;
     }
 
     /// <summary>

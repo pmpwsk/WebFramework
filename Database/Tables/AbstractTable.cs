@@ -53,7 +53,7 @@ public abstract class AbstractTable
     /// Returns a dictionary containing each entry's ID and its value's basic value information. 
     /// </summary>
     /// <returns></returns>
-    internal abstract Dictionary<string, MinimalTableValue> GetState();
+    internal abstract Dictionary<string, EntryState> GetState();
     
     /// <summary>
     /// Checks and fixes any issues with the table, like memory or disk corruption.
@@ -83,7 +83,7 @@ public abstract class AbstractTable
     /// <summary>
     /// Ingests updates from the given node which has the given table state.
     /// </summary>
-    internal abstract Task SyncFromAsync(ClusterNode node, Dictionary<string, MinimalTableValue> state);
+    internal abstract Task SyncFromAsync(ClusterNode node, Dictionary<string, EntryState> state);
     
     /// <summary>
     /// Deletes the entry with the given ID and returns whether such an entry existed in the first place.

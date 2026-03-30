@@ -22,19 +22,10 @@ public abstract class AbstractTableEntry : IDisposable
     /// </summary>
     public RawFileContent? SerializedValue { get; protected set; }
 
-    private MinimalTableValue _EntryInfo;
     /// <summary>
-    /// The common part of the value's data.
+    /// The metadata part of the value's data.
     /// </summary>
-    public MinimalTableValue EntryInfo
-    {
-        get => _EntryInfo;
-        protected set
-        {
-            _EntryInfo = value;
-            _EntryInfo.ContainingEntry = this;
-        }
-    }
+    public EntryState Metadata { get; protected set; }
 
     /// <summary>
     /// The lock used to lock the entry for reading and writing.
@@ -64,8 +55,7 @@ public abstract class AbstractTableEntry : IDisposable
     {
         Id = id;
         SerializedValue = Server.Config.Database.CacheEntries ? new(serialized) : null;
-        _EntryInfo = table.Serializer.Deserialize<MinimalTableValue>(serialized);
-        _EntryInfo.ContainingEntry = this;
+        Metadata = table.Serializer.Deserialize<MinimalTableValue>(serialized).State;
     }
     
     /// <summary>
