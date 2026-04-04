@@ -16,7 +16,7 @@ public class UniqueTableIndex<T, K>(Func<T,K> selector) : AbstractTableIndex<T, 
     public IReadOnlyCollection<K> Keys => Index.Keys;
     
     /// <summary>
-    /// Returns the table value that have the given key, or null if no such table value exists.
+    /// Returns the table value that has the given key, or null if no such table value exists.
     /// </summary>
     public async Task<string?> GetAsync(K key)
     {
