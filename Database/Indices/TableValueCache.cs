@@ -39,7 +39,7 @@ public class TableValueCache<T, V>(Func<T,V> selector) : ITableIndex<T> where T 
     {
         await using var h = await Lock.WaitReadAsync();
         
-        return Index.TryGetValue(id, out var result) ? result : throw new Exception($"The index does not contain ID '{id}'");
+        return Index.TryGetValue(id, out var result) ? result : throw new DatabaseEntryMissingException();
     }
 
     public void Dispose()
