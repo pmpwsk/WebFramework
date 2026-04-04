@@ -5,7 +5,7 @@ namespace uwap.WebFramework.Database;
 /// <summary>
 /// Table index to access a property by the entry's ID without properly loading the entry.
 /// </summary>
-public abstract class TableValueCache<T, V>(Func<T,V> selector) : ITableIndex<T> where T : AbstractTableValue
+public class TableValueCache<T, V>(Func<T,V> selector) : ITableIndex<T> where T : AbstractTableValue
 {
     /// <summary>
     /// The function to select the value from a table value.
