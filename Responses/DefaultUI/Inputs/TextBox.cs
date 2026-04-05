@@ -93,7 +93,7 @@ public class TextBox : AbstractInput
     public bool IsEmpty(out string value)
     {
         value = Value;
-        return string.IsNullOrEmpty(Value);
+        return string.IsNullOrWhiteSpace(Value);
     }
 
     /// <summary>
