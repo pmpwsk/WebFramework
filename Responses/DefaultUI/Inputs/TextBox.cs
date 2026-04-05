@@ -11,6 +11,11 @@ public enum TextBoxRole
     /// Input for normal text.
     /// </summary>
     Normal,
+    
+    /// <summary>
+    /// Input for normal text without browser suggestions.
+    /// </summary>
+    NoAutocomplete,
 
     /// <summary>
     /// Input for text without spell checking.
@@ -153,6 +158,7 @@ public class TextBox : AbstractInput
         => role switch
         {
             TextBoxRole.Normal => ("text", null, null),
+            TextBoxRole.NoAutocomplete => ("text", null, "off"),
             TextBoxRole.NoSpellcheck => ("text", "false", null),
             TextBoxRole.Username => ("text", "false", "username"),
             TextBoxRole.CurrentPassword => ("password", "false", "current-password"),
