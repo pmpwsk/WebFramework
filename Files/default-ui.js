@@ -146,7 +146,7 @@ document.addEventListener("click", event =>
 
 document.addEventListener("submit", event =>
 {
-    if (watcherId && event.submitter.matches(".wf-server-form-override"))
+    if (watcherId && event.submitter && event.submitter.matches(".wf-server-form-override"))
     {
         // Form with overriden server action
         event.preventDefault();
