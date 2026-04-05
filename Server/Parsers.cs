@@ -1004,12 +1004,18 @@ public static class Parsers
         return obj;
     }
     
+    /// <summary>
+    /// Maps a synchronous enumerable to a new asynchronous enumerable using an asynchronous selector.
+    /// </summary>
     public static async IAsyncEnumerable<B> SelectAsync<A,B>(this IEnumerable<A> enumerable, Func<A, Task<B>> selector)
     {
         foreach (var item in enumerable)
             yield return await selector(item);
     }
     
+    /// <summary>
+    /// Maps a synchronous enumerable to a new asynchronous enumerable using an asynchronous filter.
+    /// </summary>
     public static async IAsyncEnumerable<T> WhereAsync<T>(this IEnumerable<T> enumerable, Func<T, Task<bool>> filter)
     {
         foreach (var item in enumerable)
@@ -1017,12 +1023,18 @@ public static class Parsers
                 yield return item;
     }
     
+    /// <summary>
+    /// Maps an asynchronous enumerable to a new asynchronous enumerable using an asynchronous selector.
+    /// </summary>
     public static async IAsyncEnumerable<B> SelectAsync<A,B>(this IAsyncEnumerable<A> enumerable, Func<A, Task<B>> selector)
     {
         await foreach (var item in enumerable)
             yield return await selector(item);
     }
     
+    /// <summary>
+    /// Maps an asynchronous enumerable to a new asynchronous enumerable using an asynchronous filter.
+    /// </summary>
     public static async IAsyncEnumerable<T> WhereAsync<T>(this IAsyncEnumerable<T> enumerable, Func<T, Task<bool>> filter)
     {
         await foreach (var item in enumerable)
@@ -1030,12 +1042,18 @@ public static class Parsers
                 yield return item;
     }
     
+    /// <summary>
+    /// Maps an asynchronous enumerable to a new asynchronous enumerable using a synchronous selector.
+    /// </summary>
     public static async IAsyncEnumerable<B> Select<A,B>(this IAsyncEnumerable<A> enumerable, Func<A, B> selector)
     {
         await foreach (var item in enumerable)
             yield return selector(item);
     }
     
+    /// <summary>
+    /// Maps an asynchronous enumerable to a new asynchronous enumerable using a synchronous filter.
+    /// </summary>
     public static async IAsyncEnumerable<T> Where<T>(this IAsyncEnumerable<T> enumerable, Func<T, bool> filter)
     {
         await foreach (var item in enumerable)
@@ -1043,6 +1061,9 @@ public static class Parsers
                 yield return item;
     }
     
+    /// <summary>
+    /// Collects an asynchronous enumerable into a list.
+    /// </summary>
     public static async Task<List<T>> ToListAsync<T>(this IAsyncEnumerable<T> enumerable)
     {
         List<T> result = [];
