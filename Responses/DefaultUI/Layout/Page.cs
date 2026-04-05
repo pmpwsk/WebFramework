@@ -39,7 +39,7 @@ public class Page : AbstractWatchablePage
             Sections.Add(section);
     }
     
-    public Page(Request req, bool dynamic, string? title, IEnumerable<AbstractButton> sidebar, IEnumerable<Section> sections) : this(req, dynamic, title, sections)
+    public Page(Request req, bool dynamic, string? title, IEnumerable<AbstractElement> sidebar, IEnumerable<Section> sections) : this(req, dynamic, title, sections)
     {
         foreach (var element in sidebar)
             Sidebar.Items.Add(element);
