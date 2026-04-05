@@ -149,6 +149,10 @@ aside {
     align-self: flex-start;
 }
 
+aside h3.wf-heading {
+    align-self: start;
+}
+
 .wf-stretch, .wf-button.wf-button-is-container, form:has(.wf-button-is-container), aside .wf-button, .wf-menu .wf-button, aside form, .wf-menu form, .wf-textbox {
     align-self: stretch;
 }
@@ -286,7 +290,7 @@ nav {
 }
 
 h3.wf-heading, pre {
-    padding: var(--s2) var(--s4);
+    padding: var(--s2) var(--s6);
 }
 
 
