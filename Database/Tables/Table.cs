@@ -185,9 +185,9 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
                     Directory.Move(entryBackup, entryDir);
                     throw new Exception($"Failed to migrate and load table '{Name}': {ex.Message}", ex);
                 }
-                
-                state.TypeIteration = TypeIteration;
             }
+                
+            state.TypeIteration = TypeIteration;
             
             await File.WriteAllBytesAsync(statePath, Serializers.DataContractJson.Serialize(state));
         }
