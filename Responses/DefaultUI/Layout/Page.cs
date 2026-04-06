@@ -20,6 +20,11 @@ public class Page : AbstractWatchablePage
     /// </summary>
     private readonly RequiredWatchedContainer<Body> BodyContainer;
     
+    /// <summary>
+    /// The stack of states for the dynamic dialog.
+    /// </summary>
+    private readonly Stack<(IconAndText Heading, List<AbstractElement> Items, ActionHandler Action)> DynamicDialogStack = [];
+    
     public Page(Request req, bool dynamic, string? title) : base(req, dynamic)
     {
         HeadContainer = new(this, new(req, title));
@@ -132,7 +137,7 @@ public class Page : AbstractWatchablePage
     /// <summary>
     /// The page's dynamic dialog.
     /// </summary>
-    public Dialog? DynamicDialog
+    public ServerFormDialog? DynamicDialog
         => BodyContainer.Element.DynamicDialog;
     
     /// <summary>
@@ -166,44 +171,77 @@ public class Page : AbstractWatchablePage
     }
     
     /// <summary>
-    /// Closes the current dynamic popup if one is present.
+    /// Applies the given parameters to the dynamic dialog and ensures that it's open.
     /// </summary>
-    public void CloseDynamicDialog()
-    {
-        if (DynamicDialog != null && DynamicDialog.IsOpen)
-        {
-            DynamicDialog.IgnoreActions = true;
-            DynamicDialog.IsOpen = false;
-        }
-    }
-    
-    /// <summary>
-    /// Opens a dialog with the given elements, assuming the page is dynamic.
-    /// </summary>
-    public void OpenDynamicDialog(IconAndText heading, IEnumerable<AbstractElement> elements)
+    private void SetDynamicDialogParameters(IconAndText heading, List<AbstractElement> elements, ActionHandler action)
     {
         if (DynamicDialog == null)
             throw new Exception("There is no dynamic dialog.");
         
+        DynamicDialog.Action = action;
         DynamicDialog.Header.Content = heading;
-        DynamicDialog.Items.ReplaceAll(elements.ToList());
+        DynamicDialog.Items.ReplaceAll(elements);
+        
         DynamicDialog.IgnoreActions = false;
         if (!DynamicDialog.IsOpen)
             DynamicDialog.IsOpen = true;
     }
     
     /// <summary>
+    /// Closes the current dynamic popup if one is present.
+    /// </summary>
+    public void CloseDynamicDialog()
+    {
+        if (DynamicDialog != null && DynamicDialog.IsOpen)
+        {
+            DynamicDialogStack.Clear();
+            
+            DynamicDialog.Action = Nothing.EmptyHandler;
+            DynamicDialog.IgnoreActions = true;
+            DynamicDialog.IsOpen = false;
+        }
+    }
+    
+    /// <summary>
+    /// Returns the dynamic dialog to its previous state or closes it if no previous state is present.
+    /// </summary>
+    public void ReturnDynamicDialog()
+    {
+        if (DynamicDialog == null)
+            throw new Exception("There is no dynamic dialog.");
+        
+        if (DynamicDialogStack.TryPop(out var parameters))
+            SetDynamicDialogParameters(parameters.Heading, parameters.Items, parameters.Action);
+        else
+            CloseDynamicDialog();
+    }
+    
+    /// <summary>
+    /// Opens a dialog with the given elements, assuming the page is dynamic.
+    /// </summary>
+    public void OpenDynamicDialog(IconAndText heading, List<AbstractElement> elements, ActionHandler action)
+    {
+        if (DynamicDialog == null)
+            throw new Exception("There is no dynamic dialog.");
+        
+        if (DynamicDialog.IsOpen)
+            DynamicDialogStack.Push((DynamicDialog.Header.Content, DynamicDialog.Items.EnumerateTyped().ToList(), DynamicDialog.Action));
+        
+        SetDynamicDialogParameters(heading, elements, action);
+    }
+    
+    /// <summary>
     /// Adds a simple dialog with the given message and a button to close the dialog, assuming the page is dynamic.
     /// </summary>
     public void OpenDynamicDialog(IconAndText heading, params string[] messages)
-        => OpenDynamicDialog(heading, [
-            ..messages.Select(message => new Paragraph(message)),
-            new ServerActionButton("Okay", _ =>
-            {
-                CloseDynamicDialog();
-                return Task.FromResult<IActionResponse>(new Nothing());
-            })
-        ]);
+        => OpenDynamicDialog(
+            heading,
+            [
+                ..messages.Select(message => new Paragraph(message)),
+                new SubmitButton("Okay")
+            ],
+            this.DynamicDialogBackActionHandler
+        );
     
     public override IEnumerable<string> EnumerateChunks()
     {

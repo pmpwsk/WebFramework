@@ -1,3 +1,4 @@
+using uwap.WebFramework.Responses.Actions;
 using uwap.WebFramework.Responses.Base;
 using uwap.WebFramework.Responses.Dynamic;
 
@@ -37,7 +38,7 @@ public class Body : WatchedElement
     /// </summary>
     public readonly ListWatchedContainer<Dialog> Dialogs;
     
-    private readonly OptionalWatchedContainer<Dialog> DynamicDialogContainer;
+    private readonly OptionalWatchedContainer<ServerFormDialog> DynamicDialogContainer;
     
     private readonly RequiredWatchedContainer<LoadingScreen> LoadingScreenContainer;
     
@@ -60,7 +61,7 @@ public class Body : WatchedElement
         PageContentContainer = new(this, new(req));
         Menus = new(this, menus ?? []);
         Dialogs = new(this, dialogs ?? []);
-        DynamicDialogContainer = new(this, dynamic ? new Dialog("wf-dynamic-dialog", "Dynamic dialog", false) : null);
+        DynamicDialogContainer = new(this, dynamic ? new ServerFormDialog("wf-dynamic-dialog", "Dynamic dialog", false, [], Nothing.EmptyHandler) : null);
         LoadingScreenContainer = new(this, new(false));
         DefaultScript = new(this, new(req));
         Scripts = new(this, scripts ?? []);
@@ -87,7 +88,7 @@ public class Body : WatchedElement
     /// <summary>
     /// The page's dynamic dialog.
     /// </summary>
-    public Dialog? DynamicDialog
+    public ServerFormDialog? DynamicDialog
     {
         get => DynamicDialogContainer.Element;
         set => DynamicDialogContainer.Element = value;

@@ -152,8 +152,11 @@ public class TextBox : AbstractInput
     }
 
     public override void SetValueFromForm(string input)
-        => Value = input;
-    
+    {
+        Value = input;
+        InitialValueAttribute.SetValueWithoutNotifying(input);
+    }
+
     private static (string Type, string? Spellcheck, string? Autocomplete) ConfigurationFromRole(TextBoxRole role)
         => role switch
         {

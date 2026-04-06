@@ -19,6 +19,12 @@ public class RequiredWatchedAttribute(WatchedElement parent, string name, string
             Parent.ChangeWatcher?.AttributeChanged(Parent, Name);
         }
     }
+    
+    /// <summary>
+    /// Sets the stored value without applying it to the watcher.
+    /// </summary>
+    public void SetValueWithoutNotifying(string value)
+        => _Value = value;
 
     public override (string Name, string? Value) Build()
         => (Name, _Value);

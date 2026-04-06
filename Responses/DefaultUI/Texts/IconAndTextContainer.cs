@@ -39,6 +39,8 @@ public class IconAndTextContainer(IWatchedParent parent, IconAndText content)
             }
             else if (TextContainer.Element == null || TextContainer.Element.Text != value.GeneratedText)
                 TextContainer.Element = new(value.GeneratedText);
+            
+            _Content = value;
         }
     }
 }

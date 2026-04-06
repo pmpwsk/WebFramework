@@ -197,16 +197,22 @@ public static class Presets
         => Handler.AuthButtons(req);
     
     /// <summary>
-    /// Opens a dynamic dialog with the given heading and message lines to the given page and returns an empty action response.
+    /// Opens a dynamic dialog with the given heading and message lines to the given page, and returns an empty action response.
     /// </summary>
-    public static Nothing DynamicDialogAction(this Page page, IconAndText heading, IEnumerable<AbstractElement> elements)
+    public static Nothing DynamicDialogAction(this Page page, IconAndText heading, List<AbstractElement> elements, ActionHandler action)
     {
-        page.OpenDynamicDialog(heading, elements);
+        page.OpenDynamicDialog(heading, elements, action);
         return new Nothing();
     }
     
     /// <summary>
-    /// Opens a dynamic dialog with the given heading and message lines to the given page and returns an empty action response.
+    /// Opens a dynamic dialog with the given heading and message lines to the given page, and returns an empty action response.
+    /// </summary>
+    public static Task<IActionResponse> DynamicDialogActionAsync(this Page page, IconAndText heading, List<AbstractElement> elements, ActionHandler action)
+        => Task.FromResult<IActionResponse>(page.DynamicDialogAction(heading, elements, action));
+    
+    /// <summary>
+    /// Opens a dynamic dialog with the given heading and message lines to the given page, and returns an empty action response.
     /// </summary>
     public static Nothing DynamicDialogAction(this Page page, IconAndText heading, params string[] messages)
     {
@@ -215,16 +221,76 @@ public static class Presets
     }
     
     /// <summary>
-    /// Opens a dynamic error popup with the given message lines to the given page and returns an empty action response.
+    /// Opens a dynamic dialog with the given heading and message lines to the given page, and returns an empty action response.
+    /// </summary>
+    public static Task<IActionResponse> DynamicDialogActionAsync(this Page page, IconAndText heading, params string[] messages)
+        => Task.FromResult<IActionResponse>(page.DynamicDialogAction(heading, messages));
+    
+    /// <summary>
+    /// Opens a dynamic error popup with the given message lines to the given page, and returns an empty action response.
     /// </summary>
     public static Nothing DynamicErrorAction(this Page page, params string[] messages)
         => page.DynamicDialogAction("Error", messages);
     
     /// <summary>
-    /// Opens a dynamic info popup with the given message lines to the given page and returns an empty action response.
+    /// Opens a dynamic error popup with the given message lines to the given page, and returns an empty action response.
+    /// </summary>
+    public static Task<IActionResponse> DynamicErrorActionAsync(this Page page, params string[] messages)
+        => Task.FromResult<IActionResponse>(page.DynamicErrorAction(messages));
+    
+    /// <summary>
+    /// Opens a dynamic info popup with the given message lines to the given page, and returns an empty action response.
     /// </summary>
     public static Nothing DynamicInfoAction(this Page page, params string[] messages)
         => page.DynamicDialogAction("Info", messages);
+    
+    /// <summary>
+    /// Opens a dynamic info popup with the given message lines to the given page, and returns an empty action response.
+    /// </summary>
+    public static Task<IActionResponse> DynamicInfoActionAsync(this Page page, params string[] messages)
+        => Task.FromResult<IActionResponse>(page.DynamicInfoAction(messages));
+    
+    /// <summary>
+    /// Closes any dynamic dialogs, and returns an empty action response.
+    /// </summary>
+    public static Nothing DynamicDialogCloseAction(this Page page)
+    {
+        page.CloseDynamicDialog();
+        return new Nothing();
+    }
+    
+    /// <summary>
+    /// Closes any dynamic dialogs, and return an empty action response.
+    /// </summary>
+    public static Task<IActionResponse> DynamicDialogCloseActionAsync(this Page page)
+        => Task.FromResult<IActionResponse>(page.DynamicDialogCloseAction());
+    
+    /// <summary>
+    /// Closes any dynamic dialogs, and return an empty action response.
+    /// </summary>
+    public static Task<IActionResponse> DynamicDialogCloseActionHandler(this Page page, Request req)
+        => Task.FromResult<IActionResponse>(page.DynamicDialogCloseAction());
+    
+    /// <summary>
+    /// Returns the dynamic dialog to its previous state or closes it if no previous state is present and returns an empty action response.
+    /// </summary>
+    public static Nothing DynamicDialogBackAction(this Page page)
+    {
+        page.ReturnDynamicDialog();
+        return new Nothing();
+    }
+    
+    /// <summary>
+    /// Returns the dynamic dialog to its previous state or closes it if no previous state is present and returns an empty action response.
+    /// </summary>
+    public static Task<IActionResponse> DynamicDialogBackActionAsync(this Page page)
+        => Task.FromResult<IActionResponse>(page.DynamicDialogBackAction());
+    
+    /// <summary>
+    /// Returns the dynamic dialog to its previous state or closes it if no previous state is present and returns an empty action response.
+    /// </summary>
+    public static Task<IActionResponse> DynamicDialogBackActionHandler(this Page page, Request req)
+        => Task.FromResult<IActionResponse>(page.DynamicDialogBackAction());
     
     /// <summary>
     /// Creates a list of elements based on the given enumerable, while creating a placeholder if no items are present.
