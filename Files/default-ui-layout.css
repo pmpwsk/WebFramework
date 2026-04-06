@@ -229,7 +229,7 @@ nav, h1.wf-heading, h2.wf-heading {
     position: sticky;
 }
 
-aside, .wf-top-cover, aside > .wf-heading, .wf-menu > .wf-heading, .wf-menu, .wf-dialog, .wf-dialog > .wf-heading, .wf-menu-background, .wf-dialog-background, .wf-image.wf-fullscreen, .wf-loading-screen, .wf-loading-container {
+aside, .wf-top-cover, aside > .wf-heading, .wf-menu > .wf-heading, .wf-menu, .wf-dialog, .wf-dialog > h2.wf-heading, .wf-menu-background, .wf-dialog-background, .wf-image.wf-fullscreen, .wf-loading-screen, .wf-loading-container {
     position: fixed;
 }
 
@@ -532,7 +532,7 @@ section {
     scroll-margin-top: calc(3rem + var(--s12) + var(--nav-height));
 }
 
-h3.wf-heading {
+.wf-content h3.wf-heading {
     left: calc(-1 * var(--s4));
 }
 
