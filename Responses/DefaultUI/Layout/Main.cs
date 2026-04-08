@@ -17,7 +17,7 @@ public class Main : WatchedElement
     public Main(Request req, IEnumerable<Section>? sections = null)
     {
         Sections = new(this, sections ?? []);
-        FooterContainer = new(this, new(Server.Config.Domains.CopyrightNames.TryGetValueAny(out var copyright, req.Domains) ? copyright : req.Domain));
+        FooterContainer = new(this, new(Server.Config.Domains.CopyrightNames.TryGetValueAny(out var copyright, req.Domains) ? copyright : null));
     }
     
     /// <summary>
