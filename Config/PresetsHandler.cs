@@ -196,11 +196,14 @@ public class PresetsHandler
         var favicon = Favicon(req);
         if (favicon != null)
             page.Favicon = new(req, favicon);
-        
-        page.Menus.Add(new Menu("wf-menu", "Menu", AuthButtons(req)));
 
         page.NavBar.Islands.Add(new([new LinkButton("Home", "/")]));
-        page.NavBar.Islands.Add(new([new PopupButton(new("bi bi-list", "Menu"), "wf-menu")]));
+        
+        if (Server.Config.Accounts.Enabled)
+        {
+            page.Menus.Add(new Menu("wf-menu", "Menu", AuthButtons(req)));
+            page.NavBar.Islands.Add(new([new PopupButton(new("bi bi-list", "Menu"), "wf-menu")]));
+        }
     }
     
     /// <summary>
@@ -208,6 +211,9 @@ public class PresetsHandler
     /// </summary>
     public virtual AbstractButton[] AuthButtons(Request req)
     {
+        if (!Server.Config.Accounts.Enabled)
+            return [];
+        
         string usersPluginPath = UsersPluginPath(req);
         return req.LoginState switch
         {
