@@ -485,7 +485,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     {
         using var h = await CreationLock.WaitAsync();
         
-        var entry = new TableEntry<T>(this, id, Serializer.Serialize(new MinimalTableValue { State = new(0, true, []) }));
+        var entry = new TableEntry<T>(this, id, Serializer.Serialize(new MinimalTableValue(new(0, true, []))));
         var holder = await entry.Lock.WaitWriteAsync();
         Data[id] = entry;
         return (entry, holder);
@@ -737,10 +737,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
             {
                 entry?.DeleteFileDirectories();
                 
-                serialized = Serializer.Serialize(new MinimalTableValue
-                {
-                    State = new(timestamp, true, [])
-                });
+                serialized = Serializer.Serialize(new MinimalTableValue(new(timestamp, true, [])));
             }
         
             if (entry == null)

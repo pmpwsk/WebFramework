@@ -7,6 +7,6 @@ namespace uwap.WebFramework.Database;
 /// This class is used to deserialize values without the type-specific parts and to serialize deleted entries.
 /// </summary>
 [DataContract]
-public sealed class MinimalTableValue : AbstractTableValue
+public sealed class MinimalTableValue(EntryState state) : AbstractTableValue(state)
 {
 }

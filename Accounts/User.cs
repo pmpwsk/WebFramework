@@ -13,6 +13,7 @@ public partial class User : AbstractTableValue
     /// Creates a new user using the given data.
     /// </summary>
     internal User(string username, string mailAddress, string? password)
+        : base(EntryState.CreateEmpty())
     {
         Username = username;
         _MailAddress = mailAddress;

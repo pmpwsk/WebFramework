@@ -10,7 +10,7 @@ public delegate R GetFromFileDelegate<out R>(string fileId);
 /// Abstract class for table values, containing the common data.
 /// </summary>
 [DataContract]
-public abstract class AbstractTableValue
+public abstract class AbstractTableValue(EntryState state)
 {
     /// <summary>
     /// The entry the value is stored in, or null if no entry was created for it yet.
@@ -50,7 +50,7 @@ public abstract class AbstractTableValue
     /// </summary>
     [JsonInclude]
     [DataMember]
-    public EntryState State = new(0, false, []);
+    public EntryState State = state;
     
     /// <summary>
     /// Ensures that the fields in <c>AbstractTableValue</c> exist and sets them to default values if they don't.<br/>
