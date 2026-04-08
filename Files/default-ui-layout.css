@@ -67,8 +67,12 @@ html {
     flex-direction: row;
 }
 
-html, body, main, .wf-content, .wf-subsection, footer, nav, .wf-nav-island, aside, .wf-menu, .wf-dialog, .wf-row-when-wide {
+html, body, main, .wf-content, nav, .wf-nav-island {
     gap: var(--s8);
+}
+
+.wf-subsection, footer, aside, .wf-menu, .wf-dialog, .wf-row-when-wide {
+    gap: var(--s10);
 }
 
 .wf-row, .wf-col, .wf-checkbox {
@@ -241,8 +245,12 @@ aside, .wf-top-cover, aside > .wf-heading, .wf-menu > .wf-heading, .wf-menu, .wf
 
 /* Padding */
 
-html, .wf-content, main, p, div, .wf-image.wf-fullscreen, .wf-checkbox span, .wf-checkbox input {
+html, .wf-content, main, div, .wf-image.wf-fullscreen, .wf-checkbox span, .wf-checkbox input {
     padding: 0;
+}
+
+p {
+    padding: 0 0 0 var(--s3);
 }
 
 body {
@@ -254,15 +262,15 @@ body {
 }
 
 section {
-    padding: 0 var(--s12) var(--s8) var(--s12);
+    padding: 0 var(--s10) var(--s10) var(--s10);
 }
 
 footer {
-    padding: var(--s8) var(--s12);
+    padding: var(--s10);
 }
 
 aside, .wf-menu, .wf-dialog {
-    padding: calc(2rem + var(--s8)) var(--s12) var(--s8) var(--s12);
+    padding: calc(2rem + var(--s10)) var(--s10) var(--s10) var(--s10);
 }
 
 h1.wf-heading, h2.wf-heading {
@@ -278,7 +286,7 @@ select, .wf-textbox, .wf-checkbox, .wf-upload {
 }
 
 ul, ol {
-    padding: 0;
+    padding: 0 0 0 var(--s3);
 }
 
 li > ul, li > ol {
@@ -297,7 +305,7 @@ h3.wf-heading, pre {
 
 /* Margin */
 
-html, .wf-content, p, nav, section, footer, div, ul, ol, pre, .wf-checkbox span, .wf-checkbox input, .wf-upload {
+html, .wf-content, p, nav, section, footer, div, ul, ol, pre, .wf-button, .wf-checkbox span, .wf-checkbox input, .wf-upload {
     margin: 0;
 }
 
@@ -310,11 +318,11 @@ body {
 }
 
 h1.wf-heading + * {
-    margin-top: var(--n12);
+    margin-top: var(--n10);
 }
 
 h1, h2 {
-    margin: 0 0 0 var(--n12);
+    margin: 0 0 0 var(--n10);
 }
 
 h3 {
@@ -323,10 +331,6 @@ h3 {
 
 code {
     margin: 0 var(--s4);
-}
-
-.wf-button:not(nav .wf-button) {
-    margin: 0 0 var(--s2) 0;
 }
 
 .wf-upload::file-selector-button {
@@ -525,11 +529,11 @@ section {
 }
 
 .wf-subsection > h2.wf-heading {
-    top: calc(3rem + var(--s12) + var(--nav-height));
+    top: calc(3rem + var(--s14) + var(--nav-height));
 }
 
 .wf-subsection {
-    scroll-margin-top: calc(3rem + var(--s12) + var(--nav-height));
+    scroll-margin-top: calc(3rem + var(--s14) + var(--nav-height));
 }
 
 .wf-content h3.wf-heading {
