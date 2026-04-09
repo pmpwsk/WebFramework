@@ -253,6 +253,10 @@ p {
     padding: 0 0 0 var(--s3);
 }
 
+.wf-button-is-container p {
+    padding: 0;
+}
+
 body {
     padding: 0 var(--s8);
 }
@@ -291,6 +295,10 @@ ul, ol {
 
 li > ul, li > ol {
     padding: 0 0 0 calc(1rem + var(--s4));
+}
+
+.wf-button-is-container ul, .wf-button-is-container ol {
+    padding: 0;
 }
 
 nav {
