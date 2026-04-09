@@ -581,6 +581,20 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
         return result;
     }
     
+    /// <summary>
+    /// Lists all IDs of non-deleted entries.
+    /// </summary>
+    public List<string> ListExistingIds()
+    {
+        List<string> result = [];
+        
+        foreach (var entry in Data.Values)
+            if (!entry.Metadata.Deleted)
+                result.Add(entry.Id);
+        
+        return result;
+    }
+    
     internal override List<AbstractTableEntry> ListAbstractEntries()
         => [..Data.Values];
     
