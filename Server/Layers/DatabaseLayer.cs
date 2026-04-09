@@ -17,7 +17,7 @@ public static partial class Server
                 throw new ForcedResponse(StatusResponse.NotFound);
             if (!table.ClusterNodes.Contains(node))
                 throw new ForcedResponse(StatusResponse.Forbidden);
-            if (table.TypeIteration == typeIteration)
+            if (table.TypeIteration != typeIteration)
                 throw new ForcedResponse(StatusResponse.Teapot);
             return table;
         }
