@@ -10,9 +10,9 @@ public class Row : OptionalIdElement
 {
     public readonly ListWatchedContainer<AbstractElement> Content;
     
-    public Row(IEnumerable<AbstractElement>? content = null)
+    public Row(params AbstractElement[] content)
     {
-        Content = new(this, content ?? []);
+        Content = new(this, content);
         FixedAttributes.Add(("class", "wf-row"));
     }
         
