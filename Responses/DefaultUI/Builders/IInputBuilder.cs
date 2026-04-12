@@ -7,9 +7,19 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// </summary>
 public interface IInputBuilder<in C>
 {
+    /// <summary>
+    /// Creates and stores the input element to use.
+    /// </summary>
     public AbstractElement Initialize(C obj, Page page);
-        
-    public string? Validate();
-        
+    
+    /// <summary>
+    /// Validates the current value of the input element and returns an error message if necessary.
+    /// </summary>
+    /// <returns></returns>
+    public Task<string?> ValidateAsync();
+    
+    /// <summary>
+    /// Applies the current value of the input element to the object.
+    /// </summary>
     public void Apply(C obj);
 }

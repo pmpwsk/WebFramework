@@ -10,7 +10,8 @@ public class OptionalTextBoxBuilder<C>(
     PropertyReference<C, string?> reference,
     TextBoxRole role,
     string name,
-    string placeholder
+    string placeholder,
+    Func<string?, Task<string?>>? additionalValidator = null
 ) : IInputBuilder<C>
 {
     private TextBox? Element;
@@ -22,9 +23,23 @@ public class OptionalTextBoxBuilder<C>(
         return Element;
     }
 
-    public string? Validate()
-        => null;
+    public async Task<string?> ValidateAsync()
+    {
+        if (Element == null)
+            throw new Exception("Not initialized.");
         
+        var value = Element.ValueNullable;
+        
+        if (additionalValidator != null)
+        {
+            var message = await additionalValidator(value);
+            if (message != null)
+                return message;
+        }
+        
+        return null;
+    }
+
     public void Apply(C obj)
     {
         if (Element == null)

@@ -11,7 +11,8 @@ public class RequiredTextBoxBuilder<C>(
     TextBoxRole role,
     string name,
     string placeholder,
-    string error
+    string missingMessage,
+    Func<string, Task<string?>>? additionalValidator = null
 ) : IInputBuilder<C>
 {
     private TextBox? Element;
@@ -23,13 +24,20 @@ public class RequiredTextBoxBuilder<C>(
         return Element;
     }
 
-    public string? Validate()
+    public async Task<string?> ValidateAsync()
     {
         if (Element == null)
             throw new Exception("Not initialized.");
             
-        if (Element.IsEmpty(out _))
-            return error;
+        if (Element.IsEmpty(out var value))
+            return missingMessage;
+        
+        if (additionalValidator != null)
+        {
+            var message = await additionalValidator(value);
+            if (message != null)
+                return message;
+        }
             
         return null;
     }

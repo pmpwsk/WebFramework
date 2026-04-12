@@ -103,7 +103,7 @@ public static class DialogBuilder
     /// <summary>
     /// Opens a dialog to create or edit an object.
     /// </summary>
-    public static Task<IActionResponse> SaveObjectDialogActionAsync<C>(Page page, C obj, IconAndText heading, List<IInputBuilder<C>> fields, Func<C, Task<string?>>? additionalValidator, Action<C>? additionalApplicator, Func<Action<C>, Task<IActionResponse>> saver) where C : AbstractTableValue
+    public static Task<IActionResponse> SaveObjectDialogActionAsync<C>(Page page, C obj, IconAndText heading, List<IInputBuilder<C>> fields, Action<C>? additionalApplicator, Func<Action<C>, Task<IActionResponse>> saver) where C : AbstractTableValue
     {
         List<AbstractElement> elements = [];
         foreach (var field in fields)
@@ -121,17 +121,7 @@ public static class DialogBuilder
             {
                 foreach (var field in fields)
                 {
-                    var message = field.Validate();
-                    if (message != null)
-                        return DynamicErrorAction(page, message);
-                }
-                
-                foreach (var field in fields)
-                    field.Apply(obj);
-                
-                if (additionalValidator != null)
-                {
-                    var message = await additionalValidator(obj);
+                    var message = await field.ValidateAsync();
                     if (message != null)
                         return DynamicErrorAction(page, message);
                 }

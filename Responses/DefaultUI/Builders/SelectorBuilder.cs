@@ -9,7 +9,8 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 public class SelectorBuilder<C, T>(
     PropertyReference<C, T> reference,
     IconAndText heading,
-    List<DynamicSelectorItem<T>> options
+    List<DynamicSelectorItem<T>> options,
+    Func<T, Task<string?>>? additionalValidator = null
 ) : IInputBuilder<C>
 {
     private DynamicSelector<T>? Element;
@@ -21,8 +22,20 @@ public class SelectorBuilder<C, T>(
         return Element;
     }
 
-    public string? Validate()
-        => null;
+    public async Task<string?> ValidateAsync()
+    {
+        if (Element == null)
+            throw new Exception("Not initialized.");
+        
+        if (additionalValidator != null)
+        {
+            var message = await additionalValidator(Element.Value);
+            if (message != null)
+                return message;
+        }
+        
+        return null;
+    }
         
     public void Apply(C obj)
     {
