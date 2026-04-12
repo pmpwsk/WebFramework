@@ -1,3 +1,4 @@
+using uwap.WebFramework.Database;
 using uwap.WebFramework.Responses.Actions;
 using uwap.WebFramework.Responses.Base;
 
@@ -98,4 +99,72 @@ public static class DialogBuilder
     /// </summary>
     public static Task<IActionResponse> DynamicDialogBackActionAsync(Page page)
         => Task.FromResult<IActionResponse>(DynamicDialogBackAction(page));
+    
+    /// <summary>
+    /// Opens a dialog to create or edit an object.
+    /// </summary>
+    public static Task<IActionResponse> SaveObjectDialogActionAsync<C>(Page page, C obj, IconAndText heading, List<IInputBuilder<C>> fields, Func<C, Task<string?>>? additionalValidator, Action<C>? additionalApplicator, Func<Action<C>, Task<IActionResponse>> saver) where C : AbstractTableValue
+    {
+        List<AbstractElement> elements = [];
+        foreach (var field in fields)
+            elements.Add(field.Initialize(obj, page));
+        elements.Add(new Row(
+            new ContinueButton(),
+            new DialogBackButton(page)
+        ));
+        
+        return DynamicDialogActionAsync(
+            page,
+            heading,
+            elements,
+            async _ =>
+            {
+                foreach (var field in fields)
+                {
+                    var message = field.Validate();
+                    if (message != null)
+                        return DynamicErrorAction(page, message);
+                }
+                
+                foreach (var field in fields)
+                    field.Apply(obj);
+                
+                if (additionalValidator != null)
+                {
+                    var message = await additionalValidator(obj);
+                    if (message != null)
+                        return DynamicErrorAction(page, message);
+                }
+                
+                return await saver(o =>
+                {
+                    foreach (var field in fields)
+                        field.Apply(o);
+
+                    additionalApplicator?.Invoke(o);
+                });
+            }
+        );
+    }
+    
+    /// <summary>
+    /// Opens a dialog to delete an object.
+    /// </summary>
+    public static Task<IActionResponse> DeleteObjectDialogActionAsync<C>(Page page, C obj, Table<C> table, IconAndText heading, string name, string returnLocation) where C : AbstractTableValue
+        => DynamicDialogActionAsync(
+            page,
+            heading,
+            [
+                new Paragraph($"Are you sure you want to delete \"{name}\"?"),
+                new Row(
+                    new ContinueButton(),
+                    new DialogCancelButton(page)
+                )
+            ],
+            async _ =>
+            {
+                await table.DeleteAsync(obj.Id);
+                return new Navigate(returnLocation);
+            }
+        );
 }
