@@ -230,19 +230,6 @@ public class Page : AbstractWatchablePage
         SetDynamicDialogParameters(heading, elements, action);
     }
     
-    /// <summary>
-    /// Adds a simple dialog with the given message and a button to close the dialog, assuming the page is dynamic.
-    /// </summary>
-    public void OpenDynamicDialog(IconAndText heading, params string[] messages)
-        => OpenDynamicDialog(
-            heading,
-            [
-                ..messages.Select(message => new Paragraph(message)),
-                new SubmitButton("Okay")
-            ],
-            this.DynamicDialogBackActionHandler
-        );
-    
     public override IEnumerable<string> EnumerateChunks()
     {
         yield return $"<!DOCTYPE html><html{(WatchedUrl == null ? "" : $" data-wf-url=\"{WatchedUrl}\"")}>";

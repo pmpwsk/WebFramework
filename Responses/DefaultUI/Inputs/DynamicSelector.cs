@@ -31,7 +31,8 @@ public class DynamicSelector<T> : ButtonWithText, IActionHaver
     }
     
     private Task<IActionResponse> Open(Request req)
-        => Page.DynamicDialogActionAsync(
+        => DialogBuilder.DynamicDialogActionAsync(
+            Page,
             Heading,
             [
                 ..Options.Select(option => new BigServerSubmitButton(
@@ -41,7 +42,7 @@ public class DynamicSelector<T> : ButtonWithText, IActionHaver
                     {
                         Value = option.Value;
                         Content = GenerateContent(option.Value, Options);
-                        return Page.DynamicDialogBackActionAsync();
+                        return DialogBuilder.DynamicDialogBackActionAsync(Page);
                     }
                 )),
                 new DialogBackButton(Page)

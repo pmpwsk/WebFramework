@@ -8,5 +8,5 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 public class DialogCancelButton(Page page)
     : ServerSubmitButton(
         "Cancel",
-        page.DynamicDialogCloseActionHandler
+        _ => DialogBuilder.DynamicDialogCloseActionAsync(page)
     );

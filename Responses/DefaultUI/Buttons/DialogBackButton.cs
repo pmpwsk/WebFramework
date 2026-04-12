@@ -6,5 +6,5 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 public class DialogBackButton(Page page)
     : ServerSubmitButton(
         "Back",
-        page.DynamicDialogBackActionHandler
+        _ => DialogBuilder.DynamicDialogBackActionAsync(page)
     );
