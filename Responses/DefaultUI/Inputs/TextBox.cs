@@ -153,8 +153,8 @@ public class TextBox : AbstractInput
 
     public override void SetValueFromForm(string input)
     {
-        Value = input;
-        InitialValueAttribute.SetValueWithoutNotifying(input);
+        Value = input.Trim();
+        InitialValueAttribute.SetValueWithoutNotifying(Value);
     }
 
     private static (string Type, string? Spellcheck, string? Autocomplete) ConfigurationFromRole(TextBoxRole role)
