@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using uwap.WebFramework.Responses.Dynamic;
 
 namespace uwap.WebFramework.Responses.DefaultUI;
@@ -95,11 +96,25 @@ public class TextBox : AbstractInput
     /// <summary>
     /// Returns whether the current value is unknown or empty, and returns the value as an out parameter.
     /// </summary>
-    public bool IsEmpty(out string value)
+    public bool IsEmpty([MaybeNullWhen(true)] out string value)
     {
-        value = Value;
-        return string.IsNullOrWhiteSpace(Value);
+        if (string.IsNullOrWhiteSpace(Value))
+        {
+            value = null;
+            return true;
+        }
+        else
+        {
+            value = Value;
+            return false;
+        }
     }
+    
+    /// <summary>
+    /// Returns null if the current value is unknown or empty, otherwise the value itself.
+    /// </summary>
+    public string? ValueNullable
+        => string.IsNullOrWhiteSpace(Value) ? null : Value;
 
     /// <summary>
     /// The input's name, used for browser suggestions.
