@@ -54,6 +54,12 @@ public class TableReference<T> where T : AbstractTableValue
     }
     
     /// <summary>
+    /// Whether the given value is the referenced value.
+    /// </summary>
+    public bool Matches(T value)
+        => TableName == value.TableName && Id == value.Id;
+    
+    /// <summary>
     /// Attempts to retrieve the value for this reference while using a cache.
     /// </summary>
     public async Task<T?> GetNullableAsync()
