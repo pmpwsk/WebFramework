@@ -26,6 +26,16 @@ public abstract class AbstractTableValue(EntryState state)
     /// The ID of the entry the value is stored in. If no such entry was created yet, an exception is thrown.
     /// </summary>
     public string Id => IdNullable ?? throw new Exception("Containing entry was not set.");
+
+    /// <summary>
+    /// The name of the table the value is stored in, or null if the value hasn't been persisted yet.
+    /// </summary>
+    public string? TableNameNullable => ContainingEntry?.Table.Name;
+    
+    /// <summary>
+    /// The name of the table the value is stored in. If the value hasn't been persisted yet, an exception is thrown.
+    /// </summary>
+    public string TableName => TableNameNullable ?? throw new Exception("Containing entry was not set.");
     
     /// <summary>
     /// Moved to <c>State.Timestamp</c>.
