@@ -239,7 +239,7 @@ public static class Tables
                 // delete remaining entries
                 foreach (var entry in table.ListAbstractEntries())
                     if (!tableData.Entries.ContainsKey(entry.Id))
-                        await table.DeleteByIdAsync(entry.Id);
+                        await table.RoughDeleteByIdAsync(entry.Id);
             }
         }
         

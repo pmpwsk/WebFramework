@@ -793,6 +793,14 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
         return true;
     }
 
+    public override async Task<bool> RoughDeleteByIdAsync(string id)
+        => Data.ContainsKey(id) && await TransactionNullableAndGetAsync(id, transaction =>
+        {
+            bool exists = transaction.Value != null;
+            transaction.Value = null;
+            return exists;
+        });
+
     /// <summary>
     /// Deletes the entry with the given value.
     /// </summary>

@@ -89,4 +89,10 @@ public abstract class AbstractTable
     /// Deletes the entry with the given ID and returns whether such an entry existed in the first place.
     /// </summary>
     public abstract Task<bool> DeleteByIdAsync(string id);
+    
+    /// <summary>
+    /// Deletes the entry with the given ID and returns whether such an entry existed in the first place.<br/>
+    /// This method does not perform any additional (possibly required) actions.
+    /// </summary>
+    public abstract Task<bool> RoughDeleteByIdAsync(string id);
 }
