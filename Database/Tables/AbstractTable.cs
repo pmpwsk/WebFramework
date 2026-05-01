@@ -88,5 +88,5 @@ public abstract class AbstractTable
     /// <summary>
     /// Deletes the entry with the given ID and returns whether such an entry existed in the first place.
     /// </summary>
-    public abstract Task<bool> DeleteAsync(string id);
+    public abstract Task<bool> DeleteByIdAsync(string id);
 }

@@ -153,7 +153,7 @@ public static class DialogBuilder
             ],
             async _ =>
             {
-                await table.DeleteAsync(obj.Id);
+                await table.DeleteAsync(obj);
                 return new Navigate(returnLocation);
             }
         );

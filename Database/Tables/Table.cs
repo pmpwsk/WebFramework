@@ -782,15 +782,26 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
             
         return result;
     }
-    
-    public override async Task<bool> DeleteAsync(string id)
-        => Data.ContainsKey(id) && await TransactionNullableAndGetAsync(id, transaction =>
-        {
-            bool exists = transaction.Value != null;
-            transaction.Value = null;
-            return exists;
-        });
-    
+
+    public override async Task<bool> DeleteByIdAsync(string id)
+    {
+        var value = await GetByIdNullableAsync(id);
+        if (value == null)
+            return false;
+        
+        await DeleteAsync(value);
+        return true;
+    }
+
+    /// <summary>
+    /// Deletes the entry with the given value.
+    /// </summary>
+    public virtual async Task DeleteAsync(T value)
+    {
+        await TransactionNullableAsync(value.Id, transaction => { transaction.Value = null; });
+        value.ContainingEntry = null;
+    }
+
     /// <summary>
     /// Generates a random non-existing entry ID with the given length.
     /// </summary>
