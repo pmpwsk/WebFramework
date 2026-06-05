@@ -30,9 +30,6 @@ public static partial class Server
             LegacyTables.BackupAll(id, basedOnIds);
             await Tables.BackupAllAsync(id, basedOnIds.LastOrDefault());
 
-            //plugins
-            await PluginManager.Backup(id, basedOnIds);
-
             //event
             await BackupAlmostDone.InvokeWithAsyncCaller
             (

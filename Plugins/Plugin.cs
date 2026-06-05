@@ -20,10 +20,4 @@ public abstract class Plugin : IPlugin
 
     public virtual string? GetFileVersion(string relPath)
         => null;
-
-    public virtual Task Backup(string id, ReadOnlyCollection<string> basedOnIds)
-        => Task.CompletedTask;
-
-    public virtual Task Restore(ReadOnlyCollection<string> ids)
-        => Task.CompletedTask;
 }

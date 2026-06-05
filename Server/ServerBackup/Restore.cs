@@ -39,9 +39,6 @@ public static partial class Server
             LegacyTables.RestoreAll(ids);
             await Tables.RestoreAllAsync(id);
 
-            //plugin
-            await PluginManager.Restore(ids);
-
             //event
             await RestoreAlmostDone.InvokeWithAsyncCaller
             (
