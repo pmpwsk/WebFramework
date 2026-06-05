@@ -1,5 +1,6 @@
 ﻿using uwap.WebFramework.Plugins;
 using uwap.WebFramework.Responses;
+using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework;
 
@@ -49,7 +50,7 @@ public static partial class Server
                         
                         req.Path = relPath;
                         req.PluginPathPrefix = pathPrefix;
-                        return await plugin.HandleAsync(req);
+                        return await CallPluginHandlerAsync(plugin, req);
                     }
                     
                     if (OtherRequestHandler != null)
@@ -63,6 +64,15 @@ public static partial class Server
                 default: //method unknown
                     return StatusResponse.BadMethod;
             }
+        }
+    
+        /// <summary>
+        /// Sets the plugin as a dependency for the asynchronous context and calls the plugin's handler.
+        /// </summary>
+        private static async Task<IResponse> CallPluginHandlerAsync(IPlugin plugin, Request req)
+        {
+            Dependencies.Register(plugin);
+            return await plugin.HandleAsync(req);
         }
     }
 }

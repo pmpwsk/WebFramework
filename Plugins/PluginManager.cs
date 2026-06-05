@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework.Plugins;
 
@@ -67,12 +68,21 @@ public static class PluginManager
         foreach (var p in plugins)
             try
             {
-                await p.Key.Work();
+                await CallPluginWorkerAsync(p.Key);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error calling the worker method for plugin at '{p.Value}': {ex.Message}");
             }
+    }
+    
+    /// <summary>
+    /// Sets the plugin as a dependency for the asynchronous context and calls the plugin's worker.
+    /// </summary>
+    private static async Task CallPluginWorkerAsync(IPlugin plugin)
+    {
+        Dependencies.Register(plugin);
+        await plugin.Work();
     }
 
     /// <summary>
