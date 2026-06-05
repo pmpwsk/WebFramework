@@ -81,7 +81,7 @@ public static class PluginManager
     /// </summary>
     private static async Task CallPluginWorkerAsync(IPlugin plugin)
     {
-        Dependencies.Register(plugin);
+        Dependencies.RegisterRange([plugin, ..plugin.EnumerateDependencies()]);
         await plugin.WorkAsync();
     }
 

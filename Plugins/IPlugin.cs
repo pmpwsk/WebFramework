@@ -30,4 +30,9 @@ public interface IPlugin
     /// This should return a different value every time the file is changed (but never when it hasn't been modified) and shouldn't be long (DateTime.Ticks is the intended value).
     /// </summary>
     public string? GetFileVersion(string relPath);
+    
+    /// <summary>
+    /// Enumerates the dependencies that are added to the asynchronous context when the plugin is called.
+    /// </summary>
+    public IEnumerable<object> EnumerateDependencies();
 }

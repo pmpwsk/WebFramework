@@ -71,7 +71,7 @@ public static partial class Server
         /// </summary>
         private static async Task<IResponse> CallPluginHandlerAsync(IPlugin plugin, Request req)
         {
-            Dependencies.Register(plugin);
+            Dependencies.RegisterRange([plugin, ..plugin.EnumerateDependencies()]);
             return await plugin.HandleAsync(req);
         }
     }

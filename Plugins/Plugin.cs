@@ -9,6 +9,11 @@ namespace uwap.WebFramework.Plugins;
 /// </summary>
 public abstract class Plugin : IPlugin
 {
+    protected List<object> PluginDependencies = [];
+
+    public IEnumerable<object> EnumerateDependencies()
+        => PluginDependencies;
+    
     public virtual Task<IResponse> HandleAsync(Request req)
         => Task.FromResult<IResponse>(StatusResponse.NotImplemented);
 
