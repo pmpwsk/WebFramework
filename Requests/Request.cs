@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Responses;
+using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework;
 
@@ -12,6 +13,9 @@ namespace uwap.WebFramework;
 /// </summary>
 public class Request
 {
+    /// <summary>
+    /// The underlying HTTP context.
+    /// </summary>
     private HttpContext HttpContext;
 
     /// <summary>
@@ -137,6 +141,8 @@ public class Request
         IsInternal = false;
         
         Exception = null;
+        
+        Dependencies.Register(this);
     }
     
     public Request(Request req, string url)
@@ -167,6 +173,8 @@ public class Request
         IsInternal = true;
         
         Exception = null;
+        
+        Dependencies.Register(this);
     }
 
     /// <summary>
