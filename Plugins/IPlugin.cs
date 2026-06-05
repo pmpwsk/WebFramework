@@ -17,7 +17,7 @@ public interface IPlugin
     /// <summary>
     /// Does something that should be done regularly (every time the worker is active).
     /// </summary>
-    public Task Work();
+    public Task WorkAsync();
 
     /// <summary>
     /// Returns the bytes of a file to be served at the given relative path (and current plugin path prefix and current domain) or null if no such file exists.

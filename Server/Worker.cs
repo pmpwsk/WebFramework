@@ -120,7 +120,7 @@ public static partial class Server
             }
 
             //call plugins
-            await PluginManager.Work();
+            await PluginManager.WorkAsync();
 
             //fire event that worker finished
             await WorkerWorked.InvokeWithAsyncCaller

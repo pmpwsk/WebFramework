@@ -59,7 +59,7 @@ public static class PluginManager
     /// Calls the worker method for every mapped plugin.<br/>
     /// If a plugin is mapped to multiple URLs, it is only going to be called once (only if it is the exact same object).
     /// </summary>
-    public static async Task Work()
+    public static async Task WorkAsync()
     {
         Dictionary<IPlugin, string> plugins = [];
         foreach (var p in Plugins.Children)
@@ -82,7 +82,7 @@ public static class PluginManager
     private static async Task CallPluginWorkerAsync(IPlugin plugin)
     {
         Dependencies.Register(plugin);
-        await plugin.Work();
+        await plugin.WorkAsync();
     }
 
     /// <summary>

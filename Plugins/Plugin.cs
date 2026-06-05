@@ -12,7 +12,7 @@ public abstract class Plugin : IPlugin
     public virtual Task<IResponse> HandleAsync(Request req)
         => Task.FromResult<IResponse>(StatusResponse.NotImplemented);
 
-    public virtual Task Work()
+    public virtual Task WorkAsync()
         => Task.CompletedTask;
 
     public virtual byte[]? GetFile(string relPath, string pathPrefix, string domain)
