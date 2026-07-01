@@ -1,4 +1,5 @@
-﻿using uwap.WebFramework.Responses;
+﻿using System.Reflection;
+using uwap.WebFramework.Responses;
 
 namespace uwap.WebFramework.Plugins;
 
@@ -9,12 +10,24 @@ namespace uwap.WebFramework.Plugins;
 public abstract class Plugin : IPlugin
 {
     protected List<object> PluginDependencies = [];
+    
+    private Dictionary<string, Func<Request, Task<IResponse>>> PluginEndpoints;
+    
+    protected Plugin()
+    {
+        PluginEndpoints = Endpoints.BuildEndpoints(this);
+    }
 
     public IEnumerable<object> EnumerateDependencies()
         => PluginDependencies;
     
-    public virtual Task<IResponse> HandleAsync(Request req)
-        => Task.FromResult<IResponse>(StatusResponse.NotImplemented);
+    public Task<IResponse> HandleAsync(Request req)
+        => PluginEndpoints.TryGetValue(req.Path, out var endpoint)
+            ? endpoint.Invoke(req)
+            : HandleOtherAsync(req);
+    
+    public virtual Task<IResponse> HandleOtherAsync(Request req)
+        => Task.FromResult<IResponse>(StatusResponse.NotFound);
 
     public virtual Task WorkAsync()
         => Task.CompletedTask;
