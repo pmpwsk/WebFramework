@@ -46,7 +46,7 @@ public static partial class Server
 
         private static void ApplicationStopping()
         {
-            Console.WriteLine("Stopping...");
+            Console.WriteLine("The application is stopping.");
             PauseRequests = true;
             StoppingTokenSource.Cancel();
             

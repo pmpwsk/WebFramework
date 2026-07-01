@@ -167,9 +167,15 @@ public static partial class Server
         PauseRequests = true;
         Task.Delay(1000).GetAwaiter().GetResult();
         if (MailManager.In.ServerRunning)
+        {
+            Console.WriteLine("Stopping the mail server...");
             await MailManager.In.StopAsync();
+        }
+        Console.WriteLine("Stopping the web server...");
         App?.StopAsync(TimeSpan.FromSeconds(1)).GetAwaiter().GetResult();
+        Console.WriteLine("Stopped the web server.");
         Environment.Exit(0);
+        Console.WriteLine("Failed to exit softly.");
         Environment.FailFast("Failed to exit softly.");
     }
 }

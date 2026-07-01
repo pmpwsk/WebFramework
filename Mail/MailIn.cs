@@ -135,7 +135,6 @@ public static partial class MailManager
             try
             {
                 Server.Shutdown();
-                await Server.ShutdownTask.WaitAsync(TimeSpan.FromSeconds(1));
                 if (ServerTask != null)
                     await ServerTask.WaitAsync(TimeSpan.FromSeconds(1));
                 await CTS.CancelAsync();
@@ -153,6 +152,8 @@ public static partial class MailManager
                 ServerTask?.Dispose();
                 ServerTask = null;
             }
+            
+            Console.WriteLine("Disposed of the mail server.");
         }
 
         /// <summary>
