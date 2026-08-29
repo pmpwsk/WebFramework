@@ -12,7 +12,15 @@ public class ModifyTransactionData : IDisposable, IAsyncDisposable
     /// </summary>
     public List<IFileAction> FileActions = [];
     
+    /// <summary>
+    /// The waiter used to pause the transaction.
+    /// </summary>
     public readonly ReadyWaiter Waiter = new();
+    
+    /// <summary>
+    /// Whether the transaction should be canceled.
+    /// </summary>
+    public bool Cancelled { get; private set; } = false;
     
     /// <summary>
     /// The transaction task.
@@ -24,6 +32,12 @@ public class ModifyTransactionData : IDisposable, IAsyncDisposable
     /// </summary>
     public Task WaitAsync()
         => Waiter.WaitAsync(TimeSpan.FromSeconds(60));
+    
+    /// <summary>
+    /// Sets the transaction to be canceled upon disposal, without reverting the value.
+    /// </summary>
+    public void RequestCancellation()
+        => Cancelled = true;
 
     /// <summary>
     /// Commits the transaction.
@@ -33,7 +47,11 @@ public class ModifyTransactionData : IDisposable, IAsyncDisposable
         GC.SuppressFinalize(this);
         await Waiter.ReadyAsync();
         if (Task != null)
-            await Task;
+            try
+            {
+                await Task;
+            }
+            catch (TransactionCanceledException) { }
         Waiter.Dispose();
     }
 

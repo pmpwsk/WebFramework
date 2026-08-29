@@ -863,6 +863,8 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
             // ReSharper disable once AccessToDisposedClosure
             await waiter.ReadyAsync();
             await modify.WaitAsync();
+            if (modify.Cancelled)
+                throw new TransactionCanceledException();
         });
         waiter.WaitAsync().GetAwaiter().GetResult();
         waiter.Dispose();
