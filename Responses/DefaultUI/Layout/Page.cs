@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using uwap.WebFramework.Database;
 using uwap.WebFramework.Responses.Actions;
 using uwap.WebFramework.Responses.Base;
 using uwap.WebFramework.Responses.Dynamic;
@@ -228,6 +229,20 @@ public class Page : AbstractWatchablePage
             DynamicDialogStack.Push((DynamicDialog.Header.Content, DynamicDialog.Items.EnumerateTyped().ToList(), DynamicDialog.Action));
         
         SetDynamicDialogParameters(heading, elements, action);
+    }
+    
+    /// <summary>
+    /// Sets the page to internally reload when the entry is changed.
+    /// </summary>
+    public async Task ReloadOnChangeAsync<T>(T value) where T : AbstractTableValue
+    {
+        if (value.ContainingEntry is TableEntry<T> entry)
+        {
+            ValueChangedHandler<T> updater = (_, _) => ChangeWatcher?.InternalReload();
+            
+            await entry.ValueChanged.RegisterAsync(updater);
+            await Disposing.RegisterAsync(() => entry.ValueChanged.UnregisterAsync(updater).GetAwaiter().GetResult());
+        }
     }
     
     public override IEnumerable<string> EnumerateChunks()
