@@ -44,6 +44,12 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     
     public override AbstractSerializer Serializer
         => Serializers.DataContractJson;
+    
+    /// <summary>
+    /// The minimum length a generated ID should have.
+    /// </summary>
+    public virtual int MinimumIdLength
+        => 1;
 
     /// <summary>
     /// Returns the table with the given name, or loads/creates it if it isn't present already.
@@ -843,9 +849,9 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     private int CalculateIdLength()
     {
         if (Count == 0)
-            return 1;
+            return MinimumIdLength > 1 ? MinimumIdLength : 1;
         var result = (Math.Log(Count) - Math.Log(1e-9d)) / Math.Log(62);
-        return result < 1 ? 1 : Convert.ToInt32(Math.Ceiling(result));
+        return result < MinimumIdLength ? MinimumIdLength : Convert.ToInt32(Math.Ceiling(result));
     }
     
     /// <summary>
