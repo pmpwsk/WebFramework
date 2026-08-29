@@ -171,6 +171,13 @@ public class TextBox : AbstractInput
         Value = input.Trim();
         InitialValueAttribute.SetValueWithoutNotifying(Value);
     }
+    
+    public void SetValueForClient(string value)
+    {
+        Value = value;
+        InitialValueAttribute.SetValueWithoutNotifying(Value);
+        ChangeWatcher?.SetValue(this, value);
+    }
 
     private static (string Type, string? Spellcheck, string? Autocomplete) ConfigurationFromRole(TextBoxRole role)
         => role switch

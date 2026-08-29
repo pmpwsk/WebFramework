@@ -96,6 +96,12 @@ if (document.documentElement.hasAttribute("data-wf-url"))
                 if (element)
                     element.innerHTML = change.content;
             } break;
+            case "SetValue":
+            {
+                let element = getElementByPath(change.path);
+                if (element)
+                    element.value = change.value;
+            } break;
             default:
             {
                 console.warn("Unknown change", change);

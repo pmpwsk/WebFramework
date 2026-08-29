@@ -120,4 +120,12 @@ public class ChangeWatcher
         var content = string.Join("", element.RenderedContainers.WhereNotNull().SelectMany(c => c.WhereNotNull().SelectMany(e => e.EnumerateChunks())));
         WriteChange(new { type = "ContentChanged", path, content });
     }
+    
+    public void SetValue(WatchedElement element, object value)
+    {
+        var path = element.GetPath();
+        if (path == null)
+            return;
+        WriteChange(new { type = "SetValue", path, value });
+    }
 }
