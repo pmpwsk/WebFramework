@@ -23,6 +23,11 @@ public class ModifyTransactionData : IDisposable, IAsyncDisposable
     public bool Cancelled { get; private set; } = false;
     
     /// <summary>
+    /// Whether the transaction is done.
+    /// </summary>
+    public bool Finished { get; private set; } = false;
+    
+    /// <summary>
     /// The transaction task.
     /// </summary>
     internal Task? Task = null;
@@ -40,11 +45,14 @@ public class ModifyTransactionData : IDisposable, IAsyncDisposable
         => Cancelled = true;
 
     /// <summary>
-    /// Commits the transaction.
+    /// Commits or cancels the transaction.
     /// </summary>
-    public async ValueTask DisposeAsync()
+    public async Task Finish()
     {
-        GC.SuppressFinalize(this);
+        if (Finished)
+            return;
+        
+        Finished = true;
         await Waiter.ReadyAsync();
         if (Task != null)
             try
@@ -54,10 +62,16 @@ public class ModifyTransactionData : IDisposable, IAsyncDisposable
             catch (TransactionCanceledException) { }
         Waiter.Dispose();
     }
+    
+    public async ValueTask DisposeAsync()
+    {
+        GC.SuppressFinalize(this);
+        await Finish();
+    }
 
     public void Dispose()
     {
         GC.SuppressFinalize(this);
-        Waiter.Dispose();
+        Finish().GetAwaiter().GetResult();
     }
 }
