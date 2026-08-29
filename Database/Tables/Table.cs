@@ -851,7 +851,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     /// <summary>
     /// Modifies the given reference value with the current value and holds the transaction open until the returned transaction is disposed.
     /// </summary>
-    public ModifyTransactionData StartModifying(ref T value)
+    public virtual ModifyTransactionData StartModifying(ref T value)
     {
         ModifyTransactionData modify = new();
         ReadyWaiter waiter = new();
