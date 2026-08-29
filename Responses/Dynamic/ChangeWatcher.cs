@@ -128,4 +128,9 @@ public class ChangeWatcher
             return;
         WriteChange(new { type = "SetValue", path, value });
     }
+    
+    public void InternalReload()
+    {
+        WriteChange(new { type = "InternalReload" });
+    }
 }

@@ -2,112 +2,7 @@ let watcherId = null;
 
 if (document.documentElement.hasAttribute("data-wf-url"))
 {
-    let url = document.documentElement.getAttribute("data-wf-url");
-    let watcher = new EventSource(`/wf/dyn/watcher?url=${encodeURIComponent(url)}`);
-    onbeforeunload = () => watcher.close();
-    watcher.onmessage = async event =>
-    {
-        if (event.data.startsWith(":"))
-            return;
-        
-        let change = JSON.parse(event.data);
-        switch (change.type)
-        {
-            case "Navigate":
-                window.location.assign(change.location);
-                break;
-            case "Welcome":
-                watcherId = change.id;
-                break;
-            case "FullPage":
-                let script = getElementByPath(["body", "script"]);
-                if (script && script.getAttribute("src") !== change.script)
-                {
-                    window.location.reload();
-                    break;
-                }
-                
-                let valueMap = new Map();
-                writeAllValuesToMap(document.body, valueMap);
-                let focusName = document.activeElement?.name;
-                
-                document.head.innerHTML = "";
-                for (let html of change.head)
-                    document.head.append(parseElement(html));
-
-                for (let child of [...document.body.children])
-                    if (!matchesSystemId(child, "script") && !matchesSystemId(child, "loading"))
-                        child.remove();
-                
-                for (let html of change.beforeScript.reverse())
-                    document.body.prepend(parseElement(html));
-
-                for (let html of change.afterScript)
-                    document.body.append(parseElement(html));
-                
-                writeAllValuesFromMap(document.body, valueMap);
-                
-                let loadingScreen = getElementByPath(["body", "loading"]);
-                if (loadingScreen)
-                    removeClass(loadingScreen, "wf-is-open");
-                
-                if (focusName)
-                    document.getElementsByName(focusName)[0].focus();
-                break;
-            case "AttributeChanged":
-            {
-                let element = getElementByPath(change.path);
-                if (element)
-                    if (change.attributeValue)
-                        element.setAttribute(change.attributeName, change.attributeValue);
-                    else element.removeAttribute(change.attributeName);
-            } break;
-            case "ElementRemoved":
-            {
-                let element = getElementByPath(change.path);
-                if (element)
-                    element.remove();
-            } break;
-            case "ElementAddedBefore":
-            {
-                let successor = getElementByPath(change.path);
-                if (successor)
-                {
-                    let element = parseElement(change.html);
-                    successor.parentNode.insertBefore(element, successor);
-                }
-            } break;
-            case "ElementAddedAfter":
-            {
-                let predecessor = getElementByPath(change.path);
-                if (predecessor)
-                {
-                    let element = parseElement(change.html);
-                    let successor = predecessor.nextSibling;
-                    if (successor)
-                        successor.parentNode.insertBefore(element, successor);
-                    else
-                        predecessor.parentNode.append(element);
-                }
-            } break;
-            case "ContentChanged":
-            {
-                let element = getElementByPath(change.path);
-                if (element)
-                    element.innerHTML = change.content;
-            } break;
-            case "SetValue":
-            {
-                let element = getElementByPath(change.path);
-                if (element)
-                    element.value = change.value;
-            } break;
-            default:
-            {
-                console.warn("Unknown change", change);
-            } break;
-        }
-    }
+    connectWatcher();
 }
 
 document.addEventListener("click", event =>
@@ -179,6 +74,124 @@ document.addEventListener("change", event =>
     if (value !== undefined)
         event.target.setAttribute("data-wf-modified", "");
 });
+
+function connectWatcher() {
+    let url = document.documentElement.getAttribute("data-wf-url");
+    let watcher = new EventSource(`/wf/dyn/watcher?url=${encodeURIComponent(url)}`);
+    onbeforeunload = () => watcher.close();
+    watcher.onmessage = async event =>
+    {
+        if (event.data.startsWith(":"))
+            return;
+
+        let change = JSON.parse(event.data);
+        switch (change.type)
+        {
+            case "Navigate":
+                window.location.assign(change.location);
+                break;
+            case "Welcome":
+                watcherId = change.id;
+                break;
+            case "FullPage":
+                let script = getElementByPath(["body", "script"]);
+                if (script && script.getAttribute("src") !== change.script)
+                {
+                    window.location.reload();
+                    break;
+                }
+
+                let valueMap = new Map();
+                writeAllValuesToMap(document.body, valueMap);
+                let focusName = document.activeElement?.name;
+
+                document.head.innerHTML = "";
+                for (let html of change.head)
+                    document.head.append(parseElement(html));
+
+                for (let child of [...document.body.children])
+                    if (!matchesSystemId(child, "script") && !matchesSystemId(child, "loading"))
+                        child.remove();
+
+                for (let html of change.beforeScript.reverse())
+                    document.body.prepend(parseElement(html));
+
+                for (let html of change.afterScript)
+                    document.body.append(parseElement(html));
+
+                writeAllValuesFromMap(document.body, valueMap);
+
+                let loadingScreen = getElementByPath(["body", "loading"]);
+                if (loadingScreen)
+                    removeClass(loadingScreen, "wf-is-open");
+
+                if (focusName)
+                    document.getElementsByName(focusName)[0].focus();
+                break;
+            case "AttributeChanged":
+            {
+                let element = getElementByPath(change.path);
+                if (element)
+                    if (change.attributeValue)
+                        element.setAttribute(change.attributeName, change.attributeValue);
+                    else element.removeAttribute(change.attributeName);
+            } break;
+            case "ElementRemoved":
+            {
+                let element = getElementByPath(change.path);
+                if (element)
+                    element.remove();
+            } break;
+            case "ElementAddedBefore":
+            {
+                let successor = getElementByPath(change.path);
+                if (successor)
+                {
+                    let element = parseElement(change.html);
+                    successor.parentNode.insertBefore(element, successor);
+                }
+            } break;
+            case "ElementAddedAfter":
+            {
+                let predecessor = getElementByPath(change.path);
+                if (predecessor)
+                {
+                    let element = parseElement(change.html);
+                    let successor = predecessor.nextSibling;
+                    if (successor)
+                        successor.parentNode.insertBefore(element, successor);
+                    else
+                        predecessor.parentNode.append(element);
+                }
+            } break;
+            case "ContentChanged":
+            {
+                let element = getElementByPath(change.path);
+                if (element)
+                    element.innerHTML = change.content;
+            } break;
+            case "SetValue":
+            {
+                let element = getElementByPath(change.path);
+                if (element)
+                    element.value = change.value;
+            } break;
+            case "InternalReload":
+            {
+                let loadingScreen = getElementByPath(["body", "loading"]);
+                if (loadingScreen)
+                    addClass(loadingScreen, "wf-is-open");
+                
+                watcher.close();
+                setTimeout(connectWatcher, 0);
+            } break;
+            default:
+            {
+                console.warn("Unknown change", change);
+            } break;
+        }
+    }
+}
 
 function getClickReceiver(target)
 {
