@@ -1071,4 +1071,30 @@ public static class Parsers
             result.Add(item);
         return result;
     }
+    
+    /// <summary>
+    /// Iterates the true value if the condition is true, otherwise iterates the false value or nothing if it is null.
+    /// </summary>
+    public static IEnumerable<T> ConditionalIteration<T>(bool condition, T trueValue, T? falseValue = default)
+    {
+        if (condition)
+            return [ trueValue ];
+        else if (falseValue != null)
+            return [ falseValue ];
+        else
+            return [];
+    }
+    
+    /// <summary>
+    /// Iterates the true values if the condition is true, otherwise iterates the false value or nothing if it is null.
+    /// </summary>
+    public static IEnumerable<T> ConditionalIteration<T>(bool condition, IEnumerable<T> trueValues, T? falseValue = default)
+    {
+        if (condition)
+            return trueValues;
+        else if (falseValue != null)
+            return [ falseValue ];
+        else
+            return [];
+    }
 }
