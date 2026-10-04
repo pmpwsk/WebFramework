@@ -10,9 +10,9 @@ public class ChangeWatcher
 {
     public string Id;
     
-    public EventResponse? EventResponse = null;
+    public SocketResponse? Socket = null;
 
-    private readonly Queue<string> WaitingChanges = [];
+    private readonly Queue<object> WaitingChanges = [];
 
     private bool Loaded = false; 
     
@@ -23,13 +23,12 @@ public class ChangeWatcher
     
     private void WriteChange(object change, bool forLoading = false)
     {
-        var data = JsonSerializer.Serialize(change);
         lock (WaitingChanges)
         {
             if (Loaded || forLoading)
-                EventResponse?.EventMessage(data).GetAwaiter().GetResult();
+                Socket?.SendJsonAsync(change).GetAwaiter().GetResult();
             else
-                WaitingChanges.Enqueue(data);
+                WaitingChanges.Enqueue(change);
         }
     }
     
@@ -58,8 +57,8 @@ public class ChangeWatcher
         WriteChange(new { type = "FullPage", head, beforeScript, afterScript, script }, true);
         lock (WaitingChanges)
         {
-            while (WaitingChanges.TryDequeue(out var data))
-                EventResponse?.EventMessage(data).GetAwaiter().GetResult();
+            while (WaitingChanges.TryDequeue(out var change))
+                Socket?.SendJsonAsync(change).GetAwaiter().GetResult();
             Loaded = true;
         }
     }

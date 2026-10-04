@@ -24,31 +24,41 @@ public static partial class Server
             {
                 case "/watcher":
                 {
-                    req.ForceGET();
                     var url = req.Query.GetOrThrow("url");
                     
                     var otherResponse = await GetOtherResponseAsync(req, url);
                     if (otherResponse is not Page page)
                         if (otherResponse is RedirectResponse redirectResponse)
-                            return new SingleEventMessageResponse(JsonSerializer.Serialize(new { type = "Navigate", location = redirectResponse.Location }));
+                        {
+                            var redirectSocket = new SocketResponse();
+                            await redirectSocket.ConnectionOpened.RegisterAsync(async () =>
+                            {
+                                await redirectSocket.SendJsonAsync(
+                                    new { type = "Navigate", location = redirectResponse.Location }
+                                );
+                                await redirectSocket.CloseAsync();
+                            });
+                            return redirectSocket;
+                        }
                         else
                             return StatusResponse.NotFound;
+                    
                     var watcher = WatcherManager.CreateWatcher(page);
                     
-                    var response = new EventResponse();
-                    await response.KeepEventAliveCancelled.RegisterAsync((_, _) =>
+                    var response = new SocketResponse();
+                    await response.ConnectionClosed.RegisterAsync(() =>
                     {
-                        watcher.EventResponse = null;
+                        watcher.Socket = null;
                         WatcherManager.DeleteWatcher(watcher);
                         return Task.CompletedTask;
                     });
-                    watcher.EventResponse = response;
-                    response.OnStart = () =>
+                    watcher.Socket = response;
+                    await response.ConnectionOpened.RegisterAsync(() =>
                     {
                         watcher.Welcome();
                         watcher.WritePage(page);
                         return Task.CompletedTask;
-                    };
+                    });
                     return response;
                 }
 
