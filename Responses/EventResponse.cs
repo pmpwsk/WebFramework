@@ -40,7 +40,7 @@ public class EventResponse(CancellationToken cancellationToken = default) : IRes
     }
 
     /// <summary>
-    /// The event that is called the event has stopped (because the client has disconnected, the server is shutting down or the provided token was canceled).
+    /// The event that is called once the event has stopped (because the client has disconnected, the server is shutting down or the provided token was canceled).
     /// </summary>
     public readonly SubscriberContainer<Func<Request, EventResponse, Task>> KeepEventAliveCancelled = new();
     
