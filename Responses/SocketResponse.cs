@@ -50,31 +50,31 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
     /// <summary>
     /// Sends the given text to the client.
     /// </summary>
-    public Task SendText(string text)
-        => Send(WebSocketMessageType.Text, Encoding.UTF8.GetBytes(text), true);
+    public Task SendTextAsync(string text)
+        => SendAsync(WebSocketMessageType.Text, Encoding.UTF8.GetBytes(text), true);
 
     /// <summary>
     /// Sends the given object as JSON to the client.
     /// </summary>
-    public Task SendJson(object obj)
-        => Send(WebSocketMessageType.Text, JsonSerializer.SerializeToUtf8Bytes(obj), true);
+    public Task SendJsonAsync(object obj)
+        => SendAsync(WebSocketMessageType.Text, JsonSerializer.SerializeToUtf8Bytes(obj), true);
 
     /// <summary>
     /// Sends the given binary data to the client.
     /// </summary>
-    public Task SendBinary(ReadOnlyMemory<byte> data)
-        => Send(WebSocketMessageType.Binary, data, true);
+    public Task SendBinaryAsync(ReadOnlyMemory<byte> data)
+        => SendAsync(WebSocketMessageType.Binary, data, true);
     
     /// <summary>
     /// Sends the given binary data to the client in segments while needing to indicate the last segment.
     /// </summary>
-    public Task SendSegmentedBinary(ReadOnlyMemory<byte> data, bool isLastSegment)
-        => Send(WebSocketMessageType.Binary, data, isLastSegment);
+    public Task SendSegmentedBinaryAsync(ReadOnlyMemory<byte> data, bool isLastSegment)
+        => SendAsync(WebSocketMessageType.Binary, data, isLastSegment);
     
     /// <summary>
     /// Sends the given data to the client.
     /// </summary>
-    private async Task Send(WebSocketMessageType type, ReadOnlyMemory<byte> data, bool isLastSegment)
+    private async Task SendAsync(WebSocketMessageType type, ReadOnlyMemory<byte> data, bool isLastSegment)
     {
         if (Connection == null || InternalCancellation == null)
             throw new Exception("The socket hasn't started yet.");
@@ -94,7 +94,7 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
     /// <summary>
     /// Closes the socket.
     /// </summary>
-    public async Task Close(WebSocketCloseStatus status = WebSocketCloseStatus.NormalClosure, string? description = null)
+    public async Task CloseAsync(WebSocketCloseStatus status = WebSocketCloseStatus.NormalClosure, string? description = null)
     {
         if (Connection == null || InternalCancellation == null
                 || Connection.State == WebSocketState.Closed || Connection.State == WebSocketState.Aborted)
@@ -160,7 +160,7 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
                     if (segmentInfo.MessageType == WebSocketMessageType.Close)
                     {
                         lastMessageType = WebSocketMessageType.Close;
-                        await Close(
+                        await CloseAsync(
                             Connection.CloseStatus ?? WebSocketCloseStatus.NormalClosure,
                             Connection.CloseStatusDescription ?? "The client closed the connection."
                         );
@@ -169,7 +169,7 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
                     else if (lastMessageType != null && lastMessageType != segmentInfo.MessageType)
                     {
                         lastMessageType = WebSocketMessageType.Close;
-                        await Close(
+                        await CloseAsync(
                             WebSocketCloseStatus.InvalidMessageType,
                             "The message type changed between segments."
                         );
