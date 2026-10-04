@@ -116,12 +116,14 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
     
     public async Task Respond(Request req, HttpContext context)
     {
+        // check method
         if (req.WebSocket == null)
         {
             await StatusResponse.BadMethod.Respond(req, context);
             return;
         }
         
+        // open socket
         Connection = await req.WebSocket.AcceptWebSocketAsync(
             new WebSocketAcceptContext
             {
@@ -130,14 +132,16 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
             }
         );
         
+        // create cancellation token
         InternalCancellation = new();
         context.RequestAborted.Register(InternalCancellation.Cancel);
         Server.StoppingToken.Register(InternalCancellation.Cancel);
         if (CancellationToken != CancellationToken.None)
             CancellationToken.Register(InternalCancellation.Cancel);
-            
+        
         try
         {
+            // open event
             await ConnectionOpened.InvokeWithAsyncCaller
             (
                 s => s(),
@@ -145,9 +149,11 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
                 true
             );
             
+            // repeatedly wait for messages until closed
             var segmentBuffer = new byte[1024];
             while (!InternalCancellation.IsCancellationRequested && Connection.State == WebSocketState.Open)
             {
+                // repeatedly collect message segments until complete
                 using var messageStream = new MemoryStream();
                 WebSocketMessageType? lastMessageType = null;
                 while (!InternalCancellation.IsCancellationRequested && Connection.State == WebSocketState.Open)
@@ -159,6 +165,7 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
                     
                     if (segmentInfo.MessageType == WebSocketMessageType.Close)
                     {
+                        // closure message
                         lastMessageType = WebSocketMessageType.Close;
                         await CloseAsync(
                             Connection.CloseStatus ?? WebSocketCloseStatus.NormalClosure,
@@ -168,6 +175,7 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
                     }
                     else if (lastMessageType != null && lastMessageType != segmentInfo.MessageType)
                     {
+                        // mixed message types
                         lastMessageType = WebSocketMessageType.Close;
                         await CloseAsync(
                             WebSocketCloseStatus.InvalidMessageType,
@@ -177,6 +185,7 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
                     }
                     else
                     {
+                        // normal message segment
                         lastMessageType = segmentInfo.MessageType;
                         if (segmentInfo.Count > 0)
                             await messageStream.WriteAsync(
@@ -191,8 +200,11 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
                 if (lastMessageType is null or WebSocketMessageType.Close)
                     break;
                 
+                // combine message segments
                 var data = messageStream.GetBuffer().AsMemory(0, (int)messageStream.Length);
                 var isText = lastMessageType == WebSocketMessageType.Text;
+                
+                // message event
                 await MessageReceived.InvokeWithAsyncCaller(
                     s => s(data, isText),
                     _ => {},
@@ -200,9 +212,12 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
                 );
             }
         }
-        catch { }
+        catch { } // cancellation exceptions and more
         
+        // cancel the token if not already canceled
         await InternalCancellation.CancelAsync();
+        
+        // close the connection if not already closed
         if (Connection.State != WebSocketState.Closed && Connection.State != WebSocketState.Aborted)
             try
             {
@@ -216,6 +231,7 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
             }
             catch { }
         
+        // close event
         await ConnectionClosed.InvokeWithAsyncCaller
         (
             s => s(),
