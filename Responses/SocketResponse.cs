@@ -203,6 +203,19 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
         catch { }
         
         await InternalCancellation.CancelAsync();
+        if (Connection.State != WebSocketState.Closed && Connection.State != WebSocketState.Aborted)
+            try
+            {
+                var closeCts = new CancellationTokenSource();
+                closeCts.CancelAfter(1000);
+                await Connection.CloseAsync(
+                    WebSocketCloseStatus.EndpointUnavailable,
+                    null,
+                    closeCts.Token
+                );
+            }
+            catch { }
+        
         await ConnectionClosed.InvokeWithAsyncCaller
         (
             s => s(),
