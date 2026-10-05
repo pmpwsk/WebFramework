@@ -1,4 +1,3 @@
-using System.Text.Json;
 using uwap.WebFramework.Responses.DefaultUI;
 
 namespace uwap.WebFramework.Responses.Dynamic;
@@ -16,10 +15,15 @@ public class ChangeWatcher
 
     private bool Loaded = false; 
     
+    private long LastChangeId = 0;
+    
     internal ChangeWatcher(string id)
     {
         Id = id;
     }
+    
+    private long GenerateChangeId()
+        => Interlocked.Increment(ref LastChangeId);
     
     private void WriteChange(object change, bool forLoading = false)
     {
@@ -34,7 +38,15 @@ public class ChangeWatcher
     
     public void Welcome()
     {
-        WriteChange(new { type = "Welcome", id = Id });
+        WriteChange(
+            new
+            {
+                changeId = GenerateChangeId(),
+                type = "Welcome",
+                id = Id
+            },
+            true
+        );
     }
 
     public void WritePage(Page page)
@@ -54,7 +66,18 @@ public class ChangeWatcher
                         beforeScript.Add(ToCode(part));
         if (script == null)
             throw new ForcedResponse(StatusResponse.Teapot);
-        WriteChange(new { type = "FullPage", head, beforeScript, afterScript, script }, true);
+        WriteChange(
+            new
+            {
+                changeId = GenerateChangeId(),
+                type = "FullPage",
+                head,
+                beforeScript,
+                afterScript,
+                script
+            },
+            true
+        );
         lock (WaitingChanges)
         {
             while (WaitingChanges.TryDequeue(out var change))
@@ -72,7 +95,16 @@ public class ChangeWatcher
         if (path == null)
             return;
         var attributeValue = element.GetAttribute(attributeName);
-        WriteChange(new { type = "AttributeChanged", path, attributeName, attributeValue });
+        WriteChange(
+            new
+            {
+                changeId = GenerateChangeId(),
+                type = "AttributeChanged",
+                path,
+                attributeName,
+                attributeValue
+            }
+        );
     }
     
     public void ElementRemoved(WatchedElement child)
@@ -80,7 +112,14 @@ public class ChangeWatcher
         var path = child.GetPath();
         if (path == null)
             return;
-        WriteChange(new { type = "ElementRemoved", path });
+        WriteChange(
+            new
+            {
+                changeId = GenerateChangeId(),
+                type = "ElementRemoved",
+                path
+            }
+        );
     }
     
     public void ElementAdded(WatchedElement child, IWatchedParent parent, WatchedElement? predecessor, WatchedElement? successor)
@@ -99,7 +138,15 @@ public class ChangeWatcher
         if (path == null)
             return;
         var html = string.Join("", child.EnumerateChunks());
-        WriteChange(new { type = "ElementAddedBefore", path, html });
+        WriteChange(
+            new
+            {
+                changeId = GenerateChangeId(),
+                type = "ElementAddedBefore",
+                path,
+                html
+            }
+        );
     }
     
     public void ElementAddedAfter(WatchedElement child, WatchedElement predecessor)
@@ -108,7 +155,15 @@ public class ChangeWatcher
         if (path == null)
             return;
         var html = string.Join("", child.EnumerateChunks());
-        WriteChange(new { type = "ElementAddedAfter", path, html });
+        WriteChange(
+            new
+            {
+                changeId = GenerateChangeId(),
+                type = "ElementAddedAfter",
+                path,
+                html
+            }
+        );
     }
     
     public void ContentChanged(WatchedElement element)
@@ -117,7 +172,15 @@ public class ChangeWatcher
         if (path == null)
             return;
         var content = string.Join("", element.RenderedContainers.WhereNotNull().SelectMany(c => c.WhereNotNull().SelectMany(e => e.EnumerateChunks())));
-        WriteChange(new { type = "ContentChanged", path, content });
+        WriteChange(
+            new
+            {
+                changeId = GenerateChangeId(),
+                type = "ContentChanged",
+                path,
+                content
+            }
+        );
     }
     
     public void SetValue(WatchedElement element, object value)
@@ -125,11 +188,25 @@ public class ChangeWatcher
         var path = element.GetPath();
         if (path == null)
             return;
-        WriteChange(new { type = "SetValue", path, value });
+        WriteChange(
+            new
+            {
+                changeId = GenerateChangeId(),
+                type = "SetValue",
+                path,
+                value
+            }
+        );
     }
     
     public void InternalReload()
     {
-        WriteChange(new { type = "InternalReload" });
+        WriteChange(
+            new
+            {
+                changeId = GenerateChangeId(),
+                type = "InternalReload"
+            }
+        );
     }
 }

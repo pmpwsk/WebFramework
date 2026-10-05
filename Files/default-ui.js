@@ -82,10 +82,12 @@ class WrappedSocket {
 
 let watcherId = null;
 let watcher = null;
+let lastChangeId = null;
 
 if (document.documentElement.hasAttribute("data-wf-url")) {
     let url = document.documentElement.getAttribute("data-wf-url");
     watcher = new WrappedSocket(`/wf/dyn/watcher?url=${encodeURIComponent(url)}`);
+    watcher.onConnectedAsync = () => lastChangeId = -1;
     watcher.onReconnectingAsync = LoadingScreen.show;
     watcher.onMessageAsync = onWatcherMessageAsync;
     (async () => watcher.startAsync())();
@@ -163,16 +165,22 @@ document.addEventListener("change", event =>
 
 async function onWatcherMessageAsync(data) {
     let change = JSON.parse(data);
+    console.log("Watcher message received.", change);
+    if (!change.changeId || change.changeId <= lastChangeId)
+        return;
+    lastChangeId = change.changeId;
+    
     switch (change.type) {
-        case "Navigate":
+        case "Navigate": {
             window.location.assign(change.location);
-            break;
-        case "Welcome":
+        } break;
+        case "Welcome": {
             watcherId = change.id;
-            break;
-        case "FullPage":
+        } break;
+        case "FullPage": {
             let script = getElementByPath(["body", "script"]);
             if (script && script.getAttribute("src") !== change.script) {
+                console.log("Script changed, reloading.");
                 window.location.reload();
                 break;
             }
@@ -201,29 +209,26 @@ async function onWatcherMessageAsync(data) {
 
             if (focusName)
                 document.getElementsByName(focusName)[0].focus();
-            break;
+        } break;
         case "AttributeChanged": {
             let element = getElementByPath(change.path);
             if (element)
                 if (change.attributeValue)
                     element.setAttribute(change.attributeName, change.attributeValue);
                 else element.removeAttribute(change.attributeName);
-        }
-            break;
+        } break;
         case "ElementRemoved": {
             let element = getElementByPath(change.path);
             if (element)
                 element.remove();
-        }
-            break;
+        } break;
         case "ElementAddedBefore": {
             let successor = getElementByPath(change.path);
             if (successor) {
                 let element = parseElement(change.html);
                 successor.parentNode.insertBefore(element, successor);
             }
-        }
-            break;
+        } break;
         case "ElementAddedAfter": {
             let predecessor = getElementByPath(change.path);
             if (predecessor) {
@@ -234,29 +239,24 @@ async function onWatcherMessageAsync(data) {
                 else
                     predecessor.parentNode.append(element);
             }
-        }
-            break;
+        } break;
         case "ContentChanged": {
             let element = getElementByPath(change.path);
             if (element)
                 element.innerHTML = change.content;
-        }
-            break;
+        } break;
         case "SetValue": {
             let element = getElementByPath(change.path);
             if (element)
                 element.value = change.value;
-        }
-            break;
+        } break;
         case "InternalReload": {
             LoadingScreen.show();
             await watcher.restartAsync();
-        }
-            break;
+        } break;
         default: {
             console.warn("Unknown change", change);
-        }
-            break;
+        } break;
     }
 }
 
