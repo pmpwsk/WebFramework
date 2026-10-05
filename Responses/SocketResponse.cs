@@ -8,18 +8,33 @@ namespace uwap.WebFramework.Responses;
 
 public delegate Task SocketStartHandler();
 public delegate Task SocketMessageHandler(ReadOnlyMemory<byte> data, bool isText);
-public delegate Task SocketClosedHandler();
+public delegate Task SocketClosedHandler(bool wasExpected);
 
 /// <summary>
 /// Represents a WebSocket response.
 /// </summary>
 public class SocketResponse(CancellationToken cancellationToken = default) : IResponse
 {
+    /// <summary>
+    /// The custom cancellation token that was passed into the constructor.
+    /// </summary>
     public readonly CancellationToken CancellationToken = cancellationToken;
     
+    /// <summary>
+    /// The combined cancellation token source for all reasons to close the connection.
+    /// </summary>
     private CancellationTokenSource? InternalCancellation = null;
     
+    /// <summary>
+    /// The underlying connection.
+    /// </summary>
     private WebSocket? Connection = null;
+    
+    /// <summary>
+    /// Whether the client or the server requested the connection to the closed.<br/>
+    /// If the value is false, a connection termination will be treated as unexpected.
+    /// </summary>
+    private bool ClosureExpected = false;
 
     /// <summary>
     /// Lock that assures that only one thread at a time can send data.
@@ -104,6 +119,7 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
         
         try
         {
+            ClosureExpected = true;
             await Connection.CloseAsync(
                 status,
                 description,
@@ -234,7 +250,7 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
         // close event
         await ConnectionClosed.InvokeWithAsyncCaller
         (
-            s => s(),
+            s => s(ClosureExpected),
             _ => {},
             true
         );

@@ -46,7 +46,7 @@ public static partial class Server
                     var watcher = WatcherManager.CreateWatcher(page);
                     
                     var response = new SocketResponse();
-                    await response.ConnectionClosed.RegisterAsync(() =>
+                    await response.ConnectionClosed.RegisterAsync(wasExpected =>
                     {
                         watcher.Socket = null;
                         WatcherManager.DeleteWatcher(watcher);
