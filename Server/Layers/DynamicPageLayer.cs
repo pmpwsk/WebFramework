@@ -30,18 +30,23 @@ public static partial class Server
                     if (otherResponse is not Page page)
                         if (otherResponse is RedirectResponse redirectResponse)
                         {
+                            var location = redirectResponse.Location;
+                            redirectResponse.Dispose();
                             var redirectSocket = new SocketResponse();
                             await redirectSocket.ConnectionOpened.RegisterAsync(async () =>
                             {
                                 await redirectSocket.SendJsonAsync(
-                                    new { type = "Navigate", location = redirectResponse.Location }
+                                    new { type = "Navigate", location }
                                 );
                                 await redirectSocket.CloseAsync();
                             });
                             return redirectSocket;
                         }
                         else
+                        {
+                            otherResponse.Dispose();
                             return StatusResponse.NotFound;
+                        }
                     
                     var watcher = WatcherManager.CreateWatcher(page);
                     
