@@ -1,4 +1,3 @@
-using uwap.WebFramework.Responses.Actions;
 using uwap.WebFramework.Responses.Base;
 using uwap.WebFramework.Responses.Dynamic;
 
@@ -61,7 +60,7 @@ public class Body : WatchedElement
         PageContentContainer = new(this, new(req));
         Menus = new(this, menus ?? []);
         Dialogs = new(this, dialogs ?? []);
-        DynamicDialogContainer = new(this, dynamic ? new ServerFormDialog("wf-dynamic-dialog", "Dynamic dialog", false, [], Nothing.EmptyHandler) : null);
+        DynamicDialogContainer = new(this, dynamic ? new ServerFormDialog("wf-dynamic-dialog", "Dynamic dialog", false, [], _ => Task.CompletedTask) : null);
         LoadingScreenContainer = new(this, new(false));
         DefaultScript = new(this, new(req));
         Scripts = new(this, scripts ?? []);

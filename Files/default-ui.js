@@ -83,6 +83,7 @@ class WrappedSocket {
 let watcherId = null;
 let watcher = null;
 let lastChangeId = null;
+let navigateReceived = false;
 
 if (document.documentElement.hasAttribute("data-wf-url")) {
     let url = document.documentElement.getAttribute("data-wf-url");
@@ -166,12 +167,16 @@ document.addEventListener("change", event =>
 async function onWatcherMessageAsync(data) {
     let change = JSON.parse(data);
     console.log("Watcher message received.", change);
-    if (!change.changeId || change.changeId <= lastChangeId)
+    if (!change.changeId) {
+        console.error("Change without ID.", change);
         return;
+    }
+    
     lastChangeId = change.changeId;
     
     switch (change.type) {
         case "Navigate": {
+            navigateReceived = true;
             window.location.assign(change.location);
         } break;
         case "Welcome": {
@@ -364,26 +369,7 @@ function runServerAction(submitter, form)
     request.open("POST", `/wf/dyn/submit?id=${watcherId}&path=${encodeURIComponent(JSON.stringify(getSystemPath(submitter)))}`);
     request.onload = () =>
     {
-        let action = JSON.parse(request.responseText);
-        let stopLoading = true;
-        switch (action.type)
-        {
-            case "Nothing":
-                break;
-            case "Navigate":
-                stopLoading = false;
-                window.location.assign(action.location);
-                break;
-            case "Reload":
-                stopLoading = false;
-                window.location.reload();
-                break;
-            default:
-                console.warn("Unknown action", action);
-                break;
-        }
-
-        if (stopLoading)
+        if (!navigateReceived)
             LoadingScreen.hide();
     }
     let formData = new FormData();

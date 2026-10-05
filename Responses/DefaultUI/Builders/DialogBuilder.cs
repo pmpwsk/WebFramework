@@ -10,100 +10,106 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 public static class DialogBuilder
 {
     /// <summary>
-    /// Opens a dynamic dialog with the given heading and message lines to the given page, and returns an empty action response.
+    /// Opens a dynamic dialog with the given heading and message lines to the given page.
     /// </summary>
-    public static Nothing DynamicDialogAction(Page page, IconAndText heading, List<AbstractElement> elements, ActionHandler action)
+    public static void Open(Page page, IconAndText heading, List<AbstractElement> elements, ActionHandler action)
+        => page.OpenDynamicDialog(heading, elements, action);
+
+    /// <summary>
+    /// Opens a dynamic dialog with the given heading and message lines to the given page.
+    /// </summary>
+    public static Task OpenTask(Page page, IconAndText heading, List<AbstractElement> elements, ActionHandler action)
     {
-        page.OpenDynamicDialog(heading, elements, action);
-        return new Nothing();
+        Open(page, heading, elements, action);
+        return Task.CompletedTask;
     }
 
     /// <summary>
-    /// Opens a dynamic dialog with the given heading and message lines to the given page, and returns an empty action response.
+    /// Opens a dynamic dialog with the given heading and message lines to the given page.
     /// </summary>
-    public static Task<IActionResponse> DynamicDialogActionAsync(Page page, IconAndText heading, List<AbstractElement> elements, ActionHandler action)
-        => Task.FromResult<IActionResponse>(DynamicDialogAction(page, heading, elements, action));
-
-    /// <summary>
-    /// Opens a dynamic dialog with the given heading and message lines to the given page, and returns an empty action response.
-    /// </summary>
-    public static Nothing DynamicDialogAction(Page page, IconAndText heading, params string[] messages)
-    {
-        page.OpenDynamicDialog(
+    public static void Open(Page page, IconAndText heading, params string[] messages)
+        => page.OpenDynamicDialog(
             heading,
             [
                 ..messages.Select(message => new Paragraph(message)),
                 new SubmitButton("Okay")
             ],
-            _ => DynamicDialogBackActionAsync(page)
+            _ => BackTask(page)
         );
-        return new Nothing();
-    }
 
     /// <summary>
-    /// Opens a dynamic dialog with the given heading and message lines to the given page, and returns an empty action response.
+    /// Opens a dynamic dialog with the given heading and message lines to the given page.
     /// </summary>
-    public static Task<IActionResponse> DynamicDialogActionAsync(Page page, IconAndText heading, params string[] messages)
-        => Task.FromResult<IActionResponse>(DynamicDialogAction(page, heading, messages));
-
-    /// <summary>
-    /// Opens a dynamic error popup with the given message lines to the given page, and returns an empty action response.
-    /// </summary>
-    public static Nothing DynamicErrorAction(Page page, params string[] messages)
-        => DynamicDialogAction(page, "Error", messages);
-
-    /// <summary>
-    /// Opens a dynamic error popup with the given message lines to the given page, and returns an empty action response.
-    /// </summary>
-    public static Task<IActionResponse> DynamicErrorActionAsync(Page page, params string[] messages)
-        => Task.FromResult<IActionResponse>(DynamicErrorAction(page, messages));
-
-    /// <summary>
-    /// Opens a dynamic info popup with the given message lines to the given page, and returns an empty action response.
-    /// </summary>
-    public static Nothing DynamicInfoAction(Page page, params string[] messages)
-        => DynamicDialogAction(page, "Info", messages);
-
-    /// <summary>
-    /// Opens a dynamic info popup with the given message lines to the given page, and returns an empty action response.
-    /// </summary>
-    public static Task<IActionResponse> DynamicInfoActionAsync(Page page, params string[] messages)
-        => Task.FromResult<IActionResponse>(DynamicInfoAction(page, messages));
-
-    /// <summary>
-    /// Closes any dynamic dialogs, and returns an empty action response.
-    /// </summary>
-    public static Nothing DynamicDialogCloseAction(Page page)
+    public static Task OpenTask(Page page, IconAndText heading, params string[] messages)
     {
-        page.CloseDynamicDialog();
-        return new Nothing();
+        Open(page, heading, messages);
+        return Task.CompletedTask;
     }
 
     /// <summary>
-    /// Closes any dynamic dialogs, and return an empty action response.
+    /// Opens a dynamic error popup with the given message lines to the given page.
     /// </summary>
-    public static Task<IActionResponse> DynamicDialogCloseActionAsync(Page page)
-        => Task.FromResult<IActionResponse>(DynamicDialogCloseAction(page));
+    public static void Error(Page page, params string[] messages)
+        => Open(page, "Error", messages);
 
     /// <summary>
-    /// Returns the dynamic dialog to its previous state or closes it if no previous state is present and returns an empty action response.
+    /// Opens a dynamic error popup with the given message lines to the given page.
     /// </summary>
-    public static Nothing DynamicDialogBackAction(Page page)
+    public static Task ErrorTask(Page page, params string[] messages)
     {
-        page.ReturnDynamicDialog();
-        return new Nothing();
+        Error(page, messages);
+        return Task.CompletedTask;
     }
 
     /// <summary>
-    /// Returns the dynamic dialog to its previous state or closes it if no previous state is present and returns an empty action response.
+    /// Opens a dynamic info popup with the given message lines to the given page.
     /// </summary>
-    public static Task<IActionResponse> DynamicDialogBackActionAsync(Page page)
-        => Task.FromResult<IActionResponse>(DynamicDialogBackAction(page));
-    
+    public static void Info(Page page, params string[] messages)
+        => Open(page, "Info", messages);
+
+    /// <summary>
+    /// Opens a dynamic info popup with the given message lines to the given page.
+    /// </summary>
+    public static Task InfoTask(Page page, params string[] messages)
+    {
+        Info(page, messages);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Closes any dynamic dialogs.
+    /// </summary>
+    public static void Close(Page page)
+        => page.CloseDynamicDialog();
+
+    /// <summary>
+    /// Closes any dynamic dialogs.
+    /// </summary>
+    public static Task CloseTask(Page page)
+    {
+        Close(page);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Returns the dynamic dialog to its previous state or closes it if no previous state is present.
+    /// </summary>
+    public static void Back(Page page)
+        => page.ReturnDynamicDialog();
+
+    /// <summary>
+    /// Returns the dynamic dialog to its previous state or closes it if no previous state is present.
+    /// </summary>
+    public static Task BackTask(Page page)
+    {
+        Back(page);
+        return Task.CompletedTask;
+    }
+
     /// <summary>
     /// Opens a dialog to create or edit an object.
     /// </summary>
-    public static Task<IActionResponse> SaveObjectDialogActionAsync<C>(Page page, C obj, IconAndText heading, List<IInputBuilder<C>> fields, Action<C>? additionalApplicator, Func<Action<C>, Task<IActionResponse>> saver) where C : AbstractTableValue
+    public static Task SaveObjectTask<C>(Page page, C obj, IconAndText heading, List<IInputBuilder<C>> fields, Action<C>? additionalApplicator, Func<Action<C>, Task> saver) where C : AbstractTableValue
     {
         List<AbstractElement> elements = [];
         foreach (var field in fields)
@@ -113,7 +119,7 @@ public static class DialogBuilder
             new DialogBackButton(page)
         ));
         
-        return DynamicDialogActionAsync(
+        return OpenTask(
             page,
             heading,
             elements,
@@ -123,10 +129,13 @@ public static class DialogBuilder
                 {
                     var message = await field.ValidateAsync();
                     if (message != null)
-                        return DynamicErrorAction(page, message);
+                    {
+                        Error(page, message);
+                        return;
+                    }
                 }
                 
-                return await saver(o =>
+                await saver(o =>
                 {
                     foreach (var field in fields)
                         field.Apply(o);
@@ -140,8 +149,8 @@ public static class DialogBuilder
     /// <summary>
     /// Opens a dialog to delete an object.
     /// </summary>
-    public static Task<IActionResponse> DeleteObjectDialogActionAsync<C>(Page page, C obj, Table<C> table, IconAndText heading, string name, string returnLocation) where C : AbstractTableValue
-        => DynamicDialogActionAsync(
+    public static Task DeleteObjectTask<C>(Page page, C obj, Table<C> table, IconAndText heading, string name, string returnLocation) where C : AbstractTableValue
+        => OpenTask(
             page,
             heading,
             [
@@ -154,7 +163,7 @@ public static class DialogBuilder
             async _ =>
             {
                 await table.DeleteAsync(obj);
-                return new Navigate(returnLocation);
+                page.Navigate(returnLocation);
             }
         );
 }

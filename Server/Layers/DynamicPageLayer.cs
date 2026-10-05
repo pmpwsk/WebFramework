@@ -36,7 +36,7 @@ public static partial class Server
                             await redirectSocket.ConnectionOpened.RegisterAsync(async () =>
                             {
                                 await redirectSocket.SendJsonAsync(
-                                    new { type = "Navigate", location }
+                                    new { changeId = -1, type = "Navigate", location }
                                 );
                                 await redirectSocket.CloseAsync();
                             });
@@ -93,7 +93,7 @@ public static partial class Server
                     }
                     
                     if (element.HasActionIgnoringParent)
-                        return new TextResponse(JsonSerializer.Serialize(new Nothing().Generate(req)));
+                        return StatusResponse.Success;
                     
                     foreach (var (encodedKey, stringValues) in req.Form.Data)
                     {
@@ -111,7 +111,8 @@ public static partial class Server
                         formInput.SetValueFromForm(value ?? "");
                     }
                     
-                    return new TextResponse(JsonSerializer.Serialize((await action(req)).Generate(req)));
+                    await action(req);
+                    return StatusResponse.Success;
                 }
                 
                 default:

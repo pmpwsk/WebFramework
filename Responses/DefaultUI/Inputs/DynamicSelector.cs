@@ -30,8 +30,8 @@ public class DynamicSelector<T> : ButtonWithText, IActionHaver
         FixedAttributes.Add(("type", "submit"));
     }
     
-    private Task<IActionResponse> Open(Request req)
-        => DialogBuilder.DynamicDialogActionAsync(
+    private Task Open(Request req)
+        => DialogBuilder.OpenTask(
             Page,
             Heading,
             [
@@ -42,12 +42,12 @@ public class DynamicSelector<T> : ButtonWithText, IActionHaver
                     {
                         Value = option.Value;
                         Content = GenerateContent(option.Value, Options);
-                        return DialogBuilder.DynamicDialogBackActionAsync(Page);
+                        return DialogBuilder.BackTask(Page);
                     }
                 )),
                 new DialogBackButton(Page)
             ],
-            Nothing.EmptyHandler
+            _ => Task.CompletedTask
         );
     
     public override string RenderedTag

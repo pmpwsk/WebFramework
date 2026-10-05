@@ -209,4 +209,16 @@ public class ChangeWatcher
             }
         );
     }
+    
+    public void Navigate(string location)
+    {
+        WriteChange(
+            new
+            {
+                changeId = GenerateChangeId(),
+                type = "Navigate",
+                location
+            }
+        );
+    }
 }

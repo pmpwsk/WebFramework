@@ -197,7 +197,7 @@ public class Page : AbstractWatchablePage
         {
             DynamicDialogStack.Clear();
             
-            DynamicDialog.Action = Nothing.EmptyHandler;
+            DynamicDialog.Action = _ => Task.CompletedTask;
             DynamicDialog.IgnoreActions = true;
             DynamicDialog.IsOpen = false;
         }
@@ -238,12 +238,24 @@ public class Page : AbstractWatchablePage
     {
         if (value.ContainingEntry is TableEntry<T> entry)
         {
-            ValueChangedHandler<T> updater = (_, _) => ChangeWatcher?.InternalReload();
+            ValueChangedHandler<T> updater = (_, _) => Reload();
             
             await entry.ValueChanged.RegisterAsync(updater);
             await Disposing.RegisterAsync(() => entry.ValueChanged.UnregisterAsync(updater).GetAwaiter().GetResult());
         }
     }
+    
+    /// <summary>
+    /// Reloads a dynamic page internally.
+    /// </summary>
+    public void Reload()
+        => ChangeWatcher?.InternalReload();
+    
+    /// <summary>
+    /// Directs the dynamic page to the new location.
+    /// </summary>
+    public void Navigate(string location)
+        => ChangeWatcher?.Navigate(location);
     
     public override IEnumerable<string> EnumerateChunks()
     {
