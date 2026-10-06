@@ -8,8 +8,8 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// </summary>
 public class DynamicSelector<T> : ButtonWithText, IActionHaver
 {
-    public ActionHandler Action
-        => Open;
+    public ActionHandlerAsync Action
+        => OpenTask;
     
     public readonly Page Page;
     
@@ -30,26 +30,29 @@ public class DynamicSelector<T> : ButtonWithText, IActionHaver
         FixedAttributes.Add(("type", "submit"));
     }
     
-    private Task Open(Request req)
-        => DialogBuilder.OpenTask(
+    private Task OpenTask(Request req)
+    {
+        DialogBuilder.Open(
             Page,
             Heading,
             [
-                ..Options.Select(option => new BigServerSubmitButton(
+                .. Options.Select(option => new BigServerSubmitButton(
                     option.Name,
-                    option.Description == null ? [] : [ option.Description ],
+                    option.Description == null ? [] : [option.Description],
                     _ =>
                     {
                         Value = option.Value;
                         Content = GenerateContent(option.Value, Options);
-                        return DialogBuilder.BackTask(Page);
+                        DialogBuilder.Back(Page);
                     }
                 )),
                 new DialogBackButton(Page)
             ],
-            _ => Task.CompletedTask
+            _ => { }
         );
-    
+        return Task.CompletedTask;
+    }
+
     public override string RenderedTag
         => "button";
     

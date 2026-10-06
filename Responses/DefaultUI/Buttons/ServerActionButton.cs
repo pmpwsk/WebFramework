@@ -8,11 +8,11 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// </summary>
 public class ServerActionButton : AbstractButton, IActionHaver
 {
-    public ActionHandler Action { get; set; }
+    public ActionHandlerAsync Action { get; set; }
     
     private readonly RequiredWatchedContainer<SubmitButton> SubmitContainer;
     
-    public ServerActionButton(IconAndText content, ActionHandler action)
+    public ServerActionButton(IconAndText content, ActionHandlerAsync action)
     {
         SubmitContainer = new(this, new(content));
         Action = action;
@@ -21,6 +21,9 @@ public class ServerActionButton : AbstractButton, IActionHaver
         FixedAttributes.Add(("enctype", "multipart/form-data"));
         FixedAttributes.Add(("action", "#"));
     }
+    
+    public ServerActionButton(IconAndText content, ActionHandler action)
+        : this(content, action.ToAsync()) { }
     
     /// <summary>
     /// The actual submit button.

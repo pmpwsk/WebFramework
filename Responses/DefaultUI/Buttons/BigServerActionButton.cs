@@ -9,11 +9,11 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// </summary>
 public class BigServerActionButton : OptionalIdElement, IActionHaver
 {
-    public ActionHandler Action { get; set; }
+    public ActionHandlerAsync Action { get; set; }
     
     private readonly RequiredWatchedContainer<BigSubmitButton> SubmitContainer;
     
-    public BigServerActionButton(IconAndText text, IEnumerable<string> subtexts, ActionHandler action)
+    public BigServerActionButton(IconAndText text, IEnumerable<string> subtexts, ActionHandlerAsync action)
     {
         SubmitContainer = new(this, new(text, subtexts));
         Action = action;
@@ -22,6 +22,9 @@ public class BigServerActionButton : OptionalIdElement, IActionHaver
         FixedAttributes.Add(("enctype", "multipart/form-data"));
         FixedAttributes.Add(("action", "#"));
     }
+    
+    public BigServerActionButton(IconAndText text, IEnumerable<string> subtexts, ActionHandler action)
+        : this(text, subtexts, action.ToAsync()) { }
     
     /// <summary>
     /// The actual submit button.

@@ -9,7 +9,7 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// </summary>
 public class BigServerSubmitButton : OptionalIdElement, IActionHaver
 {
-    public ActionHandler Action { get; set; }
+    public ActionHandlerAsync Action { get; set; }
     
     /// <summary>
     /// The object describing the button's header text.
@@ -21,7 +21,7 @@ public class BigServerSubmitButton : OptionalIdElement, IActionHaver
     /// </summary>
     public readonly ListWatchedContainer<Paragraph> Paragraphs;
     
-    public BigServerSubmitButton(IconAndText text, IEnumerable<string> subtexts, ActionHandler action)
+    public BigServerSubmitButton(IconAndText text, IEnumerable<string> subtexts, ActionHandlerAsync action)
     {
         Action = action;
         var header = new Heading3(text);
@@ -32,6 +32,9 @@ public class BigServerSubmitButton : OptionalIdElement, IActionHaver
         FixedAttributes.Add(("type", "submit"));
         FixedAttributes.Add(("draggable", "false"));
     }
+    
+    public BigServerSubmitButton(IconAndText text, IEnumerable<string> subtexts, ActionHandler action)
+        : this(text, subtexts, action.ToAsync()) { }
     
     /// <summary>
     /// The button's text.

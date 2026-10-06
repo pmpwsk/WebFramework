@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using uwap.WebFramework.Responses;
+using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework;
 
@@ -1097,4 +1099,14 @@ public static class Parsers
         else
             return [];
     }
+    
+    /// <summary>
+    /// Registers the synchronous action to an event with asynchronous action subscribers.
+    /// </summary>
+    public static Task RegisterAsync(this SubscriberContainer<AsyncAction> subscriberContainer, Action action)
+        => subscriberContainer.RegisterAsync(() =>
+        {
+            action();
+            return Task.CompletedTask;
+        });
 }

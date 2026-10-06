@@ -8,9 +8,9 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// </summary>
 public class ServerForm : AbstractSubsection, IActionHaver
 {
-    public ActionHandler Action { get; set; }
+    public ActionHandlerAsync Action { get; set; }
 
-    public ServerForm(IconAndText? heading, IEnumerable<AbstractElement> content, ActionHandler action) : base(heading, content)
+    public ServerForm(IconAndText? heading, IEnumerable<AbstractElement> content, ActionHandlerAsync action) : base(heading, content)
     {
         Action = action;
         FixedAttributes.Add(("class", "wf-server-form"));
@@ -18,6 +18,9 @@ public class ServerForm : AbstractSubsection, IActionHaver
         FixedAttributes.Add(("enctype", "multipart/form-data"));
         FixedAttributes.Add(("action", "#"));
     }
+    
+    public ServerForm(IconAndText? heading, IEnumerable<AbstractElement> content, ActionHandler action)
+        : this(heading, content, action.ToAsync()) { }
 
     public override string RenderedTag
         => "form";

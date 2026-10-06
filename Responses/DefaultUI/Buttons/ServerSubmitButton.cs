@@ -8,14 +8,17 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// </summary>
 public class ServerSubmitButton : ButtonWithText, IActionHaver
 {
-    public ActionHandler Action { get; set; }
+    public ActionHandlerAsync Action { get; set; }
     
-    public ServerSubmitButton(IconAndText content, ActionHandler action) : base(content)
+    public ServerSubmitButton(IconAndText content, ActionHandlerAsync action) : base(content)
     {
         Action = action;
         FixedAttributes.Add(("class", "wf-button wf-server-form-override"));
         FixedAttributes.Add(("type", "submit"));
     }
+    
+    public ServerSubmitButton(IconAndText content, ActionHandler action)
+        : this(content, action.ToAsync()) { }
     
     public override string RenderedTag
         => "button";

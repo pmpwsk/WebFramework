@@ -6,9 +6,7 @@ using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework.Responses;
 
-public delegate Task SocketStartHandler();
 public delegate Task SocketMessageHandler(ReadOnlyMemory<byte> data, bool isText);
-public delegate Task SocketClosedHandler(bool wasExpected);
 
 /// <summary>
 /// Represents a WebSocket response.
@@ -34,7 +32,7 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
     /// Whether the client or the server requested the connection to the closed.<br/>
     /// If the value is false, a connection termination will be treated as unexpected.
     /// </summary>
-    private bool ClosureExpected = false;
+    public bool ClosureExpected { get; private set; } = false;
 
     /// <summary>
     /// Lock that assures that only one thread at a time can send data.
@@ -44,7 +42,7 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
     /// <summary>
     /// The event that is called once the connection has been established.
     /// </summary>
-    public readonly SubscriberContainer<SocketStartHandler> ConnectionOpened = new();
+    public readonly SubscriberContainer<AsyncAction> ConnectionOpened = new();
     
     /// <summary>
     /// The event that is called whenever a new complete message was received.
@@ -54,7 +52,7 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
     /// <summary>
     /// The event that is called once the connection has been ended for any reason.
     /// </summary>
-    public readonly SubscriberContainer<SocketClosedHandler> ConnectionClosed = new();
+    public readonly SubscriberContainer<AsyncAction> ConnectionClosed = new();
     
     /// <summary>
     /// A cancellation token that is canceled once the connection is closed for any reason.
@@ -250,7 +248,7 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
         // close event
         await ConnectionClosed.InvokeWithAsyncCaller
         (
-            s => s(ClosureExpected),
+            s => s(),
             _ => {},
             true
         );

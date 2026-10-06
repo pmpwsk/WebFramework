@@ -8,5 +8,5 @@ public interface IActionHaver
     /// <summary>
     /// The action to perform when the form is submitted.
     /// </summary>
-    public ActionHandler Action { get; }
+    public ActionHandlerAsync Action { get; }
 }

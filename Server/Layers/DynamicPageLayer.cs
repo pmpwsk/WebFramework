@@ -51,18 +51,16 @@ public static partial class Server
                     var watcher = WatcherManager.CreateWatcher(page);
                     
                     var response = new SocketResponse();
-                    await response.ConnectionClosed.RegisterAsync(wasExpected =>
+                    await response.ConnectionClosed.RegisterAsync(() =>
                     {
                         watcher.Socket = null;
                         WatcherManager.DeleteWatcher(watcher);
-                        return Task.CompletedTask;
                     });
                     watcher.Socket = response;
                     await response.ConnectionOpened.RegisterAsync(() =>
                     {
                         watcher.Welcome();
                         watcher.WritePage(page);
-                        return Task.CompletedTask;
                     });
                     return response;
                 }
@@ -80,7 +78,7 @@ public static partial class Server
                     if (elemPath == null)
                         return StatusResponse.BadRequest;
                     var element = page.FindByPath(elemPath);
-                    ActionHandler action;
+                    ActionHandlerAsync action;
                     switch (element)
                     {
                         case null:

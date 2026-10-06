@@ -24,7 +24,7 @@ public class Page : AbstractWatchablePage
     /// <summary>
     /// The stack of states for the dynamic dialog.
     /// </summary>
-    private readonly Stack<(IconAndText Heading, List<AbstractElement> Items, ActionHandler Action)> DynamicDialogStack = [];
+    private readonly Stack<(IconAndText Heading, List<AbstractElement> Items, ActionHandlerAsync Action)> DynamicDialogStack = [];
     
     public Page(Request req, bool dynamic, string? title) : base(req, dynamic)
     {
@@ -174,7 +174,7 @@ public class Page : AbstractWatchablePage
     /// <summary>
     /// Applies the given parameters to the dynamic dialog and ensures that it's open.
     /// </summary>
-    private void SetDynamicDialogParameters(IconAndText heading, List<AbstractElement> elements, ActionHandler action)
+    private void SetDynamicDialogParameters(IconAndText heading, List<AbstractElement> elements, ActionHandlerAsync action)
     {
         if (DynamicDialog == null)
             throw new Exception("There is no dynamic dialog.");
@@ -220,7 +220,7 @@ public class Page : AbstractWatchablePage
     /// <summary>
     /// Opens a dialog with the given elements, assuming the page is dynamic.
     /// </summary>
-    public void OpenDynamicDialog(IconAndText heading, List<AbstractElement> elements, ActionHandler action)
+    public void OpenDynamicDialog(IconAndText heading, List<AbstractElement> elements, ActionHandlerAsync action)
     {
         if (DynamicDialog == null)
             throw new Exception("There is no dynamic dialog.");
@@ -230,6 +230,12 @@ public class Page : AbstractWatchablePage
         
         SetDynamicDialogParameters(heading, elements, action);
     }
+    
+    /// <summary>
+    /// Opens a dialog with the given elements, assuming the page is dynamic.
+    /// </summary>
+    public void OpenDynamicDialog(IconAndText heading, List<AbstractElement> elements, ActionHandler action)
+        => OpenDynamicDialog(heading, elements, action.ToAsync());
     
     /// <summary>
     /// Sets the page to internally reload when the entry is changed.

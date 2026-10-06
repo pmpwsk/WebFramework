@@ -8,9 +8,9 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// </summary>
 public class ServerFormDialog : Dialog, IActionHaver
 {
-    public ActionHandler Action { get; set; }
+    public ActionHandlerAsync Action { get; set; }
     
-    public ServerFormDialog(string id, IconAndText heading, bool isOpen, IEnumerable<AbstractElement> items, ActionHandler action) : base(id, heading, isOpen, items)
+    public ServerFormDialog(string id, IconAndText heading, bool isOpen, IEnumerable<AbstractElement> items, ActionHandlerAsync action) : base(id, heading, isOpen, items)
     {
         Action = action;
         FixedAttributes.Add(("class", "wf-server-form"));
@@ -18,6 +18,9 @@ public class ServerFormDialog : Dialog, IActionHaver
         FixedAttributes.Add(("enctype", "multipart/form-data"));
         FixedAttributes.Add(("action", "#"));
     }
+    
+    public ServerFormDialog(string id, IconAndText heading, bool isOpen, IEnumerable<AbstractElement> items, ActionHandler action)
+        : this(id, heading, isOpen, items, action.ToAsync()) { }
 
     public override string RenderedTag
         => "form";

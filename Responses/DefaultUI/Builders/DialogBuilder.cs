@@ -12,17 +12,14 @@ public static class DialogBuilder
     /// <summary>
     /// Opens a dynamic dialog with the given heading and message lines to the given page.
     /// </summary>
-    public static void Open(Page page, IconAndText heading, List<AbstractElement> elements, ActionHandler action)
+    public static void Open(Page page, IconAndText heading, List<AbstractElement> elements, ActionHandlerAsync action)
         => page.OpenDynamicDialog(heading, elements, action);
-
+    
     /// <summary>
     /// Opens a dynamic dialog with the given heading and message lines to the given page.
     /// </summary>
-    public static Task OpenTask(Page page, IconAndText heading, List<AbstractElement> elements, ActionHandler action)
-    {
-        Open(page, heading, elements, action);
-        return Task.CompletedTask;
-    }
+    public static void Open(Page page, IconAndText heading, List<AbstractElement> elements, ActionHandler action)
+        => Open(page, heading, elements, action.ToAsync());
 
     /// <summary>
     /// Opens a dynamic dialog with the given heading and message lines to the given page.
@@ -34,17 +31,8 @@ public static class DialogBuilder
                 ..messages.Select(message => new Paragraph(message)),
                 new SubmitButton("Okay")
             ],
-            _ => BackTask(page)
+            _ => Back(page)
         );
-
-    /// <summary>
-    /// Opens a dynamic dialog with the given heading and message lines to the given page.
-    /// </summary>
-    public static Task OpenTask(Page page, IconAndText heading, params string[] messages)
-    {
-        Open(page, heading, messages);
-        return Task.CompletedTask;
-    }
 
     /// <summary>
     /// Opens a dynamic error popup with the given message lines to the given page.
@@ -53,28 +41,10 @@ public static class DialogBuilder
         => Open(page, "Error", messages);
 
     /// <summary>
-    /// Opens a dynamic error popup with the given message lines to the given page.
-    /// </summary>
-    public static Task ErrorTask(Page page, params string[] messages)
-    {
-        Error(page, messages);
-        return Task.CompletedTask;
-    }
-
-    /// <summary>
     /// Opens a dynamic info popup with the given message lines to the given page.
     /// </summary>
     public static void Info(Page page, params string[] messages)
         => Open(page, "Info", messages);
-
-    /// <summary>
-    /// Opens a dynamic info popup with the given message lines to the given page.
-    /// </summary>
-    public static Task InfoTask(Page page, params string[] messages)
-    {
-        Info(page, messages);
-        return Task.CompletedTask;
-    }
 
     /// <summary>
     /// Closes any dynamic dialogs.
@@ -83,33 +53,15 @@ public static class DialogBuilder
         => page.CloseDynamicDialog();
 
     /// <summary>
-    /// Closes any dynamic dialogs.
-    /// </summary>
-    public static Task CloseTask(Page page)
-    {
-        Close(page);
-        return Task.CompletedTask;
-    }
-
-    /// <summary>
     /// Returns the dynamic dialog to its previous state or closes it if no previous state is present.
     /// </summary>
     public static void Back(Page page)
         => page.ReturnDynamicDialog();
 
     /// <summary>
-    /// Returns the dynamic dialog to its previous state or closes it if no previous state is present.
-    /// </summary>
-    public static Task BackTask(Page page)
-    {
-        Back(page);
-        return Task.CompletedTask;
-    }
-
-    /// <summary>
     /// Opens a dialog to create or edit an object.
     /// </summary>
-    public static Task SaveObjectTask<C>(Page page, C obj, IconAndText heading, List<IInputBuilder<C>> fields, Action<C>? additionalApplicator, Func<Action<C>, Task> saver) where C : AbstractTableValue
+    public static void SaveObject<C>(Page page, C obj, IconAndText heading, List<IInputBuilder<C>> fields, Action<C>? additionalApplicator, Func<Action<C>, Task> saver) where C : AbstractTableValue
     {
         List<AbstractElement> elements = [];
         foreach (var field in fields)
@@ -119,7 +71,7 @@ public static class DialogBuilder
             new DialogBackButton(page)
         ));
         
-        return OpenTask(
+        Open(
             page,
             heading,
             elements,
@@ -149,8 +101,8 @@ public static class DialogBuilder
     /// <summary>
     /// Opens a dialog to delete an object.
     /// </summary>
-    public static Task DeleteObjectTask<C>(Page page, C obj, Table<C> table, IconAndText heading, string name, string returnLocation) where C : AbstractTableValue
-        => OpenTask(
+    public static void DeleteObject<C>(Page page, C obj, Table<C> table, IconAndText heading, string name, string returnLocation) where C : AbstractTableValue
+        => Open(
             page,
             heading,
             [
