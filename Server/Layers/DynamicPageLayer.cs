@@ -109,7 +109,14 @@ public static partial class Server
                         formInput.SetValueFromForm(value ?? "");
                     }
                     
-                    await action(req);
+                    try
+                    {
+                        await action(req);
+                    }
+                    catch (AbstractForcedActionHandler forcedHandler)
+                    {
+                        forcedHandler.Handle(page);
+                    }
                     return StatusResponse.Success;
                 }
                 

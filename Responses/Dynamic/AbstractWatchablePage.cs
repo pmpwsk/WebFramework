@@ -1,3 +1,4 @@
+using uwap.WebFramework.Database;
 using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework.Responses.Dynamic;
@@ -39,6 +40,32 @@ public abstract class AbstractWatchablePage(Request req, bool dynamic) : Abstrac
 
         return null;
     }
+    
+    /// <summary>
+    /// Sets the page to internally reload when the entry is changed.
+    /// </summary>
+    public async Task ReloadOnChangeAsync<T>(T value) where T : AbstractTableValue
+    {
+        if (value.ContainingEntry is TableEntry<T> entry)
+        {
+            ValueChangedHandler<T> updater = (_, _) => Reload();
+            
+            await entry.ValueChanged.RegisterAsync(updater);
+            await Disposing.RegisterAsync(() => entry.ValueChanged.UnregisterAsync(updater).GetAwaiter().GetResult());
+        }
+    }
+    
+    /// <summary>
+    /// Reloads a dynamic page internally.
+    /// </summary>
+    public void Reload()
+        => ChangeWatcher?.InternalReload();
+    
+    /// <summary>
+    /// Directs the dynamic page to the new location.
+    /// </summary>
+    public void Navigate(string location)
+        => ChangeWatcher?.Navigate(location);
 
     public override void Dispose()
     {
