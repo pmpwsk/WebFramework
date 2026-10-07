@@ -36,7 +36,7 @@ public static partial class Server
                             await redirectSocket.ConnectionOpened.RegisterAsync(async () =>
                             {
                                 await redirectSocket.SendJsonAsync(
-                                    new { changeId = -1, type = "Navigate", location }
+                                    new { type = "Navigate", location }
                                 );
                                 await redirectSocket.CloseAsync();
                             });

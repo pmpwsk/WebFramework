@@ -15,15 +15,10 @@ public class ChangeWatcher
 
     private bool Loaded = false; 
     
-    private long LastChangeId = 0;
-    
     internal ChangeWatcher(string id)
     {
         Id = id;
     }
-    
-    private long GenerateChangeId()
-        => Interlocked.Increment(ref LastChangeId);
     
     private void WriteChange(object change, bool forLoading = false)
     {
@@ -41,7 +36,6 @@ public class ChangeWatcher
         WriteChange(
             new
             {
-                changeId = GenerateChangeId(),
                 type = "Welcome",
                 id = Id
             },
@@ -69,7 +63,6 @@ public class ChangeWatcher
         WriteChange(
             new
             {
-                changeId = GenerateChangeId(),
                 type = "FullPage",
                 head,
                 beforeScript,
@@ -98,7 +91,6 @@ public class ChangeWatcher
         WriteChange(
             new
             {
-                changeId = GenerateChangeId(),
                 type = "AttributeChanged",
                 path,
                 attributeName,
@@ -115,7 +107,6 @@ public class ChangeWatcher
         WriteChange(
             new
             {
-                changeId = GenerateChangeId(),
                 type = "ElementRemoved",
                 path
             }
@@ -141,7 +132,6 @@ public class ChangeWatcher
         WriteChange(
             new
             {
-                changeId = GenerateChangeId(),
                 type = "ElementAddedBefore",
                 path,
                 html
@@ -158,7 +148,6 @@ public class ChangeWatcher
         WriteChange(
             new
             {
-                changeId = GenerateChangeId(),
                 type = "ElementAddedAfter",
                 path,
                 html
@@ -175,7 +164,6 @@ public class ChangeWatcher
         WriteChange(
             new
             {
-                changeId = GenerateChangeId(),
                 type = "ContentChanged",
                 path,
                 content
@@ -191,7 +179,6 @@ public class ChangeWatcher
         WriteChange(
             new
             {
-                changeId = GenerateChangeId(),
                 type = "SetValue",
                 path,
                 value
@@ -204,7 +191,6 @@ public class ChangeWatcher
         WriteChange(
             new
             {
-                changeId = GenerateChangeId(),
                 type = "InternalReload"
             }
         );
@@ -215,7 +201,6 @@ public class ChangeWatcher
         WriteChange(
             new
             {
-                changeId = GenerateChangeId(),
                 type = "Navigate",
                 location
             }

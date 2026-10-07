@@ -82,13 +82,11 @@ class WrappedSocket {
 
 let watcherId = null;
 let watcher = null;
-let lastChangeId = null;
 let navigateReceived = false;
 
 if (document.documentElement.hasAttribute("data-wf-url")) {
     let url = document.documentElement.getAttribute("data-wf-url");
     watcher = new WrappedSocket(`/wf/dyn/watcher?url=${encodeURIComponent(url)}`);
-    watcher.onConnectedAsync = () => lastChangeId = -1;
     watcher.onReconnectingAsync = LoadingScreen.show;
     watcher.onMessageAsync = onWatcherMessageAsync;
     (async () => watcher.startAsync())();
@@ -167,12 +165,6 @@ document.addEventListener("change", event =>
 async function onWatcherMessageAsync(data) {
     let change = JSON.parse(data);
     console.log("Watcher message received.", change);
-    if (!change.changeId) {
-        console.error("Change without ID.", change);
-        return;
-    }
-    
-    lastChangeId = change.changeId;
     
     switch (change.type) {
         case "Navigate": {
