@@ -23,7 +23,7 @@ public abstract class AbstractFileResponse(bool allowCors, string? timestamp) : 
     
     protected abstract Task WriteTo(HttpContext context);
     
-    public Task Respond(Request req, HttpContext context)
+    public async Task Respond(Request req, HttpContext context)
     {
         // CORS domain
         if (AllowCors)
@@ -57,8 +57,9 @@ public abstract class AbstractFileResponse(bool allowCors, string? timestamp) : 
             if (context.Request.Headers.TryGetValue("If-None-Match", out var oldTag) && oldTag == Timestamp)
             {
                 // Browser already has the current version
-                StatusResponse.NotChanged.Respond(req, context);
-                return Task.CompletedTask;
+                using var response = StatusResponse.NotChanged;
+                await response.Respond(req, context);
+                return;
             }
             else
                 context.Response.Headers.ETag = Timestamp;
@@ -69,7 +70,7 @@ public abstract class AbstractFileResponse(bool allowCors, string? timestamp) : 
             context.Response.ContentLength = Length;
         
         // Body
-        return WriteTo(context);
+        await WriteTo(context);
     }
 
     public virtual void Dispose()

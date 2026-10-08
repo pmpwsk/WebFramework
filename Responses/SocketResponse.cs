@@ -133,7 +133,8 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
         // check method
         if (req.WebSocket == null)
         {
-            await StatusResponse.BadMethod.Respond(req, context);
+            using var response = StatusResponse.BadMethod;
+            await response.Respond(req, context);
             return;
         }
         

@@ -107,9 +107,10 @@ public static class Parsers
         var ip = context.Connection.RemoteIpAddress;
         if (ip == null)
             return null;
-        if (ip.ToString().StartsWith("::ffff:"))
-            return ip.ToString().Replace("::ffff:", "");
-        else return ip.ToString();
+        var result = ip.ToString();
+        if (result.StartsWith("::ffff:"))
+            return result["::ffff:".Length..];
+        else return result;
     }
     /// <summary>
     /// Path.

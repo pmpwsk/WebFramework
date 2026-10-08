@@ -53,23 +53,15 @@ public static class AccountManager
     /// </summary>
     public static void ReportFailedAuth(Request req)
     {
-        if (!Settings.FailedAttempts.EnableBanning)
+        if (!Settings.FailedAttempts.EnableBanning || req.IsInternal)
             return;
 
-        string? ipString = req.ClientAddress; //necessary for ::ffff:
-        if (ipString == null)
+        var normalizedAddress = NormalizeClientAddress(req);
+        if (normalizedAddress == null)
             return;
-
-        if (!IPAddress.TryParse(ipString, out var ipAddress))
-            return;
-        byte[] ipBytes = ipAddress.GetAddressBytes();
-
-        if (ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
-            for (int i = 8; i < ipBytes.Length; i++)
-                ipBytes[i] = 0;
-
-        string key = Convert.ToHexString(SHA256.HashData(ipBytes));
-        if (FailedAuth.TryGetValue(key, out var fa) && (DateTime.UtcNow-fa.LastAttempt)<Settings.FailedAttempts.BanDuration)
+        
+        if (FailedAuth.TryGetValue(normalizedAddress, out var fa)
+            && DateTime.UtcNow - fa.LastAttempt <Settings.FailedAttempts.BanDuration)
         {
             if (fa.FailedAttempts >= Settings.FailedAttempts.Limit)
                 return;
@@ -77,11 +69,11 @@ public static class AccountManager
             fa.FailedAttempts++;
             fa.LastAttempt = DateTime.UtcNow;
             if (Settings.FailedAttempts.LogBans && fa.FailedAttempts >= Settings.FailedAttempts.Limit)
-                Console.WriteLine($"Banned IP \"{new IPAddress(ipBytes)}\" for too many failed authentication attempts.");
+                Console.WriteLine($"Banned IP \"{normalizedAddress}\" for too many failed authentication attempts.");
         }
         else
         {
-            FailedAuth[key] = new FailedAuthEntry();
+            FailedAuth[normalizedAddress] = new FailedAuthEntry();
         }
     }
 
@@ -90,12 +82,30 @@ public static class AccountManager
     /// </summary>
     public static bool IsBanned(Request req)
     {
-        string? ip = req.ClientAddress;
-        if (ip == null) return false;
-        string key = Convert.ToHexString(ip.ToSha256());
-        if (FailedAuth.TryGetValue(key, out var fa) && (DateTime.UtcNow-fa.LastAttempt)<Settings.FailedAttempts.BanDuration)
-            return fa.FailedAttempts >= Settings.FailedAttempts.Limit;
-        else return false;
+        var normalizedAddress = NormalizeClientAddress(req);
+        return normalizedAddress != null && FailedAuth.TryGetValue(normalizedAddress, out var fa)
+                && DateTime.UtcNow - fa.LastAttempt < Settings.FailedAttempts.BanDuration
+                && fa.FailedAttempts >= Settings.FailedAttempts.Limit;
+    }
+    
+    /// <summary>
+    /// Normalizes the client's IP address's formatting, while only keeping the first 8 bytes of IPv6 addresses.
+    /// </summary>
+    private static string? NormalizeClientAddress(Request req)
+    {
+        var ipString = req.ClientAddress;
+        if (ipString == null)
+            return null;
+
+        if (!IPAddress.TryParse(ipString, out var ipAddress))
+            return null;
+        byte[] ipBytes = ipAddress.GetAddressBytes();
+
+        if (ipAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+            for (int i = 8; i < ipBytes.Length; i++)
+                ipBytes[i] = 0;
+
+        return new IPAddress(ipBytes).ToString();
     }
 
     /// <summary>

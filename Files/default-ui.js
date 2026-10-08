@@ -28,7 +28,7 @@ class WrappedSocket {
     }
     
     startAsync = async () => {
-        this.#reconnectEnabled = true;
+        console.log("Starting socket.");
         try {
             this.#socket = new WebSocket(this.#url);
             this.unloadHandler = this.stopAsync;
@@ -43,6 +43,7 @@ class WrappedSocket {
     }
     
     stopAsync = async () => {
+        console.log("Stopping socket.");
         this.#reconnectEnabled = false;
         window.removeEventListener("beforeunload", this.stopAsync);
         this.#socket?.close();
@@ -50,6 +51,7 @@ class WrappedSocket {
     }
     
     restartAsync = async () => {
+        console.log("Restarting socket.");
         await this.stopAsync();
         await new Promise(resolve => {
             setTimeout(async () => {
@@ -71,6 +73,9 @@ class WrappedSocket {
             console.log("Socket reconnecting.")
             await this.onReconnectingAsync?.();
             setTimeout(this.startAsync, 2000);
+        } else {
+            console.log("Socket reconnect skipped.")
+            this.#reconnectEnabled = true;
         }
     }
     
@@ -82,7 +87,8 @@ class WrappedSocket {
 
 let watcherId = null;
 let watcher = null;
-let navigateReceived = false;
+let requestedNavigation = null;
+let actionRunning = false;
 
 if (document.documentElement.hasAttribute("data-wf-url")) {
     let url = document.documentElement.getAttribute("data-wf-url");
@@ -132,19 +138,25 @@ document.addEventListener("click", event =>
     }
 });
 
-document.addEventListener("submit", event =>
+document.addEventListener("submit", async event =>
 {
-    if (watcherId && event.submitter && event.submitter.matches(".wf-server-form-override"))
+    if (document.querySelector("#wf-dynamic-dialog.wf-is-open") && event.target.id !== "wf-dynamic-dialog")
+    {
+        // Regular form while dialog is open, ignored
+        event.preventDefault();
+        console.log("Submit ignored during open dialog.");
+    }
+    else if (watcherId && event.submitter && event.submitter.matches(".wf-server-form-override"))
     {
         // Form with overriden server action
         event.preventDefault();
-        runServerAction(event.submitter, event.target);
+        await runServerAction(event.submitter, event.target);
     }
     else if (watcherId && event.target.matches(".wf-server-form"))
     {
         // Form with server action
         event.preventDefault();
-        runServerAction(event.target, event.target);
+        await runServerAction(event.target, event.target);
     }
 });
 
@@ -162,14 +174,25 @@ document.addEventListener("change", event =>
         event.target.setAttribute("data-wf-modified", "");
 });
 
+function requestNavigation(action) {
+    if (actionRunning) {
+        requestedNavigation = action;
+    } else {
+        action();
+    }
+}
+
 async function onWatcherMessageAsync(data) {
     let change = JSON.parse(data);
     console.log("Watcher message received.", change);
     
     switch (change.type) {
         case "Navigate": {
-            navigateReceived = true;
-            window.location.assign(change.location);
+            let location = change.location;
+            requestNavigation(() => {
+                console.log("Performing navigation.", location);
+                window.location.assign(location);
+            });
         } break;
         case "Welcome": {
             watcherId = change.id;
@@ -204,8 +227,11 @@ async function onWatcherMessageAsync(data) {
 
             LoadingScreen.hide();
 
-            if (focusName)
-                document.getElementsByName(focusName)[0].focus();
+            if (focusName) {
+                let focusedElements = document.getElementsByName(focusName);
+                if (focusedElements.length > 0)
+                    focusedElements[0].focus();
+            }
         } break;
         case "AttributeChanged": {
             let element = getElementByPath(change.path);
@@ -249,7 +275,10 @@ async function onWatcherMessageAsync(data) {
         } break;
         case "InternalReload": {
             LoadingScreen.show();
-            await watcher.restartAsync();
+            requestNavigation(async () => {
+                console.log("Performing internal reload.");
+                await watcher.restartAsync();
+            });
         } break;
         default: {
             console.warn("Unknown change", change);
@@ -353,20 +382,33 @@ function getSystemPath(element)
     return path.reverse();
 }
 
-function runServerAction(submitter, form)
+async function runServerAction(submitter, form)
 {
+    actionRunning = true;
+    console.log("Action started.");
     LoadingScreen.show();
-    
-    let request = new XMLHttpRequest();
-    request.open("POST", `/wf/dyn/submit?id=${watcherId}&path=${encodeURIComponent(JSON.stringify(getSystemPath(submitter)))}`);
-    request.onload = () =>
-    {
-        if (!navigateReceived)
-            LoadingScreen.hide();
-    }
+
     let formData = new FormData();
     appendAllToForm(form, formData);
-    request.send(formData);
+    let response = await fetch(
+        `/wf/dyn/submit?id=${watcherId}&path=${encodeURIComponent(JSON.stringify(getSystemPath(submitter)))}`,
+        {
+            method: "POST",
+            body: formData
+        }
+    );
+    if (!response.ok) {
+        alert("Action failed unexpectedly.")
+        return;
+    }
+    
+    actionRunning = false;
+    console.log("Action completed.");
+    if (requestedNavigation) {
+        requestedNavigation();
+    } else {
+        LoadingScreen.hide();
+    }
 }
 
 function getValueForForm(element)

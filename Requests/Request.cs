@@ -181,7 +181,9 @@ public class Request
     /// The requested host name without the port.
     /// </summary>
     public string Domain
-        => Host.Before(':');
+        => Host.StartsWith('[') && Host.SplitAtLast(']', out var first, out _)
+            ? first + ']'
+            : Host.BeforeLast(':');
     
     /// <summary>
     /// The full requested URL.

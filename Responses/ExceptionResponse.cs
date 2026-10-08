@@ -9,12 +9,13 @@ public class ExceptionResponse(Exception exception) : IResponse
 {
     public readonly Exception Exception = exception;
     
-    public Task Respond(Request req, HttpContext context)
+    public async Task Respond(Request req, HttpContext context)
     {
         context.Response.StatusCode = 500;
         req.Exception = Exception;
         Presets.CreatePage(req, "Error", out var page);
-        return new LegacyPageResponse(page, req).Respond(req, context);
+        using var response = new LegacyPageResponse(page, req);
+        await response.Respond(req, context);
     }
 
     public void Dispose()

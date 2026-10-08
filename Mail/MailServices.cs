@@ -34,7 +34,7 @@ public static partial class MailManager
 
                     stream.Position = 0;
 
-                    var message = await MimeKit.MimeMessage.LoadAsync(stream, cancellationToken);
+                    using var message = await MimeKit.MimeMessage.LoadAsync(stream, cancellationToken);
                     var connectionData = new MailConnectionData(context);
                     var results = await HandleMail.InvokeWithAsyncCallerAndGet(s => s(context, message, connectionData), null);
                     return results.Count == 0 ? SmtpResponse.MailboxUnavailable : results.First();
