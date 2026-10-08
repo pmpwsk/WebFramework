@@ -72,8 +72,6 @@ public class PresetsHandler
         {
             LoginState.LoggedIn
                 => new Elements.Button("Account", $"{usersPluginPath}/", "right"),
-            LoginState.Banned
-                => new Elements.Button("Banned", "#", "right"),
             LoginState.Needs2FA
                 => new Elements.Button("Logout", AccountPathMatches("/2fa")
                     ? $"{usersPluginPath}/logout{req.CurrentRedirectQuery}"
@@ -82,7 +80,7 @@ public class PresetsHandler
                 => new Elements.Button("Logout", AccountPathMatches("/verify")
                     ? $"{usersPluginPath}/logout{req.CurrentRedirectQuery}"
                     : $"{usersPluginPath}/verify{req.CurrentRedirectQuery}", "right"),
-            LoginState.None or _
+            _
                 => new Elements.Button("Login", AccountPathMatches("/login") || AccountPathMatches("/register") || AccountPathMatches("/recovery", true)
                     ? $"{usersPluginPath}/login{req.CurrentRedirectQuery}"
                     : $"{usersPluginPath}/login?redirect={HttpUtility.UrlEncode(req.ProtoHostPathQuery)}", "right")
@@ -221,9 +219,6 @@ public class PresetsHandler
                 [
                     new LinkButton(new("bi bi-person", "Account"), $"{usersPluginPath}/"),
                     new LinkButton(new("bi bi-box-arrow-left", "Logout"), $"{usersPluginPath}/logout")
-                ],
-            LoginState.Banned =>
-                [
                 ],
             LoginState.Needs2FA =>
                 [

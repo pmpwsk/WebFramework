@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using uwap.WebFramework.Accounts;
 using uwap.WebFramework.Responses;
+using uwap.WebFramework.Responses.DefaultUI;
 using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework;
@@ -115,6 +116,11 @@ public class Request
     /// </summary>
     public readonly bool IsInternal;
     
+    /// <summary>
+    /// Whether <c>ForceNotBanned</c> was ever called.
+    /// </summary>
+    public bool BlockBanned;
+    
     public Request(HttpContext context)
     {
         HttpContext = context;
@@ -139,6 +145,7 @@ public class Request
         PluginPathPrefix = "";
         Domains = Parsers.Domains(Domain);
         IsInternal = false;
+        BlockBanned = false;
         
         Exception = null;
         
@@ -171,6 +178,7 @@ public class Request
         PluginPathPrefix = "";
         Domains = Parsers.Domains(Domain);
         IsInternal = true;
+        BlockBanned = false;
         
         Exception = null;
         
@@ -245,6 +253,13 @@ public class Request
     /// </summary>
     public bool IsAdmin
         => LoginState == LoginState.LoggedIn && User.AccessLevel == ushort.MaxValue;
+    
+    /// <summary>
+    /// Whether the user's IP address is currently banned from authentication.<br/>
+    /// This queries the current ban dictionary instead of only relying on the request's initial state.
+    /// </summary>
+    public bool IsBanned
+        => LoginState == LoginState.Banned || AccountManager.IsBanned(this);
 
     /// <summary>
     /// The URL that is specified in the 'redirect' parameter, or "/" if no such parameter has been provided.
@@ -328,6 +343,35 @@ public class Request
         else if (redirectIfNotLoggedIn)
             throw new ForcedResponse(new RedirectToLoginResponse(this));
         else throw new ForcedResponse(StatusResponse.Forbidden);
+    }
+    
+    /// <summary>
+    /// Forcefully returns a ban screen page if the user's IP address is currently banned from authentication.
+    /// </summary>
+    public void ForceNotBanned()
+    {
+        BlockBanned = true;
+        if (IsBanned)
+            throw new ForcedResponse(new Page(
+                this,
+                false,
+                "Banned",
+                [
+                    new Section(
+                        "Banned",
+                        [
+                            new Subsection(
+                                null,
+                                [
+                                    new Paragraph("You have been temporarily banned from authenticating yourself to avoid brute-force attacks."),
+                                    new Paragraph("This may have been caused by someone else on your network (home network or VPN)."),
+                                    new Paragraph("You may try to log in again later.")
+                                ]
+                            )
+                        ]
+                    )
+                ]
+            ));
     }
     
     #region Legacy pages

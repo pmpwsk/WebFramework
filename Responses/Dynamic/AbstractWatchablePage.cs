@@ -9,6 +9,11 @@ namespace uwap.WebFramework.Responses.Dynamic;
 public abstract class AbstractWatchablePage(Request req, bool dynamic) : AbstractTextResponse, IWatchedParent
 {
     /// <summary>
+    /// The request that initially created this page.
+    /// </summary>
+    public readonly Request Request = req;
+    
+    /// <summary>
     /// Whether the page will be watched for changes.
     /// </summary>
     public readonly bool Dynamic = dynamic;

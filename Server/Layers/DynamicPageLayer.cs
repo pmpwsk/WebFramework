@@ -109,14 +109,22 @@ public static partial class Server
                         formInput.SetValueFromForm(value ?? "");
                     }
                     
-                    try
+                    if (page.Request.BlockBanned && req.IsBanned)
+                        page.Reload();
+                    else
                     {
-                        await action(req);
+                        try
+                        {
+                            await action(req);
+                        }
+                        catch (AbstractForcedActionHandler forcedHandler)
+                        {
+                            forcedHandler.Handle(page);
+                        }
+                        if (page.Request.BlockBanned && req.IsBanned)
+                            page.Reload();
                     }
-                    catch (AbstractForcedActionHandler forcedHandler)
-                    {
-                        forcedHandler.Handle(page);
-                    }
+                    
                     return StatusResponse.Success;
                 }
                 
