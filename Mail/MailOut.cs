@@ -104,7 +104,8 @@ public static partial class MailManager
             {
                 try
                 {
-                    fromBackup = BackupSender.Send(GenerateMessage(mailGen, true, out var messageId, leftAddresses));
+                    using var message = GenerateMessage(mailGen, true, out var messageId, leftAddresses);
+                    fromBackup = BackupSender.Send(message);
                     messageIds.Add(messageId);
                 }
                 catch (Exception ex)
@@ -115,7 +116,8 @@ public static partial class MailManager
 
             MailSendResult result = new(internalLog, fromSelf, fromBackup);
 
-            await InvokeMailSentAsync(GenerateMessage(mailGen, true, out var messageId2), result);
+            using var sentMessage = GenerateMessage(mailGen, true, out var messageId2);
+            await InvokeMailSentAsync(sentMessage, result);
             messageIds.Add(messageId2);
             return (result, messageIds);
         }
@@ -295,7 +297,8 @@ public static partial class MailManager
 
                         try
                         {
-                            string response = client.Send(GenerateMessage(mailGen, true, out string messageId, [due.Key]));
+                            using var message = GenerateMessage(mailGen, true, out string messageId, [due.Key]);
+                            string response = client.Send(message);
                             messageIds.Add(messageId);
                             success = true;
                             leftAddresses.Remove(due.Key);
