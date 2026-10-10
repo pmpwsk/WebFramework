@@ -310,6 +310,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
             
             entry.DeleteFileDirectories();
             entry.DeleteEntryFiles();
+            entry.Dispose();
             Data.Remove(id);
         }
         
