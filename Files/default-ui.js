@@ -22,6 +22,7 @@ class WrappedSocket {
     #url;
     #reconnectEnabled = true;
     #socket = null;
+    #connected = false;
     
     constructor(url) {
         this.#url = url;
@@ -29,6 +30,10 @@ class WrappedSocket {
     
     startAsync = async () => {
         console.log("Starting socket.");
+        if (this.#connected) {
+            console.log("Already connected.");
+            return;
+        }
         try {
             this.#socket = new WebSocket(this.#url);
             this.unloadHandler = this.stopAsync;
@@ -63,18 +68,20 @@ class WrappedSocket {
     
     #onOpenAsync = async () => {
         console.log("Socket event 'open'.");
+        this.#connected = true;
         await this.onConnectedAsync?.();
     }
     
     #onCloseAsync = async () => {
         console.log("Socket event 'close'.");
+        this.#connected = false;
         this.#socket = null;
         if (this.#reconnectEnabled) {
-            console.log("Socket reconnecting.")
+            console.log("Socket will be reconnecting.");
             await this.onReconnectingAsync?.();
-            setTimeout(this.startAsync, 2000);
+            setTimeout(this.#reconnectAsync, 2000);
         } else {
-            console.log("Socket reconnect skipped.")
+            console.log("Socket will not reconnect.")
             this.#reconnectEnabled = true;
         }
     }
@@ -82,6 +89,18 @@ class WrappedSocket {
     #onMessageAsync = async (event) => {
         console.log("Socket event 'message'.");
         await this.onMessageAsync?.(event.data);
+    }
+    
+    #reconnectAsync = async () => {
+        if (document.visibilityState !== "visible") {
+            let date = new Date();
+            while (new Date() - date < 60000 && document.visibilityState !== "visible") {
+                console.log(`Waiting to reconnect (${new Date() - date}/60000).`);
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+        console.log("Socket reconnecting.");
+        await this.startAsync();
     }
 }
 
@@ -406,6 +425,7 @@ async function runServerAction(submitter, form)
     console.log("Action completed.");
     if (requestedNavigation) {
         requestedNavigation();
+        requestedNavigation = null;
     } else {
         LoadingScreen.hide();
     }
