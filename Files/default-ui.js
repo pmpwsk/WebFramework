@@ -22,7 +22,6 @@ class WrappedSocket {
     #url;
     #reconnectEnabled = true;
     #socket = null;
-    #connected = false;
     
     constructor(url) {
         this.#url = url;
@@ -30,10 +29,6 @@ class WrappedSocket {
     
     startAsync = async () => {
         console.log("Starting socket.");
-        if (this.#connected) {
-            console.log("Already connected.");
-            return;
-        }
         try {
             this.#socket = new WebSocket(this.#url);
             this.unloadHandler = this.stopAsync;
@@ -68,13 +63,11 @@ class WrappedSocket {
     
     #onOpenAsync = async () => {
         console.log("Socket event 'open'.");
-        this.#connected = true;
         await this.onConnectedAsync?.();
     }
     
     #onCloseAsync = async () => {
         console.log("Socket event 'close'.");
-        this.#connected = false;
         this.#socket = null;
         if (this.#reconnectEnabled) {
             console.log("Socket will be reconnecting.");
