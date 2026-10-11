@@ -8,7 +8,7 @@ namespace uwap.WebFramework.Accounts;
 /// </summary>
 /// <param name="needs2FA">Whether the token still needs two-factor authentication.</param>
 [DataContract]
-public class AuthTokenData(bool needs2FA, bool temporary, string? friendlyName, ReadOnlyCollection<string>? limitedToPaths)
+public class AuthTokenData(bool needs2FA, bool temporary, string? friendlyName, ReadOnlyCollection<string>? limitedToPaths, bool alreadyRenewed)
 {
     /// <summary>
     /// The date and time of the token's expiration.
@@ -29,4 +29,9 @@ public class AuthTokenData(bool needs2FA, bool temporary, string? friendlyName, 
     /// The list of paths the token is limited to or null if it's not limited.
     /// </summary>
     [DataMember] public ReadOnlyCollection<string>? LimitedToPaths { get; private set; } = limitedToPaths;
+    
+    /// <summary>
+    /// Whether to the token has already been renewed and shouldn't be renewed again.
+    /// </summary>
+    [DataMember] public bool AlreadyRenewed { get; private set; } = alreadyRenewed;
 }

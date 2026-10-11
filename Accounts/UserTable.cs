@@ -101,11 +101,15 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
             return (LoginState.NeedsMailVerification, user, tokenData.LimitedToPaths);
         else
         {
-            if (req.CookieWriter != null && tokenData.Expires < DateTime.UtcNow + Server.Config.Accounts.TokenExpiration - Server.Config.Accounts.TokenRenewalAfter)
+            if (req.CookieWriter != null && !tokenData.AlreadyRenewed && tokenData.Expires < DateTime.UtcNow + Server.Config.Accounts.TokenExpiration - Server.Config.Accounts.TokenRenewalAfter)
             { //renew token if the renewal is due
-                AccountManager.AddAuthTokenCookie(user.Id + await RenewTokenAsync(user.Id, authToken, tokenData), req, false);
-                if (Server.Config.Log.AuthTokenRenewed)
-                    Console.WriteLine($"Renewed a token for user {id}.");
+                var newToken = await RenewTokenAsync(user.Id, authToken, tokenData);
+                if (newToken != null)
+                {
+                    AccountManager.AddAuthTokenCookie(user.Id + newToken, req, false);
+                    if (Server.Config.Log.AuthTokenRenewed)
+                        Console.WriteLine($"Renewed a token for user {id}.");
+                }
             }
             return (LoginState.LoggedIn, user, tokenData.LimitedToPaths);
         }
@@ -306,7 +310,7 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
                     //renew
                     if (Server.Config.Log.AuthTokenRenewed)
                         Console.WriteLine($"Renewed a token after mail verification for user {tokenId}.");
-                    AccountManager.AddAuthTokenCookie(tokenId + RenewTokenInTransaction(t.Value, authToken, data), req, false);
+                    AccountManager.AddAuthTokenCookie(tokenId + (RenewTokenInTransaction(t.Value, authToken, data) ?? throw new Exception("The auth token wasn't renewed.")), req, false);
                 }
             }
             
@@ -410,7 +414,7 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
                         //renew
                         if (Server.Config.Log.AuthTokenRenewed)
                             Console.WriteLine($"Renewed a token after 2FA for user {t.Value.Id}.");
-                        AccountManager.AddAuthTokenCookie(t.Value.Id + RenewTokenInTransaction(t.Value, authToken, data), req, false);
+                        AccountManager.AddAuthTokenCookie(t.Value.Id + (RenewTokenInTransaction(t.Value, authToken, data) ?? throw new Exception("The auth token wasn't renewed.")), req, false);
                     }
                 }
             });
@@ -436,7 +440,7 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
                         //renew
                         if (Server.Config.Log.AuthTokenRenewed)
                             Console.WriteLine($"Renewed a token after 2FA for user {t.Value.Id}.");
-                        AccountManager.AddAuthTokenCookie(t.Value.Id + RenewTokenInTransaction(t.Value, authToken, data), req, false);
+                        AccountManager.AddAuthTokenCookie(t.Value.Id + (RenewTokenInTransaction(t.Value, authToken, data) ?? throw new Exception("The auth token wasn't renewed.")), req, false);
                     }
                 }
             });
@@ -455,38 +459,31 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
     /// Removes the given token from the token dictionary, then adds and returns a new token.<br/>
     /// The newly created token will not require 2FA and will not be temporary, so this shouldn't be used for temporary tokens for sessions that aren't fully logged in!
     /// </summary>
-    public Task<string> RenewTokenAsync(string id, string oldToken, AuthTokenData data)
+    public Task<string?> RenewTokenAsync(string id, string oldToken, AuthTokenData data)
         => TransactionAndGetAsync(id, t => RenewTokenInTransaction(t.Value, oldToken, data));
-    
-    private static string RenewTokenInTransaction(User user, string oldToken, AuthTokenData data)
+
+    private static string? RenewTokenInTransaction(User user, string oldToken, AuthTokenData data)
     {
-        if (!user._AuthTokens.Remove(oldToken))
+        if (!user._AuthTokens.TryGetValue(oldToken, out var oldData))
             throw new ArgumentException("The given token isn't present in the token dictionary.");
 
-        string token = Parsers.RandomString(64, user._AuthTokens.Keys);
-        user._AuthTokens[token] = new AuthTokenData(false, false, data.FriendlyName, data.LimitedToPaths);
-        return token;
+        if (oldData.AlreadyRenewed)
+            return null;
+        
+        SetTokenDataInTransaction(user, oldToken, new(false, true, data.FriendlyName, data.LimitedToPaths, true));
+        string newToken = Parsers.RandomString(64, user._AuthTokens.Keys);
+        SetTokenDataInTransaction(user, newToken, new(false, false, data.FriendlyName, data.LimitedToPaths, false), oldToken);
+        return newToken;
     }
     
     public Task SetTokenDataAsync(string id, string authToken, AuthTokenData data)
         => TransactionAsync(id, t => SetTokenDataInTransaction(t.Value, authToken, data));
     
-    private static void SetTokenDataInTransaction(User user, string authToken, AuthTokenData data)
+    private static void SetTokenDataInTransaction(User user, string authToken, AuthTokenData data, string? tokenToKeep = null)
     {
         //find and delete least recently used token if there are too many tokens now
         if (!user._AuthTokens.ContainsKey(authToken) && user._AuthTokens.Count >= Server.Config.Accounts.MaxAuthTokens)
-        {
-            KeyValuePair<string, AuthTokenData>? oldestToken = null;
-            foreach (var token in user._AuthTokens)
-            {
-                if (oldestToken == null || token.Value.Expires < oldestToken.Value.Value.Expires)
-                {
-                    oldestToken = token;
-                }
-            }
-            if (oldestToken != null)
-                user._AuthTokens.Remove(oldestToken.Value.Key);
-        }
+            user._AuthTokens.Remove(user._AuthTokens.Where(kv => kv.Key != tokenToKeep).MinBy(kv => kv.Value.Expires).Key);
 
         user._AuthTokens[authToken] = data;
     }
@@ -503,7 +500,7 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
             string token = Parsers.RandomString(64, t.Value.Auth.ListAll());
             bool twoFactor = t.Value.TwoFactor.TOTPEnabled();
             temp = twoFactor || t.Value.MailToken != null;
-            SetTokenDataInTransaction(t.Value, token, new AuthTokenData(twoFactor, temp, null, null));
+            SetTokenDataInTransaction(t.Value, token, new AuthTokenData(twoFactor, temp, null, null, false));
             return token;
         });
         return (token, temp);
@@ -517,7 +514,7 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
         => TransactionAndGetAsync(id, t =>
         {
             string token = Parsers.RandomString(64, t.Value._AuthTokens.Keys);
-            SetTokenDataInTransaction(t.Value, token, new AuthTokenData(false, false, friendlyName, limitedToPaths));
+            SetTokenDataInTransaction(t.Value, token, new AuthTokenData(false, false, friendlyName, limitedToPaths, false));
             return token;
         });
 
