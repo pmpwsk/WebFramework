@@ -74,7 +74,7 @@ public static partial class Server
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error checking the database for errors: " + ex.Message);
+                Console.WriteLine("Error checking the legacy database for errors: " + ex.Message);
             }
             try
             {

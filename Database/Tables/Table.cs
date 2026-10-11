@@ -306,12 +306,14 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
             if (!Data.TryGetValue(id, out var entry))
                 continue;
             
-            await using var h = await entry.Lock.WaitWriteAsync();
+            await using (await entry.Lock.WaitWriteAsync())
+            {
+                entry.DeleteFileDirectories();
+                entry.DeleteEntryFiles();
+                Data.Remove(id);
+            }
             
-            entry.DeleteFileDirectories();
-            entry.DeleteEntryFiles();
             entry.Dispose();
-            Data.Remove(id);
         }
         
         // delete obsolete file directories and files
