@@ -23,8 +23,14 @@ public class BigServerActionButton : OptionalIdElement, IActionHaver
         FixedAttributes.Add(("action", "#"));
     }
     
+    public BigServerActionButton(IconAndText text, string? subtext, ActionHandlerAsync action)
+        : this(text, subtext == null ? [] : [ subtext ], action) { }
+    
     public BigServerActionButton(IconAndText text, IEnumerable<string> subtexts, ActionHandler action)
         : this(text, subtexts, action.ToAsync()) { }
+    
+    public BigServerActionButton(IconAndText text, string? subtext, ActionHandler action)
+        : this(text, subtext == null ? [] : [ subtext ], action.ToAsync()) { }
     
     /// <summary>
     /// The actual submit button.

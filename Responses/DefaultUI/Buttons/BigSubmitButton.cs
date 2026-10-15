@@ -31,6 +31,9 @@ public class BigSubmitButton : OptionalIdElement
         FixedAttributes.Add(("draggable", "false"));
     }
     
+    public BigSubmitButton(IconAndText text, string? subtext, string? overrideAction = null)
+        : this(text, subtext == null ? [] : [ subtext ], overrideAction) { }
+    
     /// <summary>
     /// The button's text.
     /// </summary>

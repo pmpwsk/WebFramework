@@ -38,7 +38,7 @@ public class DynamicSelector<T> : ButtonWithText, IActionHaver
             [
                 .. Options.Select(option => new BigServerSubmitButton(
                     option.Name,
-                    option.Description == null ? [] : [option.Description],
+                    option.Description,
                     _ =>
                     {
                         Value = option.Value;

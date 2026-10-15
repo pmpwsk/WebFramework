@@ -33,8 +33,14 @@ public class BigServerSubmitButton : OptionalIdElement, IActionHaver
         FixedAttributes.Add(("draggable", "false"));
     }
     
+    public BigServerSubmitButton(IconAndText text, string? subtext, ActionHandlerAsync action)
+        : this(text, subtext == null ? [] : [ subtext ], action) { }
+    
     public BigServerSubmitButton(IconAndText text, IEnumerable<string> subtexts, ActionHandler action)
         : this(text, subtexts, action.ToAsync()) { }
+    
+    public BigServerSubmitButton(IconAndText text, string? subtext, ActionHandler action)
+        : this(text, subtext == null ? [] : [ subtext ], action.ToAsync()) { }
     
     /// <summary>
     /// The button's text.
