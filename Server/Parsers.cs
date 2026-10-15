@@ -231,9 +231,11 @@ public static class Parsers
     /// </summary>
     public static string QRImageBase64Src(string text, bool border = true)
     {
-        QRCodeData qr = new QRCodeGenerator().CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
-        byte[] png = new PngByteQRCode(qr).GetGraphic(20, border);
-        return $"data:image/png;base64,{Convert.ToBase64String(png)}";
+        using var generator = new QRCodeGenerator();
+        using var qr = generator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
+        using var png = new PngByteQRCode(qr);
+        byte[] bytes = png.GetGraphic(20, border);
+        return $"data:image/png;base64,{Convert.ToBase64String(bytes)}";
     }
 
     /// <summary>
