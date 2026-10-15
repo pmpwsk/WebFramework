@@ -16,8 +16,16 @@
 
 /* Background */
 
-body, .wf-top-cover {
+body, .wf-top-cover, .wf-graph-segment:hover::after {
     background: var(--background);
+}
+
+.wf-graph-bar {
+    background: var(--foreground);
+}
+
+.wf-graph-segment:hover .wf-graph-bar {
+    background: var(--action);
 }
 
 .wf-heading, nav, section, footer, aside, .wf-menu, .wf-dialog, .wf-button, .wf-checkbox, .wf-upload, .wf-upload::file-selector-button, select, .wf-textbox {
@@ -55,7 +63,7 @@ nav, section, footer, aside, .wf-menu, .wf-dialog {
     border-radius: var(--s8);
 }
 
-.wf-image:not(.wf-fullscreen), code {
+.wf-image:not(.wf-fullscreen), code, .wf-graph {
     border-radius: var(--s4);
 }
 
@@ -69,6 +77,22 @@ h1.wf-heading, aside > h2.wf-heading, .wf-menu > h2.wf-heading, .wf-dialog > h2.
 
 .wf-subsection > h2.wf-heading {
     border-radius: 0 var(--s11) var(--s11) 0;
+}
+
+.wf-graph-bar {
+    border-radius: var(--s3) var(--s3) 0 0;
+}
+
+.wf-graph-segment:first-child .wf-graph-bar {
+    border-radius: var(--s3) var(--s3) 0 var(--s3);
+}
+
+.wf-graph-segment:last-child .wf-graph-bar {
+    border-radius: var(--s3) var(--s3) var(--s3) 0;
+}
+
+.wf-graph-segment:first-child:last-child .wf-graph-bar, .wf-graph-segment:hover::after {
+    border-radius: var(--s3);
 }
 
 
@@ -99,12 +123,28 @@ code, pre {
 
 .wf-heading, nav, section, footer, aside, .wf-menu, .wf-dialog, .wf-image {
     box-shadow: 0 0 var(--s4) 0 var(--inset-shadow) inset,
-    0 0 var(--s6) var(--s2) var(--outer-shadow),
-    0 9rem 3rem -10rem var(--inset-shadow) inset;
+                0 0 var(--s6) var(--s2) var(--outer-shadow),
+                0 9rem 3rem -10rem var(--inset-shadow) inset;
 }
 
 .wf-top-cover {
     box-shadow: 0 0 var(--s4) var(--s6) var(--background);
+}
+
+.wf-graph {
+    box-shadow: 0 0 var(--s4) 0 var(--inset-shadow) inset,
+                0 0 var(--s6) var(--s2) var(--outer-shadow),
+                0 9rem 3rem -10rem var(--inset-shadow) inset;
+}
+
+.wf-graph-bar {
+    box-shadow: var(--n2) var(--s2) var(--s8) var(--n4) var(--action-dark) inset;
+}
+
+.wf-graph-segment:hover::after {
+    box-shadow: 0 0 var(--s4) 0 var(--inset-shadow) inset,
+                0 0 var(--s6) var(--s2) var(--outer-shadow),
+                0 9rem 3rem -10rem var(--inset-shadow) inset;
 }
 
 
@@ -113,37 +153,37 @@ code, pre {
 
 .wf-button, .wf-button:focus, .wf-upload::file-selector-button, .wf-upload::file-selector-button:focus {
     box-shadow: 0 var(--s2) 0 0 var(--action-dark),
-    0 var(--s2) var(--s4) var(--s4) var(--outer-shadow),
-    0 0 0 var(--s1) var(--action) inset,
-    0 calc(8rem + var(--s7)) 3rem -10rem var(--action-highlighting) inset;
+                0 var(--s2) var(--s4) var(--s4) var(--outer-shadow),
+                0 0 0 var(--s1) var(--action) inset,
+                0 calc(8rem + var(--s7)) 3rem -10rem var(--action-highlighting) inset;
     top: var(--n2);
     transition: box-shadow var(--action-time) ease-in-out,
-    top var(--action-time) ease-in-out;
+                top var(--action-time) ease-in-out;
 }
 
 .wf-button:active, .wf-upload:active::file-selector-button, .wf-upload::file-selector-button:active {
     box-shadow: 0 0 0 0 var(--action-dark),
-    0 var(--s2) var(--s3) var(--s3) var(--outer-shadow),
-    0 0 0 var(--s1) var(--action) inset,
-    0 calc(8rem + var(--s7)) 3rem -10rem var(--action-highlighting) inset;
+                0 var(--s2) var(--s3) var(--s3) var(--outer-shadow),
+                0 0 0 var(--s1) var(--action) inset,
+                0 calc(8rem + var(--s7)) 3rem -10rem var(--action-highlighting) inset;
     top: 0;
     transition: box-shadow var(--action-time) ease-in-out,
-    top var(--action-time) ease-in-out;
+                top var(--action-time) ease-in-out;
 }
 
 select, select:focus, select:active, .wf-checkbox, .wf-checkbox:focus, .wf-checkbox:active, .wf-upload, .wf-upload:focus, .wf-upload:active, .wf-textbox {
     box-shadow: 0 0 0 var(--s1) var(--border) inset,
-    0 var(--s1) 0 var(--s1) var(--background) inset,
-    0 var(--s1) var(--s4) var(--s1) var(--background) inset,
-    0 calc(7rem + var(--s12)) 3rem -10rem var(--action-highlighting) inset;
+                0 var(--s1) 0 var(--s1) var(--background) inset,
+                0 var(--s1) var(--s4) var(--s1) var(--background) inset,
+                0 calc(7rem + var(--s12)) 3rem -10rem var(--action-highlighting) inset;
     transition: box-shadow var(--action-time) ease-in-out;
 }
 
 .wf-textbox:focus, .wf-textbox:active {
     box-shadow: 0 0 0 var(--s1) var(--marker) inset,
-    0 var(--s1) 0 var(--s1) var(--background) inset,
-    0 var(--s1) var(--s4) var(--s1) var(--background) inset,
-    0 calc(7rem + var(--s12)) 3rem -10rem var(--action-highlighting) inset;
+                0 var(--s1) 0 var(--s1) var(--background) inset,
+                0 var(--s1) var(--s4) var(--s1) var(--background) inset,
+                0 calc(7rem + var(--s12)) 3rem -10rem var(--action-highlighting) inset;
     transition: box-shadow var(--action-time) ease-in-out;
 }
 

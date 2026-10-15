@@ -57,14 +57,18 @@ html {
 
 /* Flex */
 
-.wf-col, html, body, main, section, .wf-subsection, footer, aside, .wf-menu, .wf-dialog, .wf-button.wf-button-is-container, form:has(.wf-button-is-container), aside form, .wf-menu form, .wf-row-when-wide {
+.wf-col, html, body, main, section, .wf-subsection, footer, aside, .wf-menu, .wf-dialog, .wf-button.wf-button-is-container, form:has(.wf-button-is-container), aside form, .wf-menu form, .wf-row-when-wide, .wf-graph-segment {
     display: flex;
     flex-direction: column;
 }
 
-.wf-row, .wf-content, nav, .wf-nav-island, .wf-checkbox {
+.wf-row, .wf-content, nav, .wf-nav-island, .wf-checkbox, .wf-graph {
     display: flex;
     flex-direction: row;
+}
+
+.wf-graph {
+    gap: 0;
 }
 
 html, body, main, .wf-content, nav, .wf-nav-island {
@@ -91,7 +95,7 @@ section, .wf-subsection, footer, .wf-checkbox, .wf-dialog {
     align-items: start;
 }
 
-.wf-dyn-1, body, .wf-content, main, main > div {
+.wf-dyn-1, body, .wf-content, main, main > div, .wf-graph-segment {
     flex: 1 1 0;
 }
 
@@ -141,6 +145,10 @@ nav {
     justify-content: space-between;
 }
 
+.wf-graph-segment {
+    justify-content: end;
+}
+
 nav, .wf-nav-island, nav .wf-button {
     flex-shrink: 0;
 }
@@ -157,7 +165,7 @@ aside h3.wf-heading {
     align-self: start;
 }
 
-.wf-stretch, .wf-button.wf-button-is-container, form:has(.wf-button-is-container), aside .wf-button, .wf-menu .wf-button, aside form, .wf-menu form, .wf-textbox {
+.wf-stretch, .wf-button.wf-button-is-container, form:has(.wf-button-is-container), aside .wf-button, .wf-menu .wf-button, aside form, .wf-menu form, .wf-textbox, .wf-graph {
     align-self: stretch;
 }
 
@@ -213,7 +221,7 @@ nav {
 
 /* Display */
 
-.wf-top-cover, .wf-button, .wf-menu-background, .wf-dialog-background {
+.wf-top-cover, .wf-button, .wf-menu-background, .wf-dialog-background, .wf-graph-segment:hover::after {
     display: block;
 }
 
@@ -237,8 +245,12 @@ aside, .wf-top-cover, aside > .wf-heading, .wf-menu > .wf-heading, .wf-menu, .wf
     position: fixed;
 }
 
-.wf-button, .wf-upload::file-selector-button, h3.wf-heading, .wf-checkbox input {
+.wf-button, .wf-upload::file-selector-button, h3.wf-heading, .wf-checkbox input, .wf-graph {
     position: relative;
+}
+
+.wf-graph-segment:hover::after {
+    position: absolute;
 }
 
 
@@ -261,7 +273,7 @@ body {
     padding: 0 var(--s8);
 }
 
-.wf-image {
+.wf-image, .wf-graph {
     padding: var(--s6);
 }
 
@@ -305,7 +317,7 @@ nav {
     padding: 0 var(--s3);
 }
 
-h3.wf-heading, pre {
+h3.wf-heading, pre, .wf-graph-segment:hover::after {
     padding: var(--s2) var(--s6);
 }
 
@@ -313,7 +325,7 @@ h3.wf-heading, pre {
 
 /* Margin */
 
-html, .wf-content, p, nav, section, footer, div, ul, ol, pre, .wf-button, .wf-checkbox span, .wf-checkbox input, .wf-upload {
+html, .wf-content, p, nav, section, footer, div, ul, ol, pre, .wf-button, .wf-checkbox span, .wf-checkbox input, .wf-upload, .wf-graph {
     margin: 0;
 }
 
@@ -373,6 +385,11 @@ h2, h2 * {
 
 h3, h3 * {
     font-size: calc(1rem + var(--s2));
+}
+
+.wf-graph-segment:hover::after {
+    font-size: var(--s14);
+    line-height: 1rem;
 }
 
 .wf-upload::file-selector-button {
@@ -476,7 +493,15 @@ html, .wf-image.wf-fullscreen, .wf-menu-background, .wf-dialog-background, .wf-l
     height: 100dvh;
 }
 
-aside, main {
+.wf-graph-segment {
+    height: 100%;
+}
+
+.wf-graph {
+    height: 13rem;
+}
+
+aside, main, .wf-graph-segment {
     min-width: 0;
 }
 
@@ -484,7 +509,7 @@ aside, main {
     max-width: 100%;
 }
 
-.wf-button.wf-button-is-container, form:has(.wf-button-is-container), .wf-textbox {
+.wf-button.wf-button-is-container, form:has(.wf-button-is-container), .wf-textbox, .wf-graph {
     max-width: 30rem;
 }
 
@@ -500,7 +525,7 @@ li .wf-image:not(.wf-image.wf-fullscreen) {
     max-width: unset !important;
 }
 
-.wf-subsection > * {
+.wf-subsection > *, .wf-graph {
     box-sizing: border-box;
 }
 
@@ -557,6 +582,11 @@ section {
 .wf-image.wf-fullscreen, .wf-menu-background, .wf-dialog-background, .wf-loading-screen {
     left: 0;
     top: 0;
+}
+
+.wf-graph-segment:hover::after {
+    top: var(--s6);
+    left: var(--s6);
 }
 
 
@@ -720,4 +750,8 @@ body:has(aside.wf-is-forced) .wf-menu-background, body:has(.wf-menu.wf-is-open) 
 
 li pre, li .wf-image {
     vertical-align: top;
+}
+
+.wf-graph-segment:hover::after {
+    content: attr(data-wf-label);
 }
