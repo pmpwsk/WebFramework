@@ -11,6 +11,11 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 public class Page : AbstractWatchablePage
 {
     /// <summary>
+    /// The CSP setting to include in the HTTP head.
+    /// </summary>
+    public string? ContentSecurityPolicy = null;
+    
+    /// <summary>
     /// The page's HeadContainer.Element.
     /// </summary>
     private readonly RequiredWatchedContainer<Head> HeadContainer;
@@ -251,6 +256,8 @@ public class Page : AbstractWatchablePage
     public override Task Respond(Request req, HttpContext context)
     {
         context.Response.ContentType = "text/html;charset=utf-8";
+        if (ContentSecurityPolicy != null)
+            context.Response.Headers.ContentSecurityPolicy = ContentSecurityPolicy;
         return base.Respond(req, context);
     }
 }
