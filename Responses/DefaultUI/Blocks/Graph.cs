@@ -31,14 +31,14 @@ public class Graph : OptionalIdElement
         var segments = new List<GraphSegment>();
         foreach (var dataPoint in dataPoints)
         {
-            var percentage = Convert.ToInt32(Math.Round(dataPoint.Value / max * 100, 0, MidpointRounding.AwayFromZero));
-            percentage = percentage switch
+            double percentageDouble = Math.Round(max <= 0 ? 0 : dataPoint.Value / max * 100, MidpointRounding.AwayFromZero);
+            int percentageInt = percentageDouble switch
             {
-                < 0 => 0,
-                > 100 => 100,
-                _ => percentage
+                <= 0 => 0,
+                >= 100 => 100,
+                _ => Convert.ToInt32(percentageDouble)
             };
-            segments.Add(new GraphSegment(percentage, dataPoint.Label));
+            segments.Add(new GraphSegment(percentageInt, dataPoint.Label));
         }
         Segments.ReplaceAll(segments);
     }
