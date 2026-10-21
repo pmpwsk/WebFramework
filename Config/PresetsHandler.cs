@@ -130,7 +130,7 @@ public class PresetsHandler
     public virtual AbstractElement CreateSupportButton(Request req)
     {
         string address = GetSupportEmail(req) ?? throw new Exception("No support email was found.");
-        return new BigLinkButton(new("bi bi-question-circle", "Contact support"), [address], "mailto:" + address) { NoFollow = true, NewTab = true };
+        return new BigLinkButton(new("bi bi-question-circle", "Contact support"), address, "mailto:" + address) { NoFollow = true, NewTab = true };
     }
 
     /// <summary>

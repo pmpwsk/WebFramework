@@ -37,6 +37,9 @@ public class BigLinkButton : OptionalIdElement
         FixedAttributes.Add(("draggable", "false"));
     }
     
+    public BigLinkButton(IconAndText text, string? subtext, string target)
+        : this(text, subtext == null ? [] : [ subtext ], target) { }
+    
     /// <summary>
     /// The button's text.
     /// </summary>
