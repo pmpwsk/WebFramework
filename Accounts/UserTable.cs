@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System.Collections.ObjectModel;
-using OtpNet;
+using Useful.Toolkit;
 using uwap.WebFramework.Database;
 
 namespace uwap.WebFramework.Accounts;
@@ -422,7 +422,7 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
         }
 
         //valid and unused?
-        if (new Totp(totp.SecretKey).VerifyTotp(code, out long timeStepMatched, new VerificationWindow(1, 1)) && !totp.UsedTimeSteps.Contains(timeStepMatched))
+        if (TOTP.VerifyCode(totp.SecretKey, code, out long timeStepMatched) && !totp.UsedTimeSteps.Contains(timeStepMatched))
         {
             //add to used time steps (and remove the oldest one if the list is full)
             await TransactionAsync(id, t =>

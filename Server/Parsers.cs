@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Http;
-using QRCoder;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -224,18 +223,6 @@ public static class Parsers
     /// </summary>
     public static char RandomItem(string characters)
         => characters[RandomNumberGenerator.GetInt32(characters.Length)];
-
-    /// <summary>
-    /// Generates a QR code (with or without borders) of the given text and returns an HTML image source for it in base64.
-    /// </summary>
-    public static string QRImageBase64Src(string text, bool border = true)
-    {
-        using var generator = new QRCodeGenerator();
-        using var qr = generator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
-        using var png = new PngByteQRCode(qr);
-        byte[] bytes = png.GetGraphic(20, border);
-        return $"data:image/png;base64,{Convert.ToBase64String(bytes)}";
-    }
 
     /// <summary>
     /// Returns the first segment of a path as well as the remainder, e.g. for /abc/xyz/... it returns "abc" and "/xyz/...".

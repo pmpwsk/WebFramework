@@ -1,6 +1,6 @@
-﻿using OtpNet;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
+using Useful.Toolkit;
 
 namespace uwap.WebFramework.Accounts;
 
@@ -21,7 +21,7 @@ public class TwoFactorTOTP
     /// <summary>
     /// The private/secret key using which two-factor codes are generated.
     /// </summary>
-    public string SecretKeyString => Base32Encoding.ToString(SecretKey);
+    public string SecretKeyString => TOTP.GetKeyString(SecretKey);
 
     /// <summary>
     /// The list of recovery codes that are still available to use.
@@ -35,12 +35,12 @@ public class TwoFactorTOTP
     /// <param name="username">The username to be listed in the authenticator app.</param>
     /// <returns></returns>
     public string QRImageBase64Src(string domain, string username)
-        => Parsers.QRImageBase64Src($"otpauth://totp/{domain}:{username}?secret={SecretKeyString}&issuer={domain}");
+        => TOTP.GetKeyQRBase64(SecretKey, domain, username);
 
     public TwoFactorTOTP()
     {
         Verified = false;
-        SecretKey = KeyGeneration.GenerateRandomKey(OtpHashMode.Sha1);
+        SecretKey = TOTP.GenerateKey();
         Recovery = GenerateRecoveryCodes();
     }
 
