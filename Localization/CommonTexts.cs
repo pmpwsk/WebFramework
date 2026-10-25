@@ -10,4 +10,10 @@ public static class CommonTexts
     /// </summary>
     public static Translation Create(string? icon, string english, string german)
         => new(icon, ("en", english), ("de", german));
+    
+    /// <summary>
+    /// Creates a new translation with the given icon and values for english and german.
+    /// </summary>
+    public static Translation Create(string english, string german)
+        => Create(null, english, german);
 }
