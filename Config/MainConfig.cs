@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Collections.Immutable;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -252,5 +253,15 @@ public static partial class Server
         /// Default: 30 seconds
         /// </summary>
         public static TimeSpan WatcherExpiration { get; set; } = TimeSpan.FromSeconds(30);
+        
+        /// <summary>
+        /// The list of acceptable languages keys. Other translations will be ignored.
+        /// </summary>
+        public static ImmutableHashSet<string> AllowedLanguages { get; set; } = [ "en" ];
+        
+        /// <summary>
+        /// The default language key to use if no translations are presents for the requested languages.
+        /// </summary>
+        public static string DefaultLanguage { get; set; } = "en";
     }
 }

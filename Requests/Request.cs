@@ -3,6 +3,7 @@ using System.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using uwap.WebFramework.Accounts;
+using uwap.WebFramework.Localization;
 using uwap.WebFramework.Responses;
 using uwap.WebFramework.Responses.DefaultUI;
 using uwap.WebFramework.Tools;
@@ -121,6 +122,11 @@ public class Request
     /// </summary>
     public bool BlockBanned;
     
+    /// <summary>
+    /// The list of locales that are accepted by the client.
+    /// </summary>
+    public IReadOnlyCollection<LocaleEntry> Locales;
+    
     public Request(HttpContext context)
     {
         HttpContext = context;
@@ -146,6 +152,8 @@ public class Request
         Domains = Parsers.Domains(Domain);
         IsInternal = false;
         BlockBanned = false;
+        
+        Locales = LocaleEntry.ParseAll(context);
         
         Exception = null;
         
@@ -179,6 +187,8 @@ public class Request
         Domains = Parsers.Domains(Domain);
         IsInternal = true;
         BlockBanned = false;
+        
+        Locales = req.Locales;
         
         Exception = null;
         
