@@ -22,6 +22,9 @@ public static partial class Server
             
             switch (path)
             {
+                case "/ping":
+                    return new TextResponse("pong");
+                
                 case "/watcher":
                 {
                     var url = req.Query.GetOrThrow("url");

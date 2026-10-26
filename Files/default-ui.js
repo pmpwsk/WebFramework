@@ -19,18 +19,20 @@ class WrappedSocket {
     onConnectedAsync = null;
     onMessageAsync = null;
     
-    #url;
+    #socketUrl;
+    #pingUrl;
     #reconnectEnabled = true;
     #socket = null;
     
-    constructor(url) {
-        this.#url = url;
+    constructor(socketUrl, pingUrl) {
+        this.#socketUrl = socketUrl;
+        this.#pingUrl = pingUrl;
     }
     
     startAsync = async () => {
         console.log("Starting socket.");
         try {
-            this.#socket = new WebSocket(this.#url);
+            this.#socket = new WebSocket(this.#socketUrl);
             this.unloadHandler = this.stopAsync;
             window.addEventListener("beforeunload", this.unloadHandler);
             this.#socket.addEventListener("open", this.#onOpenAsync);
@@ -85,15 +87,18 @@ class WrappedSocket {
     }
     
     #reconnectAsync = async () => {
-        if (document.visibilityState !== "visible") {
-            let date = new Date();
-            while (new Date() - date < 60000 && document.visibilityState !== "visible") {
-                console.log(`Waiting to reconnect (${new Date() - date}/60000).`);
-                await new Promise(resolve => setTimeout(resolve, 100));
+        try {
+            console.log("Socket pinging.");
+            let pingResult = await fetch(this.#pingUrl);
+            if (pingResult.ok && await pingResult.text() === "pong") {
+                console.log("Socket reconnecting.");
+                await this.startAsync();
+                return;
             }
+        } catch {
         }
-        console.log("Socket reconnecting.");
-        await this.startAsync();
+        console.log("Socket ping failed, trying again.");
+        setTimeout(this.#reconnectAsync, 2000);
     }
 }
 
@@ -104,7 +109,7 @@ let actionRunning = false;
 
 if (document.documentElement.hasAttribute("data-wf-url")) {
     let url = document.documentElement.getAttribute("data-wf-url");
-    watcher = new WrappedSocket(`/wf/dyn/watcher?url=${encodeURIComponent(url)}`);
+    watcher = new WrappedSocket(`/wf/dyn/watcher?url=${encodeURIComponent(url)}`, "/wf/dyn/ping");
     watcher.onReconnectingAsync = LoadingScreen.show;
     watcher.onMessageAsync = onWatcherMessageAsync;
     (async () => watcher.startAsync())();
