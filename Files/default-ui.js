@@ -150,6 +150,7 @@ document.addEventListener("click", event =>
             // Add fullscreen image
             let fullscreenImage = target.cloneNode();
             fullscreenImage.classList.add("wf-fullscreen");
+            fullscreenImage.style = null;
             document.body.append(fullscreenImage);
         }
     }
