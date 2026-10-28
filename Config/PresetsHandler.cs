@@ -1,6 +1,7 @@
 ﻿using MimeKit;
 using System.Web;
 using uwap.WebFramework.Accounts;
+using uwap.WebFramework.Localization;
 using uwap.WebFramework.Mail;
 using uwap.WebFramework.Responses.Base;
 using uwap.WebFramework.Responses.DefaultUI;
@@ -71,17 +72,17 @@ public class PresetsHandler
         return req.LoginState switch
         {
             LoginState.LoggedIn
-                => new Elements.Button("Account", $"{usersPluginPath}/", "right"),
+                => new Elements.Button(CommonTexts.Account, $"{usersPluginPath}/", "right"),
             LoginState.Needs2FA
-                => new Elements.Button("Logout", AccountPathMatches("/2fa")
+                => new Elements.Button(CommonTexts.Logout, AccountPathMatches("/2fa")
                     ? $"{usersPluginPath}/logout{req.CurrentRedirectQuery}"
                     : $"{usersPluginPath}/2fa{req.CurrentRedirectQuery}", "right"),
             LoginState.NeedsMailVerification
-                => new Elements.Button("Logout", AccountPathMatches("/verify")
+                => new Elements.Button(CommonTexts.Logout, AccountPathMatches("/verify")
                     ? $"{usersPluginPath}/logout{req.CurrentRedirectQuery}"
                     : $"{usersPluginPath}/verify{req.CurrentRedirectQuery}", "right"),
             _
-                => new Elements.Button("Login", AccountPathMatches("/login") || AccountPathMatches("/register") || AccountPathMatches("/recovery", true)
+                => new Elements.Button(CommonTexts.Login, AccountPathMatches("/login") || AccountPathMatches("/register") || AccountPathMatches("/recovery", true)
                     ? $"{usersPluginPath}/login{req.CurrentRedirectQuery}"
                     : $"{usersPluginPath}/login?redirect={HttpUtility.UrlEncode(req.ProtoHostPathQuery)}", "right")
         };
@@ -121,7 +122,7 @@ public class PresetsHandler
     public virtual void AddSupportButton(Request req, Elements.Page page)
     {
         string address = GetSupportEmail(req) ?? throw new Exception("No support email was found.");
-        page.Elements.Add(new Elements.ButtonElement("Contact support", address, "mailto:" + address, newTab: true));
+        page.Elements.Add(new Elements.ButtonElement(CommonTexts.ContactSupport, address, "mailto:" + address, newTab: true));
     }
 
     /// <summary>
@@ -130,7 +131,7 @@ public class PresetsHandler
     public virtual AbstractElement CreateSupportButton(Request req)
     {
         string address = GetSupportEmail(req) ?? throw new Exception("No support email was found.");
-        return new BigLinkButton(new("bi bi-question-circle", "Contact support"), address, "mailto:" + address) { NoFollow = true, NewTab = true };
+        return new BigLinkButton(CommonTexts.ContactSupport, address, "mailto:" + address) { NoFollow = true, NewTab = true };
     }
 
     /// <summary>
@@ -144,30 +145,30 @@ public class PresetsHandler
         string? twoFactorStyle = user.TwoFactor.TOTPEnabled() ? null : "display: none";
         page.Elements.Add(new Elements.ContainerElement(null, new List<Elements.IContent>
         {
-            new Elements.Heading("Password:"),
-            new Elements.TextBox("Enter your password...", null, "password", Elements.TextBoxRole.Password, "Continue()"),
-            new Elements.Heading("2FA code / recovery:", styles: twoFactorStyle),
-            new Elements.TextBox("Enter the current code...", twoFactorText, "code", Elements.TextBoxRole.NoSpellcheck, "Continue()", styles: twoFactorStyle)
+            new Elements.Heading($"{CommonTexts.Password}:"),
+            new Elements.TextBox(CommonTexts.PasswordPlaceholder, null, "password", Elements.TextBoxRole.Password, "Continue()"),
+            new Elements.Heading($"{CommonTexts.TwoFactorOrRecovery}:", styles: twoFactorStyle),
+            new Elements.TextBox(CommonTexts.TwoFactorPlaceholder, twoFactorText, "code", Elements.TextBoxRole.NoSpellcheck, "Continue()", styles: twoFactorStyle)
         }));
     }
 
     /// <summary>
     /// Creates elements to allow for password (and 2FA if present) verification.
     /// </summary>
-    public virtual Presets.AuthElements CreateAuthElements(Request req)
+    public virtual Presets.AuthElements CreateAuthElements(Request req, bool indicateOldPassword)
     {
         if (!req.LoggedIn)
             throw new Exception("Not logged in.");
         User user = req.User;
         
-        var passwordHeading = new Heading3("Password");
-        var passwordInput = new TextBox("password", "Enter your password...", null, TextBoxRole.CurrentPassword);
+        var passwordHeading = new Heading3(indicateOldPassword ? CommonTexts.OldPassword : CommonTexts.Password);
+        var passwordInput = new TextBox("password", indicateOldPassword ? CommonTexts.OldPasswordPlaceholder : CommonTexts.PasswordPlaceholder, null, TextBoxRole.CurrentPassword);
         
         if (!user.TwoFactor.TOTPEnabled())
             return new([passwordHeading, passwordInput], passwordInput, null);
         
-        var codeHeading = new Heading3("2FA code / recovery");
-        var codeInput = new TextBox("code", "Enter the current code...", null, TextBoxRole.NoSpellcheck);
+        var codeHeading = new Heading3(CommonTexts.TwoFactorOrRecovery);
+        var codeInput = new TextBox("code", CommonTexts.TwoFactorPlaceholder, null, TextBoxRole.NoSpellcheck);
         return new([passwordHeading, passwordInput, codeHeading, codeInput], passwordInput, codeInput);
     }
 
@@ -195,12 +196,12 @@ public class PresetsHandler
         if (favicon != null)
             page.Favicon = new(req, favicon);
 
-        page.NavBar.Islands.Add(new([new LinkButton("Home", "/")]));
+        page.NavBar.Islands.Add(new([new LinkButton(CommonTexts.Home, "/")]));
         
         if (Server.Config.Accounts.Enabled)
         {
-            page.Menus.Add(new Menu("wf-menu", "Menu", AuthButtons(req)));
-            page.NavBar.Islands.Add(new([new PopupButton(new("bi bi-list", "Menu"), "wf-menu")]));
+            page.Menus.Add(new Menu("wf-menu", CommonTexts.Menu, AuthButtons(req)));
+            page.NavBar.Islands.Add(new([new PopupButton(CommonTexts.Menu, "wf-menu")]));
         }
     }
     
@@ -217,30 +218,30 @@ public class PresetsHandler
         {
             LoginState.LoggedIn =>
                 [
-                    new LinkButton(new("bi bi-person", "Account"), $"{usersPluginPath}/"),
-                    new LinkButton(new("bi bi-box-arrow-left", "Logout"), $"{usersPluginPath}/logout")
+                    new LinkButton(CommonTexts.Account, $"{usersPluginPath}/"),
+                    new LinkButton(CommonTexts.Logout, $"{usersPluginPath}/logout")
                 ],
             LoginState.Needs2FA =>
                 [
-                    new LinkButton(new("bi bi-box-arrow-left", "Logout"), AccountPathMatches("/2fa")
+                    new LinkButton(CommonTexts.Logout, AccountPathMatches("/2fa")
                         ? $"{usersPluginPath}/logout{req.CurrentRedirectQuery}"
                         : $"{usersPluginPath}/2fa{req.CurrentRedirectQuery}"
                     )
                 ],
             LoginState.NeedsMailVerification =>
                 [
-                    new LinkButton(new("bi bi-box-arrow-left", "Logout"), AccountPathMatches("/verify")
+                    new LinkButton(CommonTexts.Logout, AccountPathMatches("/verify")
                         ? $"{usersPluginPath}/logout{req.CurrentRedirectQuery}"
                         : $"{usersPluginPath}/verify{req.CurrentRedirectQuery}"
                     )
                 ],
             _ =>
                 [
-                    new LinkButton(new("bi bi-key", "Login"), AccountPathMatches("/login") || AccountPathMatches("/register") || AccountPathMatches("/recovery", true)
+                    new LinkButton(CommonTexts.Login, AccountPathMatches("/login") || AccountPathMatches("/register") || AccountPathMatches("/recovery", true)
                         ? $"{usersPluginPath}/login{req.CurrentRedirectQuery}"
                         : $"{usersPluginPath}/login?redirect={HttpUtility.UrlEncode(req.ProtoHostPathQuery)}"
                     ),
-                    new LinkButton(new("bi bi-person-vcard", "Register"), AccountPathMatches("/login") || AccountPathMatches("/register") || AccountPathMatches("/recovery", true)
+                    new LinkButton(new("bi bi-person-vcard", CommonTexts.Register), AccountPathMatches("/login") || AccountPathMatches("/register") || AccountPathMatches("/recovery", true)
                         ? $"{usersPluginPath}/register{req.CurrentRedirectQuery}"
                         : $"{usersPluginPath}/register?redirect={HttpUtility.UrlEncode(req.ProtoHostPathQuery)}"
                     )

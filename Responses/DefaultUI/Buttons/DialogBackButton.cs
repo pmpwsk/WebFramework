@@ -1,3 +1,5 @@
+using uwap.WebFramework.Localization;
+
 namespace uwap.WebFramework.Responses.DefaultUI;
 
 /// <summary>
@@ -5,6 +7,6 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// </summary>
 public class DialogBackButton(Page page)
     : ServerSubmitButton(
-        "Back",
+        CommonTexts.Back,
         _ => DialogBuilder.Back(page)
     );

@@ -1,4 +1,5 @@
 using uwap.WebFramework.Database;
+using uwap.WebFramework.Localization;
 using uwap.WebFramework.Responses.Actions;
 using uwap.WebFramework.Responses.Base;
 
@@ -29,7 +30,7 @@ public static class DialogBuilder
             heading,
             [
                 ..messages.Select(message => new Paragraph(message)),
-                new SubmitButton("Okay")
+                new SubmitButton(CommonTexts.Okay)
             ],
             _ => Back(page)
         );
@@ -38,13 +39,13 @@ public static class DialogBuilder
     /// Opens a dynamic error popup with the given message lines to the given page.
     /// </summary>
     public static void Error(Page page, params string[] messages)
-        => Open(page, "Error", messages);
+        => Open(page, CommonTexts.Error, messages);
 
     /// <summary>
     /// Opens a dynamic info popup with the given message lines to the given page.
     /// </summary>
     public static void Info(Page page, params string[] messages)
-        => Open(page, "Info", messages);
+        => Open(page, CommonTexts.Info, messages);
 
     /// <summary>
     /// Closes any dynamic dialogs.
@@ -106,10 +107,10 @@ public static class DialogBuilder
             page,
             heading,
             [
-                new Paragraph($"Are you sure you want to delete \"{name}\"?"),
+                new Paragraph($"{CommonTexts.DeleteConfirmationStart}{name}{CommonTexts.DeleteConfirmationEnd}"),
                 new Row(
                     new ContinueButton(),
-                    new DialogCancelButton(page)
+                    new DialogBackButton(page)
                 )
             ],
             async _ =>

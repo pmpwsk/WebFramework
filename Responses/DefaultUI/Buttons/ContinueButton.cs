@@ -1,9 +1,8 @@
+using uwap.WebFramework.Localization;
+
 namespace uwap.WebFramework.Responses.DefaultUI;
 
 /// <summary>
-/// A default UI button that submits a form.
+/// A default UI button that submits a form with the text "Continue".
 /// </summary>
-public class ContinueButton()
-    : SubmitButton(
-        new("bi bi-arrow-return-right", "Continue")
-    );
+public class ContinueButton() : SubmitButton(CommonTexts.Continue);

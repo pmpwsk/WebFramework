@@ -1,3 +1,4 @@
+using uwap.WebFramework.Localization;
 using uwap.WebFramework.Responses.Base;
 using uwap.WebFramework.Responses.Dynamic;
 
@@ -46,5 +47,5 @@ public class Footer : WatchedElement
         => "footer";
 
     private string BuildCopyright()
-        => $"Copyright {DateTime.UtcNow.Year} {_CopyrightName} - All other trademarks, screenshots, logos and copyrights are the property of their respective owners.";
+        => $"© {DateTime.UtcNow.Year} {_CopyrightName} - {CommonTexts.AllRightsReserved}";
 }

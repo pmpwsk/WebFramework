@@ -1,3 +1,4 @@
+using uwap.WebFramework.Localization;
 using uwap.WebFramework.Responses.Base;
 using uwap.WebFramework.Responses.Dynamic;
 
@@ -17,7 +18,7 @@ public class Sidebar : OptionalIdElement
     
     public Sidebar(IEnumerable<AbstractElement>? items = null)
     {
-        HeaderContainer = new(this, new("Navigation"));
+        HeaderContainer = new(this, new(CommonTexts.GoTo));
         Items = new(this, items ?? []);
     }
     

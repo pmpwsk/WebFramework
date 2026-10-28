@@ -1,3 +1,4 @@
+using uwap.WebFramework.Localization;
 using uwap.WebFramework.Responses.Dynamic;
 
 namespace uwap.WebFramework.Responses.DefaultUI;
@@ -34,7 +35,7 @@ public class Head : WatchedElement
     
     public Head(Request req, string? title, IEnumerable<StyleReference>? additionalStyles = null)
     {
-        TitleContainer = new(this, new(title ?? "Untitled", Server.Config.Domains.TitleExtensions.GetValueAny(req.Domains)));
+        TitleContainer = new(this, new(title ?? CommonTexts.Untitled, Server.Config.Domains.TitleExtensions.GetValueAny(req.Domains)));
         DescriptionContainer = new(this, null);
         ViewportSettingsContainer = new(this, new("viewport", "width=device-width, initial-scale=1.0, interactive-widget=resizes-content"));
         CharsetContainer = new(this, new());

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using uwap.WebFramework.Localization;
 
 namespace uwap.WebFramework.Responses;
 
@@ -13,7 +14,7 @@ public class ExceptionResponse(Exception exception) : IResponse
     {
         context.Response.StatusCode = 500;
         req.Exception = Exception;
-        Presets.CreatePage(req, "Error", out var page);
+        Presets.CreatePage(req, CommonTexts.Error, out var page);
         using var response = new LegacyPageResponse(page, req);
         await response.Respond(req, context);
     }

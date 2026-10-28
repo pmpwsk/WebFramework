@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using Useful.Toolkit;
 using uwap.WebFramework.Database;
+using uwap.WebFramework.Localization;
 
 namespace uwap.WebFramework.Accounts;
 
@@ -144,7 +145,6 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
     /// <summary>
     /// Logs out all other clients.
     /// </summary>
-    /// <param name="req"></param>
     public Task LogoutOthersAsync(Request req)
         => LogoutAsync(req, true);
 
@@ -165,16 +165,16 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
     public async Task<User> RegisterAsync(string username, string mailAddress, string? password)
     {
         if (!AccountManager.CheckUsernameFormat(username))
-            throw new Exception("Usernames must be at least 3 characters long and only contain lowercase letters, digits, dashes, dots and underscores. The first and last characters can only be letters or digits.");
+            throw new Exception(CommonTexts.UsernameFormat);
         if (!AccountManager.CheckMailAddressFormat(mailAddress))
-            throw new Exception("The provided email address is invalid.");
+            throw new Exception(CommonTexts.MailFormat);
         if (password != null && !AccountManager.CheckPasswordFormat(password))
-            throw new Exception("Passwords must be at least 8 characters long and contain at least one uppercase letter, lowercase letter, digit and special character.");
+            throw new Exception(CommonTexts.PasswordFormat);
 
         if (await FindByUsernameAsync(username) != null)
-            throw new Exception("This username is already being used by another account.");
+            throw new Exception(CommonTexts.UsernameExists);
         if (await FindByMailAddressAsync(mailAddress) != null)
-            throw new Exception("This email address is already being used by another account.");
+            throw new Exception(CommonTexts.MailExists);
         
         User newUser = new(username, mailAddress, password);
         
@@ -225,11 +225,11 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
         {
             var oldUsername = t.Value.Username;
             if (!AccountManager.CheckUsernameFormat(username))
-                throw new Exception("Usernames must be at least 3 characters long and only contain lowercase letters, digits, dashes, dots and underscores. The first and last characters can only be letters or digits.");
+                throw new Exception(CommonTexts.UsernameFormat);
             if (oldUsername == username)
-                throw new Exception("The provided username is the same as the old one.");
+                throw new Exception(CommonTexts.UsernameSame);
             if (await FindByUsernameAsync(username) != null)
-                throw new Exception("This username is already being used by another account.");
+                throw new Exception(CommonTexts.UsernameExists);
             
             t.Value.Username = username;
         });
@@ -242,11 +242,11 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
         {
             var oldAddress = t.Value.MailAddress;
             if (!AccountManager.CheckMailAddressFormat(mailAddress))
-                throw new Exception("The provided email address is invalid.");
+                throw new Exception(CommonTexts.MailFormat);
             if (oldAddress == mailAddress)
-                throw new Exception("The provided email address is the same as the old one.");
+                throw new Exception(CommonTexts.MailSame);
             if (await FindByMailAddressAsync(mailAddress) != null)
-                throw new Exception("This email address is already being used by another account.");
+                throw new Exception(CommonTexts.MailExists);
             
             t.Value.MailAddress = mailAddress;
         });
@@ -264,9 +264,9 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
             else
             {
                 if (!ignoreRules && !AccountManager.CheckPasswordFormat(password))
-                    throw new Exception("Passwords must be at least 8 characters long and contain at least one uppercase letter, lowercase letter, digit and special character.");
+                    throw new Exception(CommonTexts.PasswordFormat);
                 if (!allowSame && await ValidatePasswordAsync(id, password, null, t.Value))
-                    throw new Exception("The provided password is the same as the old one.");
+                    throw new Exception(CommonTexts.PasswordSame);
 
                 t.Value.Password = new(password);
             }

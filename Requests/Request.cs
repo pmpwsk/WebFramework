@@ -365,17 +365,17 @@ public class Request
             throw new ForcedResponse(new Page(
                 this,
                 false,
-                "Banned",
+                CommonTexts.Banned,
                 [
                     new Section(
-                        "Banned",
+                        CommonTexts.Banned,
                         [
                             new Subsection(
                                 null,
                                 [
-                                    new Paragraph("You have been temporarily banned from authenticating yourself to avoid brute-force attacks."),
-                                    new Paragraph("This may have been caused by someone else on your network (home network or VPN)."),
-                                    new Paragraph("You may try to log in again later.")
+                                    new Paragraph(CommonTexts.BannedParagraph1),
+                                    new Paragraph(CommonTexts.BannedParagraph2),
+                                    new Paragraph(CommonTexts.BannedParagraph3)
                                 ]
                             )
                         ]

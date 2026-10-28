@@ -146,8 +146,8 @@ public static class Presets
     /// <summary>
     /// Creates elements to allow for password (and 2FA if present) verification.
     /// </summary>
-    public static AuthElements CreateAuthElements(Request req)
-        => Handler.CreateAuthElements(req);
+    public static AuthElements CreateAuthElements(Request req, bool indicateOldPassword = false)
+        => Handler.CreateAuthElements(req, indicateOldPassword);
 
     /// <summary>
     /// Checks whether the given password (and 2FA code if necessary) provided in the query (keys 'password' and 'code') is correct for the given user.<br/>
