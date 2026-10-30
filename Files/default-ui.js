@@ -204,7 +204,13 @@ async function onWatcherMessageAsync(data) {
     let change = JSON.parse(data);
     console.log("Watcher message received.", change);
     
-    switch (change.type) {
+    switch (change.$type) {
+        case "Reload": {
+            requestNavigation(() => {
+                console.log("Performing reload.");
+                window.location.reload();
+            });
+        } break;
         case "Navigate": {
             let location = change.location;
             requestNavigation(() => {
@@ -251,26 +257,26 @@ async function onWatcherMessageAsync(data) {
                     focusedElements[0].focus();
             }
         } break;
-        case "AttributeChanged": {
+        case "ChangeAttribute": {
             let element = getElementByPath(change.path);
             if (element)
                 if (change.attributeValue)
                     element.setAttribute(change.attributeName, change.attributeValue);
                 else element.removeAttribute(change.attributeName);
         } break;
-        case "ElementRemoved": {
+        case "RemoveElement": {
             let element = getElementByPath(change.path);
             if (element)
                 element.remove();
         } break;
-        case "ElementAddedBefore": {
+        case "AddElementBefore": {
             let successor = getElementByPath(change.path);
             if (successor) {
                 let element = parseElement(change.html);
                 successor.parentNode.insertBefore(element, successor);
             }
         } break;
-        case "ElementAddedAfter": {
+        case "AddElementAfter": {
             let predecessor = getElementByPath(change.path);
             if (predecessor) {
                 let element = parseElement(change.html);
@@ -281,7 +287,7 @@ async function onWatcherMessageAsync(data) {
                     predecessor.parentNode.append(element);
             }
         } break;
-        case "ContentChanged": {
+        case "ChangeContent": {
             let element = getElementByPath(change.path);
             if (element)
                 element.innerHTML = change.content;

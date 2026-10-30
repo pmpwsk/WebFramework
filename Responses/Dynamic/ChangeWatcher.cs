@@ -13,14 +13,14 @@ public class ChangeWatcher
 
     private readonly Queue<object> WaitingChanges = [];
 
-    private bool Loaded = false; 
+    private bool Loaded = false;
     
     internal ChangeWatcher(string id)
     {
         Id = id;
     }
     
-    private void WriteChange(object change, bool forLoading = false)
+    private void WriteChange(ServerActions.AbstractAction change, bool forLoading = false)
     {
         lock (WaitingChanges)
         {
@@ -34,11 +34,7 @@ public class ChangeWatcher
     public void Welcome()
     {
         WriteChange(
-            new
-            {
-                type = "Welcome",
-                id = Id
-            },
+            new ServerActions.Welcome(Id),
             true
         );
     }
@@ -61,14 +57,12 @@ public class ChangeWatcher
         if (script == null)
             throw new ForcedResponse(StatusResponse.Teapot);
         WriteChange(
-            new
-            {
-                type = "FullPage",
+            new ServerActions.FullPage(
                 head,
                 beforeScript,
                 afterScript,
                 script
-            },
+            ),
             true
         );
         lock (WaitingChanges)
@@ -89,13 +83,11 @@ public class ChangeWatcher
             return;
         var attributeValue = element.GetAttribute(attributeName);
         WriteChange(
-            new
-            {
-                type = "AttributeChanged",
+            new ServerActions.ChangeAttribute(
                 path,
                 attributeName,
                 attributeValue
-            }
+            )
         );
     }
     
@@ -105,11 +97,9 @@ public class ChangeWatcher
         if (path == null)
             return;
         WriteChange(
-            new
-            {
-                type = "ElementRemoved",
+            new ServerActions.RemoveElement(
                 path
-            }
+            )
         );
     }
     
@@ -130,12 +120,10 @@ public class ChangeWatcher
             return;
         var html = string.Join("", child.EnumerateChunks());
         WriteChange(
-            new
-            {
-                type = "ElementAddedBefore",
+            new ServerActions.AddElementBefore(
                 path,
                 html
-            }
+            )
         );
     }
     
@@ -146,12 +134,10 @@ public class ChangeWatcher
             return;
         var html = string.Join("", child.EnumerateChunks());
         WriteChange(
-            new
-            {
-                type = "ElementAddedAfter",
+            new ServerActions.AddElementAfter(
                 path,
                 html
-            }
+            )
         );
     }
     
@@ -162,12 +148,10 @@ public class ChangeWatcher
             return;
         var content = string.Join("", element.RenderedContainers.WhereNotNull().SelectMany(c => c.WhereNotNull().SelectMany(e => e.EnumerateChunks())));
         WriteChange(
-            new
-            {
-                type = "ContentChanged",
+            new ServerActions.ChangeContent(
                 path,
                 content
-            }
+            )
         );
     }
     
@@ -177,33 +161,26 @@ public class ChangeWatcher
         if (path == null)
             return;
         WriteChange(
-            new
-            {
-                type = "SetValue",
+            new ServerActions.SetValue(
                 path,
                 value
-            }
+            )
         );
     }
     
     public void InternalReload()
     {
         WriteChange(
-            new
-            {
-                type = "InternalReload"
-            }
+            new ServerActions.InternalReload()
         );
     }
     
     public void Navigate(string location)
     {
         WriteChange(
-            new
-            {
-                type = "Navigate",
+            new ServerActions.Navigate(
                 location
-            }
+            )
         );
     }
 }

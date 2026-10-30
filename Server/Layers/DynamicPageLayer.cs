@@ -31,25 +31,21 @@ public static partial class Server
                     
                     var otherResponse = await GetOtherResponseAsync(req, url);
                     if (otherResponse is not Page page)
-                        if (otherResponse is RedirectResponse redirectResponse)
+                    {
+                        ServerActions.AbstractAction action = otherResponse is RedirectResponse redirectResponse
+                            ? new ServerActions.Navigate(redirectResponse.Location)
+                            : new ServerActions.Reload();
+                        
+                        otherResponse.Dispose();
+                        var otherSocket = new SocketResponse();
+                        await otherSocket.ConnectionOpened.RegisterAsync(async () =>
                         {
-                            var location = redirectResponse.Location;
-                            redirectResponse.Dispose();
-                            var redirectSocket = new SocketResponse();
-                            await redirectSocket.ConnectionOpened.RegisterAsync(async () =>
-                            {
-                                await redirectSocket.SendJsonAsync(
-                                    new { type = "Navigate", location }
-                                );
-                                await redirectSocket.CloseAsync();
-                            });
-                            return redirectSocket;
-                        }
-                        else
-                        {
-                            otherResponse.Dispose();
-                            return StatusResponse.NotFound;
-                        }
+                            await otherSocket.SendJsonAsync(
+                                action
+                            );
+                        });
+                        return otherSocket;
+                    }
                     
                     var watcher = WatcherManager.CreateWatcher(page);
                     
