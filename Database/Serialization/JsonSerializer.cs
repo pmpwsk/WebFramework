@@ -16,11 +16,11 @@ public class JsonSerializer(JsonSerializerOptions options) : AbstractSerializer
         WriteIndented = true,
         IncludeFields = true,
         IgnoreReadOnlyProperties = true,
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         DefaultIgnoreCondition = JsonIgnoreCondition.Never,
         Converters =
         {
-            new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower, false)
+            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, false)
         }
     })
     {
