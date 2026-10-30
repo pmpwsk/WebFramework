@@ -205,12 +205,6 @@ async function onWatcherMessageAsync(data) {
     console.log("Watcher message received.", change);
     
     switch (change.$type) {
-        case "Reload": {
-            requestNavigation(() => {
-                console.log("Performing reload.");
-                window.location.reload();
-            });
-        } break;
         case "Navigate": {
             let location = change.location;
             requestNavigation(() => {
@@ -303,6 +297,16 @@ async function onWatcherMessageAsync(data) {
                 console.log("Performing internal reload.");
                 await watcher.restartAsync();
             });
+        } break;
+        case "BrowserReload": {
+            requestNavigation(() => {
+                console.log("Performing browser reload.");
+                window.location.reload();
+            });
+        } break;
+        case "BrowserAlert": {
+            console.log("Alert.", change.message);
+            alert(change.message);
         } break;
         default: {
             console.warn("Unknown change", change);

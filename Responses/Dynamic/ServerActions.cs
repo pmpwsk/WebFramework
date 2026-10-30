@@ -7,7 +7,6 @@ public static class ServerActions
     /// <summary>
     /// Abstract action sent from the server to the client for dynamic pages.
     /// </summary>
-    [JsonDerivedType(typeof(Reload), typeDiscriminator: "Reload")]
     [JsonDerivedType(typeof(Welcome), typeDiscriminator: "Welcome")]
     [JsonDerivedType(typeof(FullPage), typeDiscriminator: "FullPage")]
     [JsonDerivedType(typeof(ChangeAttribute), typeDiscriminator: "ChangeAttribute")]
@@ -18,12 +17,9 @@ public static class ServerActions
     [JsonDerivedType(typeof(SetValue), typeDiscriminator: "SetValue")]
     [JsonDerivedType(typeof(InternalReload), typeDiscriminator: "InternalReload")]
     [JsonDerivedType(typeof(Navigate), typeDiscriminator: "Navigate")]
+    [JsonDerivedType(typeof(BrowserReload), typeDiscriminator: "BrowserReload")]
+    [JsonDerivedType(typeof(BrowserAlert), typeDiscriminator: "BrowserAlert")]
     public abstract class AbstractAction;
-
-    /// <summary>
-    /// Server action to request a browser reload.
-    /// </summary>
-    public class Reload : AbstractAction;
 
     /// <summary>
     /// Server action to welcome the client with the specified watcher ID.
@@ -136,5 +132,20 @@ public static class ServerActions
     ) : AbstractAction
     {
         public readonly string Location = location;
+    }
+
+    /// <summary>
+    /// Server action to request a browser reload.
+    /// </summary>
+    public class BrowserReload : AbstractAction;
+
+    /// <summary>
+    /// Server action to show a browser alert.
+    /// </summary>
+    public class BrowserAlert(
+        string message
+    ) : AbstractAction
+    {
+        public readonly string Message = message;
     }
 }

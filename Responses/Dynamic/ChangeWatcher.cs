@@ -183,4 +183,18 @@ public class ChangeWatcher
             )
         );
     }
+    
+    public void BrowserReload()
+    {
+        WriteChange(
+            new ServerActions.BrowserReload()
+        );
+    }
+    
+    public void BrowserAlert(string message)
+    {
+        WriteChange(
+            new ServerActions.BrowserAlert(message)
+        );
+    }
 }

@@ -84,6 +84,18 @@ public abstract class AbstractWatchablePage : AbstractTextResponse, IWatchedPare
         => ChangeWatcher?.InternalReload();
     
     /// <summary>
+    /// Reloads a dynamic page using the browser navigation.
+    /// </summary>
+    public void BrowserReload()
+        => ChangeWatcher?.BrowserReload();
+    
+    /// <summary>
+    /// Shows a browser alert on a dynamic page.
+    /// </summary>
+    public void BrowserAlert(string message)
+        => ChangeWatcher?.BrowserAlert(message);
+    
+    /// <summary>
     /// Directs the dynamic page to the new location.
     /// </summary>
     public void Navigate(string location)
