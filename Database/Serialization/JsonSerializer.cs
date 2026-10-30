@@ -1,3 +1,4 @@
+using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Base = System.Text.Json.JsonSerializer;
@@ -30,6 +31,14 @@ public class JsonSerializer(JsonSerializerOptions options) : AbstractSerializer
         => Base.SerializeToUtf8Bytes(obj, Options);
 
     public override T? DeserializeNullable<T>(byte[] json) where T : class
+        => DeserializeNullable<T>(new ReadOnlySpan<byte>(json));
+
+    /// <summary>
+    /// Deserializes the given JSON as a byte span into an object and returns it.<br/>
+    /// If the deserialization failed, null is returned.
+    /// <typeparam name="T">The object's type.</typeparam>
+    /// </summary>
+    public T? DeserializeNullable<T>(ReadOnlySpan<byte> json) where T : class
     {
         try
         {
@@ -41,4 +50,12 @@ public class JsonSerializer(JsonSerializerOptions options) : AbstractSerializer
             return null;
         }
     }
+    
+    /// <summary>
+    /// Deserializes the given JSON as a byte span into an object and returns it.<br/>
+    /// If the deserialization failed, a <c>SerializationException</c> is thrown.
+    /// <typeparam name="T">The object's type.</typeparam>
+    /// </summary>
+    public T Deserialize<T>(ReadOnlySpan<byte> json) where T : class
+        => DeserializeNullable<T>(json) ?? throw new SerializationException();
 }
