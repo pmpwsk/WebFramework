@@ -1,7 +1,7 @@
 using System.Net.WebSockets;
 using System.Text;
-using System.Text.Json;
 using Microsoft.AspNetCore.Http;
+using uwap.WebFramework.Database;
 using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework.Responses;
@@ -70,7 +70,7 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
     /// Sends the given object as JSON to the client.
     /// </summary>
     public Task SendJsonAsync(object obj)
-        => SendAsync(WebSocketMessageType.Text, JsonSerializer.SerializeToUtf8Bytes(obj), true);
+        => SendAsync(WebSocketMessageType.Text, Serializers.Json.Serialize(obj), true);
 
     /// <summary>
     /// Sends the given binary data to the client.
