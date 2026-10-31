@@ -48,18 +48,18 @@ public static partial class Server
                         return otherSocket;
                     }
                     
-                    var watcher = WatcherManager.CreateWatcher(page);
+                    var watcher = new ChangeWatcher();
+                    page.ChangeWatcher = watcher;
                     
                     var response = new SocketResponse();
                     await response.ConnectionClosed.RegisterAsync(() =>
                     {
                         watcher.Socket = null;
-                        WatcherManager.DeleteWatcher(watcher);
+                        page.Dispose();
                     });
                     watcher.Socket = response;
                     await response.ConnectionOpened.RegisterAsync(() =>
                     {
-                        watcher.Welcome();
                         watcher.WritePage(page);
                     });
                     await response.MessageReceived.RegisterAsync(async (data, isText) =>
@@ -87,7 +87,7 @@ public static partial class Server
             var element = page.FindByPath(submit.Path);
             if (element is not IActionHaver actionHaver)
             {
-                page.BrowserAlert("Error: Action target is invalid.");
+                page.BrowserAlert("Error: Action target is invalid");
                 return;
             }
             if (element.HasActionIgnoringParent)
@@ -99,7 +99,7 @@ public static partial class Server
                 var formElement = page.FindByPath(entry.Path);
                 if (formElement is not AbstractInput formInput)
                 {
-                    page.BrowserAlert("Error: Form input is invalid.");
+                    page.BrowserAlert("Error: Form input is invalid");
                     return;
                 }
                 
@@ -120,7 +120,7 @@ public static partial class Server
                 }
                 catch (Exception ex)
                 {
-                    page.BrowserAlert($"Error: Action failed ({ex.Message}).");
+                    page.BrowserAlert($"Error: Action failed ({ex.Message})");
                 }
                 if (page.Request.BlockBanned && req.IsBanned)
                     page.Reload();

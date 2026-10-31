@@ -7,18 +7,11 @@ namespace uwap.WebFramework.Responses.Dynamic;
 /// </summary>
 public class ChangeWatcher
 {
-    public string Id;
-    
     public SocketResponse? Socket = null;
 
     private readonly Queue<object> WaitingChanges = [];
 
     private bool Loaded = false;
-    
-    internal ChangeWatcher(string id)
-    {
-        Id = id;
-    }
     
     private void WriteChange(ServerActions.AbstractAction change, bool forLoading = false)
     {
@@ -29,14 +22,6 @@ public class ChangeWatcher
             else
                 WaitingChanges.Enqueue(change);
         }
-    }
-    
-    public void Welcome()
-    {
-        WriteChange(
-            new ServerActions.Welcome(Id),
-            true
-        );
     }
 
     public void WritePage(Page page)

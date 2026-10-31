@@ -7,7 +7,6 @@ public static class ServerActions
     /// <summary>
     /// Abstract action sent from the server to the client for dynamic pages.
     /// </summary>
-    [JsonDerivedType(typeof(Welcome), typeDiscriminator: "Welcome")]
     [JsonDerivedType(typeof(FullPage), typeDiscriminator: "FullPage")]
     [JsonDerivedType(typeof(ChangeAttribute), typeDiscriminator: "ChangeAttribute")]
     [JsonDerivedType(typeof(RemoveElement), typeDiscriminator: "RemoveElement")]
@@ -21,16 +20,6 @@ public static class ServerActions
     [JsonDerivedType(typeof(BrowserAlert), typeDiscriminator: "BrowserAlert")]
     [JsonDerivedType(typeof(FinishAction), typeDiscriminator: "FinishAction")]
     public abstract class AbstractAction;
-
-    /// <summary>
-    /// Server action to welcome the client with the specified watcher ID.
-    /// </summary>
-    public class Welcome(
-        string id
-    ) : AbstractAction
-    {
-        public readonly string Id = id;
-    }
 
     /// <summary>
     /// Server action to send a full page to the client.

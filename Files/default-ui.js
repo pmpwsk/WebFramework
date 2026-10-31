@@ -106,7 +106,6 @@ class WrappedSocket {
     }
 }
 
-let watcherId = null;
 let watcher = null;
 
 if (document.documentElement.hasAttribute("data-wf-url")) {
@@ -166,13 +165,13 @@ document.addEventListener("submit", async event =>
         event.preventDefault();
         console.log("Submit ignored during open dialog.");
     }
-    else if (watcherId && event.submitter && event.submitter.matches(".wf-server-form-override"))
+    else if (watcher && event.submitter && event.submitter.matches(".wf-server-form-override"))
     {
         // Form with overriden server action
         event.preventDefault();
         await runServerAction(event.submitter, event.target);
     }
-    else if (watcherId && event.target.matches(".wf-server-form"))
+    else if (watcher && event.target.matches(".wf-server-form"))
     {
         // Form with server action
         event.preventDefault();
@@ -203,9 +202,6 @@ async function onWatcherMessageAsync(data) {
             let location = change.location;
             console.log("Performing navigation.", location);
             window.location.assign(location);
-        } break;
-        case "Welcome": {
-            watcherId = change.id;
         } break;
         case "FullPage": {
             let script = getElementByPath(["body", "script"]);
