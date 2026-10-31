@@ -18,11 +18,12 @@ public class ByteArrayDownloadResponse(byte[] bytes, string filename, string? ti
     public override long? Length
         => Bytes.Length;
 
-    protected override async Task WriteTo(HttpContext context)
+    protected override async Task WriteTo(Request req, HttpContext context)
     {
         var contentDisposition = new ContentDispositionHeaderValue("attachment");
         contentDisposition.SetHttpFileName(Filename);
         context.Response.Headers.Append("Content-Disposition", contentDisposition.ToString());
+        req.Cookies.DisableWriting();
         await context.Response.BodyWriter.WriteAsync(Bytes);
     }
 }

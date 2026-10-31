@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Http;
 using System.Diagnostics.CodeAnalysis;
 
@@ -8,12 +9,33 @@ namespace uwap.WebFramework;
 /// </summary>
 public class CookieManager
 {
-    internal readonly Dictionary<string, string> KnownCookies = [];
+    /// <summary>
+    /// The currently known cookie values. 
+    /// </summary>
+    private readonly ConcurrentDictionary<string, string> KnownCookies = [];
     
+    /// <summary>
+    /// The cookie writer to use.
+    /// </summary>
+    private ICookieWriter? Writer = null;
+    
+    /// <summary>
+    /// Creates a new cookie manager for the given context, while enabling writing to that context.
+    /// </summary>
     public CookieManager(HttpContext context)
     {
         foreach (var (key, value) in context.Request.Cookies)
             KnownCookies[key] = KnownCookies.TryGetValue(key, out var oldValue) ? $"{oldValue} {value}" : value;
+        
+        UseContextWriting(context);
+    }
+    
+    /// <summary>
+    /// Uses the same known cookies from the existing cookie manager, writing is disabled.
+    /// </summary>
+    public CookieManager(CookieManager manager)
+    {
+        KnownCookies = manager.KnownCookies;
     }
 
     /// <summary>
@@ -44,5 +66,83 @@ public class CookieManager
     /// Lists all request cookies.
     /// </summary>
     public List<KeyValuePair<string, string>> ListAll()
-        => KnownCookies.ToList();
+        => [.. KnownCookies];
+    
+    /// <summary>
+    /// Removes the cookie writer.
+    /// </summary>
+    public void DisableWriting()
+        => Writer = null;
+    
+    /// <summary>
+    /// Sets the cookie writer to write to the provided HTTP context.
+    /// </summary>
+    public void UseContextWriting(HttpContext context)
+        => Writer = new ContextCookieWriter(context);
+    
+    /// <summary>
+    /// Whether writing is supported.
+    /// </summary>
+    public bool CanWrite
+        => Writer != null;
+    
+    /// <summary>
+    /// Applies the provided cookie action.<br/>
+    /// If cookie writing is not supported, an exception is thrown.
+    /// </summary>
+    private async Task ApplyAsync(Action<HttpContext> action)
+    {
+        if (Writer == null)
+            throw new Exception("This request does not support cookie writing.");
+        
+        await Writer.ApplyAsync(action);
+    }
+
+    /// <summary>
+    /// Asks the client to add a simple session cookie (temporary!) with the given key and value.
+    /// </summary>
+    public Task SetAsync(string key, string value)
+        => ApplyAsync(
+            context =>
+            {
+                context.Response.Cookies.Append(key, value);
+                KnownCookies[key] = value;
+            }
+        );
+
+    /// <summary>
+    /// Asks the client to add a cookie with the given key, value and options.
+    /// </summary>
+    public Task SetAsync(string key, string value, CookieOptions options)
+        => ApplyAsync(
+            context =>
+            {
+                context.Response.Cookies.Append(key, value, options);
+                KnownCookies[key] = value;
+            }
+        );
+
+    /// <summary>
+    /// Asks the client to delete the cookie with the given key.
+    /// </summary>
+    public Task DeleteAsync(string key)
+        => ApplyAsync(
+            context =>
+            {
+                context.Response.Cookies.Delete(key);
+                KnownCookies.Remove(key, out _);
+            }
+        );
+
+    /// <summary>
+    /// Asks the client to delete the cookie with the given key and options.
+    /// </summary>
+    public Task DeleteAsync(string key, CookieOptions options)
+        => ApplyAsync(
+            context =>
+            {
+                context.Response.Cookies.Delete(key, options);
+                KnownCookies.Remove(key, out _);
+            }
+        );
 }

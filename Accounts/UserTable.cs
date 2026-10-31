@@ -85,12 +85,14 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
         if (user == null || !user.Auth.TryGetValue(authToken, out var tokenData))
         { //user doesn't exist or doesn't contain the token provided
             AccountManager.ReportFailedAuth(req);
-            req.CookieWriter?.Delete("AuthToken");
+            if (req.Cookies.CanWrite)
+                await req.Cookies.DeleteAsync("AuthToken");
             return (LoginState.None, null, null);
         }
         if (tokenData.Expires < DateTime.UtcNow)
         { //token expired <- don't report this because it's probably not brute-force
-            req.CookieWriter?.Delete("AuthToken");
+            if (req.Cookies.CanWrite)
+                await req.Cookies.DeleteAsync("AuthToken");
             if (Server.Config.Log.AuthTokenExpired)
                 Console.WriteLine($"User {id} used an expired auth token.");
             return (LoginState.None, null, null);
@@ -102,12 +104,12 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
             return (LoginState.NeedsMailVerification, user, tokenData.LimitedToPaths);
         else
         {
-            if (req.CookieWriter != null && !tokenData.AlreadyRenewed && tokenData.Expires < DateTime.UtcNow + Server.Config.Accounts.TokenExpiration - Server.Config.Accounts.TokenRenewalAfter)
+            if (req.Cookies.CanWrite && !tokenData.AlreadyRenewed && tokenData.Expires < DateTime.UtcNow + Server.Config.Accounts.TokenExpiration - Server.Config.Accounts.TokenRenewalAfter)
             { //renew token if the renewal is due
                 var newToken = await RenewTokenAsync(user.Id, authToken, tokenData);
                 if (newToken != null)
                 {
-                    AccountManager.AddAuthTokenCookie(user.Id + newToken, req, false);
+                    await AccountManager.AddAuthTokenCookieAsync(user.Id + newToken, req, false);
                     if (Server.Config.Log.AuthTokenRenewed)
                         Console.WriteLine($"Renewed a token for user {id}.");
                 }
@@ -125,8 +127,8 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
     {
         if (!req.Cookies.TryGetValue("AuthToken", out var combinedToken))
             return;
-        if (!logoutOthers)
-            req.CookieWriter?.Delete("AuthToken", new CookieOptions { Domain = AccountManager.GetWildcardDomain(req.Domain)});
+        if (!logoutOthers && req.Cookies.CanWrite)
+            await req.Cookies.DeleteAsync("AuthToken", new CookieOptions { Domain = AccountManager.GetWildcardDomain(req.Domain)});
         string id = combinedToken.Remove(12);
         string authToken = combinedToken.Remove(0, 12);
         if (!ContainsId(id))
@@ -285,7 +287,7 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
     /// Checks whether the given token is the token for mail verification and sets it to null (=verified) if it's the correct one.
     /// </summary>
     public async Task<bool> VerifyMailAsync(string id, string token, Request? req)
-        => (req == null || !AccountManager.IsBanned(req)) && await TransactionAndGetAsync(id, t =>
+        => (req == null || !AccountManager.IsBanned(req)) && await AsyncTransactionAndGetAsync(id, async t =>
         {
             if (t.Value.MailToken == null)
                 throw new Exception("This user's mail address is already verified.");
@@ -310,7 +312,7 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
                     //renew
                     if (Server.Config.Log.AuthTokenRenewed)
                         Console.WriteLine($"Renewed a token after mail verification for user {tokenId}.");
-                    AccountManager.AddAuthTokenCookie(tokenId + (RenewTokenInTransaction(t.Value, authToken, data) ?? throw new Exception("The auth token wasn't renewed.")), req, false);
+                    await AccountManager.AddAuthTokenCookieAsync(tokenId + (RenewTokenInTransaction(t.Value, authToken, data) ?? throw new Exception("The auth token wasn't renewed.")), req, false);
                 }
             }
             
@@ -399,7 +401,7 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
         //recovery code?
         if (tolerateRecovery && totp.RecoveryCodes.Contains(code))
         {
-            await TransactionAsync(id, t =>
+            await AsyncTransactionAsync(id, async t =>
             {
                 t.Value.TwoFactor.TOTP?.RemoveRecoveryCode(code);
                 
@@ -414,7 +416,7 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
                         //renew
                         if (Server.Config.Log.AuthTokenRenewed)
                             Console.WriteLine($"Renewed a token after 2FA for user {t.Value.Id}.");
-                        AccountManager.AddAuthTokenCookie(t.Value.Id + (RenewTokenInTransaction(t.Value, authToken, data) ?? throw new Exception("The auth token wasn't renewed.")), req, false);
+                        await AccountManager.AddAuthTokenCookieAsync(t.Value.Id + (RenewTokenInTransaction(t.Value, authToken, data) ?? throw new Exception("The auth token wasn't renewed.")), req, false);
                     }
                 }
             });
@@ -425,7 +427,7 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
         if (TOTP.VerifyCode(totp.SecretKey, code, out long timeStepMatched) && !totp.UsedTimeSteps.Contains(timeStepMatched))
         {
             //add to used time steps (and remove the oldest one if the list is full)
-            await TransactionAsync(id, t =>
+            await AsyncTransactionAsync(id, async t =>
             {
                 t.Value.TwoFactor.TOTP?.AddUsedTimestamp(timeStepMatched);
 
@@ -440,7 +442,7 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
                         //renew
                         if (Server.Config.Log.AuthTokenRenewed)
                             Console.WriteLine($"Renewed a token after 2FA for user {t.Value.Id}.");
-                        AccountManager.AddAuthTokenCookie(t.Value.Id + (RenewTokenInTransaction(t.Value, authToken, data) ?? throw new Exception("The auth token wasn't renewed.")), req, false);
+                        await AccountManager.AddAuthTokenCookieAsync(t.Value.Id + (RenewTokenInTransaction(t.Value, authToken, data) ?? throw new Exception("The auth token wasn't renewed.")), req, false);
                     }
                 }
             });

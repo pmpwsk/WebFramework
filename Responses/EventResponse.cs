@@ -57,6 +57,8 @@ public class EventResponse(CancellationToken cancellationToken = default) : IRes
         if (CancellationToken != CancellationToken.None)
             CancellationToken.Register(cts.Cancel);
             
+        req.Cookies.DisableWriting();
+        
         try
         {
             if (OnStart != null)

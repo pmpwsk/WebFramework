@@ -8,7 +8,10 @@ namespace uwap.WebFramework.Responses;
 public class DummyResponse : IResponse
 {
     public Task Respond(Request req, HttpContext context)
-        => Task.CompletedTask;
+    {
+        req.Cookies.DisableWriting();
+        return Task.CompletedTask;
+    }
 
     public void Dispose()
     {

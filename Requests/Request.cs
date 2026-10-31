@@ -24,11 +24,6 @@ public class Request
     /// The associated cookie manager.
     /// </summary>
     public readonly CookieManager Cookies;
-    
-    /// <summary>
-    /// The associated cookie writer or null if the request can't modify the client's cookies.
-    /// </summary>
-    public readonly CookieWriter? CookieWriter;
 
     /// <summary>
     /// The associated query manager.
@@ -131,7 +126,6 @@ public class Request
     {
         HttpContext = context;
         Cookies = new(context);
-        CookieWriter = new(Cookies, context);
         Query = new(context.Query());
         Form = HttpContext.Request.HasFormContentType ? new(context) : null;
         Body = HttpContext.Request.HasFormContentType ? null : new(context);
@@ -165,8 +159,7 @@ public class Request
         var parts = Parsers.ParseUrl(req, url);
         
         HttpContext = req.HttpContext;
-        Cookies = req.Cookies;
-        CookieWriter = null;
+        Cookies = new(req.Cookies);
         Query = new(parts.Query);
         Form = null;
         Body = null;

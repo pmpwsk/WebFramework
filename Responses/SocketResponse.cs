@@ -138,6 +138,9 @@ public class SocketResponse(CancellationToken cancellationToken = default) : IRe
             return;
         }
         
+        // disable cookie writing
+        req.Cookies.DisableWriting();
+        
         // open socket
         Connection = await req.WebSocket.AcceptWebSocketAsync(
             new WebSocketAcceptContext

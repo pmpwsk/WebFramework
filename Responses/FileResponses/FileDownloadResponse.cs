@@ -20,11 +20,12 @@ public class FileDownloadResponse(string path, string filename, string? timestam
     public override long? Length
         => new FileInfo(Path).Length;
 
-    protected override async Task WriteTo(HttpContext context)
+    protected override async Task WriteTo(Request req, HttpContext context)
     {
         var contentDisposition = new ContentDispositionHeaderValue("attachment");
         contentDisposition.SetHttpFileName(Filename);
         context.Response.Headers.Append("Content-Disposition", contentDisposition.ToString());
+        req.Cookies.DisableWriting();
         await context.Response.SendFileAsync(Path);
     }
 

@@ -120,17 +120,18 @@ public static class AccountManager
     /// <summary>
     /// Adds a cookie for the given authentication token to the given request.
     /// </summary>
-    internal static void AddAuthTokenCookie(string combinedToken, Request req, bool temporary)
+    internal static async Task AddAuthTokenCookieAsync(string combinedToken, Request req, bool temporary)
     {
         GenerateAuthTokenCookieOptions(out var expires, out var sameSite, out var domain, req, temporary);
-        req.CookieWriter?.Set("AuthToken", combinedToken, new CookieOptions()
-        {
-            Expires = expires,
-            SameSite = sameSite,
-            HttpOnly = Settings.HttpOnly,
-            Path = "/",
-            Domain = domain
-        });
+        if (req.Cookies.CanWrite)
+            await req.Cookies.SetAsync("AuthToken", combinedToken, new CookieOptions()
+            {
+                Expires = expires,
+                SameSite = sameSite,
+                HttpOnly = Settings.HttpOnly,
+                Path = "/",
+                Domain = domain
+            });
     }
 
     /// <summary>
@@ -160,7 +161,7 @@ public static class AccountManager
     internal static async Task LoginAsync(User user, Request req)
     {
         (string token, bool temporary) = await req.UserTable.AddNewTokenAsync(user.Id);
-        AddAuthTokenCookie(user.Id + token, req, temporary);
+        await AddAuthTokenCookieAsync(user.Id + token, req, temporary);
     }
 
     /// <summary>

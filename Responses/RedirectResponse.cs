@@ -15,6 +15,7 @@ public class RedirectResponse(string location, bool permanent = false) : IRespon
     public Task Respond(Request req, HttpContext context)
     {
         context.Response.Headers.Append("Cache-Control", "no-cache, private");
+        req.Cookies.DisableWriting();
         context.Response.Redirect(Location, Permanent);
         return Task.CompletedTask;
     }

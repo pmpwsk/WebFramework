@@ -9,6 +9,7 @@ public abstract class AbstractTextResponse : AbstractMarkdownPart, IResponse
 {
     public virtual async Task Respond(Request req, HttpContext context)
     {
+        req.Cookies.DisableWriting();
         foreach (var chunk in EnumerateChunks())
             await context.Response.WriteAsync(chunk);
     }

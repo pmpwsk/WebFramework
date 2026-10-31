@@ -17,8 +17,9 @@ public class FileResponse(string path, bool allowCors, string? timestamp) : Abst
     public override long? Length
         => new FileInfo(Path).Length;
 
-    protected override async Task WriteTo(HttpContext context)
+    protected override async Task WriteTo(Request req, HttpContext context)
     {
+        req.Cookies.DisableWriting();
         await context.Response.SendFileAsync(Path);
     }
 

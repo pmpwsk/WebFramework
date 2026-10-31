@@ -21,7 +21,7 @@ public abstract class AbstractFileResponse(bool allowCors, string? timestamp) : 
     
     public abstract long? Length { get; }
     
-    protected abstract Task WriteTo(HttpContext context);
+    protected abstract Task WriteTo(Request req, HttpContext context);
     
     public async Task Respond(Request req, HttpContext context)
     {
@@ -70,7 +70,7 @@ public abstract class AbstractFileResponse(bool allowCors, string? timestamp) : 
             context.Response.ContentLength = Length;
         
         // Body
-        await WriteTo(context);
+        await WriteTo(req, context);
     }
 
     public virtual void Dispose()
