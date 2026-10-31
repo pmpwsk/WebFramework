@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Concurrent;
 
 namespace uwap.WebFramework.Tools;
 
@@ -21,25 +22,21 @@ public class ExpiringSet<T>(TimeSpan expiration, bool strict) : IEnumerable<T> w
     /// <summary>
     /// The items and their expiration dates.
     /// </summary>
-    private readonly Dictionary<T, DateTime> Items = [];
+    private readonly ConcurrentDictionary<T, DateTime> Items = [];
     
     /// <summary>
     /// Adds the given item to the set. If it already exists, its expiration will be reset.
     /// </summary>
     public void Add(T value)
     {
-        lock (Items)
+        var date = DateTime.UtcNow.Add(Expiration);
+        Items[value] = date;
+        _ = Task.Run(async () =>
         {
-            var date = DateTime.UtcNow.Add(Expiration);
-            Items[value] = date;
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(Expiration);
-                lock (Items)
-                    if (Items.TryGetValue(value, out var currentDate) && currentDate == date)
-                        Items.Remove(value);
-            });
-        }
+            await Task.Delay(Expiration);
+            if (Items.TryGetValue(value, out var currentDate) && currentDate == date)
+                Items.Remove(value, out _);
+        });
     }
     
     /// <summary>
@@ -47,8 +44,7 @@ public class ExpiringSet<T>(TimeSpan expiration, bool strict) : IEnumerable<T> w
     /// </summary>
     public void Remove(T value)
     {
-        lock (Items)
-            Items.Remove(value);
+        Items.Remove(value, out _);
     }
     
     /// <summary>
@@ -56,8 +52,7 @@ public class ExpiringSet<T>(TimeSpan expiration, bool strict) : IEnumerable<T> w
     /// </summary>
     public void Clear()
     {
-        lock (Items)
-            Items.Clear();
+        Items.Clear();
     }
     
     /// <summary>
@@ -65,23 +60,21 @@ public class ExpiringSet<T>(TimeSpan expiration, bool strict) : IEnumerable<T> w
     /// </summary>
     public bool Contains(T value)
     {
-        lock (Items)
-            if (Strict)
-                return Items.TryGetValue(value, out var date) && date >= DateTime.UtcNow;
-            else
-                return Items.ContainsKey(value);
+        if (Strict)
+            return Items.TryGetValue(value, out var date) && date >= DateTime.UtcNow;
+        else
+            return Items.ContainsKey(value);
     }
     
     public IEnumerator<T> GetEnumerator()
     {
-        lock (Items)
-            if (Strict)
-            {
-                var date = DateTime.UtcNow;
-                return Items.Where(kv => kv.Value >= date).Select(kv => kv.Key).ToList().GetEnumerator();
-            }
-            else
-                return Items.Keys.ToList().GetEnumerator();
+        if (Strict)
+        {
+            var date = DateTime.UtcNow;
+            return Items.Where(kv => kv.Value >= date).Select(kv => kv.Key).ToList().GetEnumerator();
+        }
+        else
+            return Items.Keys.ToList().GetEnumerator();
     }
     
     IEnumerator IEnumerable.GetEnumerator()
