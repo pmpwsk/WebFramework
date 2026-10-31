@@ -1,10 +1,8 @@
-using System.Web;
 using uwap.WebFramework.Database;
 using uwap.WebFramework.Responses;
 using uwap.WebFramework.Responses.Actions;
 using uwap.WebFramework.Responses.DefaultUI;
 using uwap.WebFramework.Responses.Dynamic;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace uwap.WebFramework;
 
@@ -62,17 +60,22 @@ public static partial class Server
                     {
                         watcher.WritePage(page);
                     });
-                    await response.MessageReceived.RegisterAsync(async (data, isText) =>
+                    await response.MessageReceived.RegisterAsync((data, isText) =>
                     {
-                        if (!isText)
-                            return;
-                        
-                        switch (Serializers.Json.DeserializeNullable<ClientActions.AbstractAction>(data.Span))
+                        if (isText)
                         {
-                            case ClientActions.Submit submit:
-                                await HandleDynamicPageSubmit(watcher, req, page, submit);
-                                break;
+                            var action = Serializers.Json.DeserializeNullable<ClientActions.AbstractAction>(data.Span);
+                            _ = Task.Run(async () =>
+                            {
+                                switch (action)
+                                {
+                                    case ClientActions.Submit submit:
+                                        await HandleDynamicPageSubmit(watcher, req, page, submit);
+                                        break;
+                                }
+                            });
                         }
+                        return Task.CompletedTask;
                     });
                     return response;
                 }
