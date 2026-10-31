@@ -8,20 +8,10 @@ namespace uwap.WebFramework.Responses.Dynamic;
 public class ChangeWatcher
 {
     public SocketResponse? Socket = null;
-
-    private readonly Queue<object> WaitingChanges = [];
-
-    private bool Loaded = false;
     
-    private void WriteChange(ServerActions.AbstractAction change, bool forLoading = false)
+    private void WriteChange(ServerActions.AbstractAction change)
     {
-        lock (WaitingChanges)
-        {
-            if (Loaded || forLoading)
-                Socket?.SendJsonAsync(change).GetAwaiter().GetResult();
-            else
-                WaitingChanges.Enqueue(change);
-        }
+        Socket?.SendJsonAsync(change).GetAwaiter().GetResult();
     }
 
     public void WritePage(Page page)
@@ -47,15 +37,8 @@ public class ChangeWatcher
                 beforeScript,
                 afterScript,
                 script
-            ),
-            true
+            )
         );
-        lock (WaitingChanges)
-        {
-            while (WaitingChanges.TryDequeue(out var change))
-                Socket?.SendJsonAsync(change).GetAwaiter().GetResult();
-            Loaded = true;
-        }
     }
 
     private static string ToCode(AbstractMarkdownPart part)
