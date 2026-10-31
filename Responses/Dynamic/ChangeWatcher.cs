@@ -189,4 +189,11 @@ public class ChangeWatcher
             new ServerActions.FinishAction()
         );
     }
+    
+    public void CookieAction(string id)
+    {
+        WriteChange(
+            new ServerActions.CookieAction(id)
+        );
+    }
 }

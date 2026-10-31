@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Http;
 using System.Diagnostics.CodeAnalysis;
+using uwap.WebFramework.Responses.Dynamic;
 
 namespace uwap.WebFramework;
 
@@ -81,6 +82,12 @@ public class CookieManager
         => Writer = new ContextCookieWriter(context);
     
     /// <summary>
+    /// Sets the cookie writer to write to the provided change watcher.
+    /// </summary>
+    public void UseWatcherWriting(ChangeWatcher watcher)
+        => Writer = new WatcherCookieWriter(watcher);
+    
+    /// <summary>
     /// Whether writing is supported.
     /// </summary>
     public bool CanWrite
@@ -90,7 +97,7 @@ public class CookieManager
     /// Applies the provided cookie action.<br/>
     /// If cookie writing is not supported, an exception is thrown.
     /// </summary>
-    private async Task ApplyAsync(Action<HttpContext> action)
+    internal async Task ApplyAsync(Action<HttpContext> action)
     {
         if (Writer == null)
             throw new Exception("This request does not support cookie writing.");

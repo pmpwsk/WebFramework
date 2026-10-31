@@ -200,7 +200,7 @@ async function onWatcherMessageAsync(data) {
     switch (change.$type) {
         case "Navigate": {
             let location = change.location;
-            console.log("Performing navigation.", location);
+            console.log("Performing navigation.");
             window.location.assign(location);
         } break;
         case "FullPage": {
@@ -295,6 +295,21 @@ async function onWatcherMessageAsync(data) {
         case "FinishAction": {
             console.log("Action completed.");
             LoadingScreen.hide();
+        } break;
+        case "CookieAction": {
+            let cookieId = change.id;
+            console.log("Cookie action requested.");
+            try {
+                let cookieResult = await fetch(`/wf/dyn/cookies?id=${encodeURIComponent(cookieId)}`);
+                if (cookieResult.ok && await cookieResult.text() === "ok") {
+                    console.log("Cookie applied.");
+                    await watcher.sendJson({$type: "CookieApplied", id: cookieId});
+                    return;
+                }
+            } catch {
+            }
+            console.log("Cookie failed.", cookieId);
+            alert("Error: Cookie action failed");
         } break;
         default: {
             console.warn("Unknown change", change);

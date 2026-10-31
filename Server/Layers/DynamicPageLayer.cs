@@ -58,6 +58,7 @@ public static partial class Server
                     watcher.Socket = response;
                     await response.ConnectionOpened.RegisterAsync(() =>
                     {
+                        req.Cookies.UseWatcherWriting(watcher);
                         watcher.WritePage(page);
                     });
                     await response.MessageReceived.RegisterAsync((data, isText) =>
@@ -72,12 +73,24 @@ public static partial class Server
                                     case ClientActions.Submit submit:
                                         await HandleDynamicPageSubmit(watcher, req, page, submit);
                                         break;
+                                    case ClientActions.CookieApplied cookieApplied:
+                                        await DynamicCookieActionManager.CloseAsync(cookieApplied.Id);
+                                        break;
                                 }
                             });
                         }
                         return Task.CompletedTask;
                     });
                     return response;
+                }
+                
+                case "/cookies":
+                {
+                    var id = req.Query.GetOrThrow("id");
+                    if (await DynamicCookieActionManager.ApplyAsync(id, req))
+                        return new TextResponse("ok");
+                    else
+                        return StatusResponse.NotFound;
                 }
                 
                 default:

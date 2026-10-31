@@ -8,6 +8,7 @@ public static class ClientActions
     /// Abstract action sent from the client to the server for dynamic pages.
     /// </summary>
     [JsonDerivedType(typeof(Submit), typeDiscriminator: "Submit")]
+    [JsonDerivedType(typeof(CookieApplied), typeDiscriminator: "CookieApplied")]
     public abstract class AbstractAction;
 
     /// <summary>
@@ -29,5 +30,15 @@ public static class ClientActions
     {
         public readonly string[] Path = path;
         public readonly string? Value = value;
+    }
+
+    /// <summary>
+    /// Client action to confirm a cookie action.
+    /// </summary>
+    public class CookieApplied(
+        string id
+    ) : AbstractAction
+    {
+        public readonly string Id = id;
     }
 }

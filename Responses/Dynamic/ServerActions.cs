@@ -19,6 +19,7 @@ public static class ServerActions
     [JsonDerivedType(typeof(BrowserReload), typeDiscriminator: "BrowserReload")]
     [JsonDerivedType(typeof(BrowserAlert), typeDiscriminator: "BrowserAlert")]
     [JsonDerivedType(typeof(FinishAction), typeDiscriminator: "FinishAction")]
+    [JsonDerivedType(typeof(CookieAction), typeDiscriminator: "CookieAction")]
     public abstract class AbstractAction;
 
     /// <summary>
@@ -143,4 +144,14 @@ public static class ServerActions
     /// Server action to indicate that the current action has been completed.
     /// </summary>
     public class FinishAction : AbstractAction;
+
+    /// <summary>
+    /// Server action to ask the client to request the cookie action with the specified ID.
+    /// </summary>
+    public class CookieAction(
+        string id
+    ) : AbstractAction
+    {
+        public readonly string Id = id;
+    }
 }
