@@ -108,8 +108,6 @@ class WrappedSocket {
 
 let watcherId = null;
 let watcher = null;
-let requestedNavigation = null;
-let actionRunning = false;
 
 if (document.documentElement.hasAttribute("data-wf-url")) {
     let url = document.documentElement.getAttribute("data-wf-url");
@@ -196,14 +194,6 @@ document.addEventListener("change", event =>
         event.target.setAttribute("data-wf-modified", "");
 });
 
-function requestNavigation(action) {
-    if (actionRunning) {
-        requestedNavigation = action;
-    } else {
-        action();
-    }
-}
-
 async function onWatcherMessageAsync(data) {
     let change = JSON.parse(data);
     console.log("Watcher message received.", change);
@@ -211,10 +201,8 @@ async function onWatcherMessageAsync(data) {
     switch (change.$type) {
         case "Navigate": {
             let location = change.location;
-            requestNavigation(() => {
-                console.log("Performing navigation.", location);
-                window.location.assign(location);
-            });
+            console.log("Performing navigation.", location);
+            window.location.assign(location);
         } break;
         case "Welcome": {
             watcherId = change.id;
@@ -297,30 +285,20 @@ async function onWatcherMessageAsync(data) {
         } break;
         case "InternalReload": {
             LoadingScreen.show();
-            requestNavigation(async () => {
-                console.log("Performing internal reload.");
-                await watcher.restartAsync();
-            });
+            console.log("Performing internal reload.");
+            await watcher.restartAsync();
         } break;
         case "BrowserReload": {
-            requestNavigation(() => {
-                console.log("Performing browser reload.");
-                window.location.reload();
-            });
+            console.log("Performing browser reload.");
+            window.location.reload();
         } break;
         case "BrowserAlert": {
             console.log("Alert.", change.message);
             alert(change.message);
         } break;
         case "FinishAction": {
-            actionRunning = false;
             console.log("Action completed.");
-            if (requestedNavigation) {
-                requestedNavigation();
-                requestedNavigation = null;
-            } else {
-                LoadingScreen.hide();
-            }
+            LoadingScreen.hide();
         } break;
         default: {
             console.warn("Unknown change", change);
@@ -426,7 +404,6 @@ function getSystemPath(element)
 
 async function runServerAction(submitter, form)
 {
-    actionRunning = true;
     console.log("Action started.");
     LoadingScreen.show();
 
