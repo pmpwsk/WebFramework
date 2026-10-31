@@ -197,4 +197,11 @@ public class ChangeWatcher
             new ServerActions.BrowserAlert(message)
         );
     }
+    
+    public void FinishAction()
+    {
+        WriteChange(
+            new ServerActions.FinishAction()
+        );
+    }
 }

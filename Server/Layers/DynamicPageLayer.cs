@@ -1,9 +1,10 @@
-using System.Text.Json;
 using System.Web;
+using uwap.WebFramework.Database;
 using uwap.WebFramework.Responses;
 using uwap.WebFramework.Responses.Actions;
 using uwap.WebFramework.Responses.DefaultUI;
 using uwap.WebFramework.Responses.Dynamic;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace uwap.WebFramework;
 
@@ -34,7 +35,7 @@ public static partial class Server
                     {
                         ServerActions.AbstractAction action = otherResponse is RedirectResponse redirectResponse
                             ? new ServerActions.Navigate(redirectResponse.Location)
-                            : new ServerActions.Reload();
+                            : new ServerActions.BrowserReload();
                         
                         otherResponse.Dispose();
                         var otherSocket = new SocketResponse();
@@ -61,74 +62,69 @@ public static partial class Server
                         watcher.Welcome();
                         watcher.WritePage(page);
                     });
+                    await response.MessageReceived.RegisterAsync(async (data, isText) =>
+                    {
+                        if (!isText)
+                            return;
+                        
+                        switch (Serializers.Json.DeserializeNullable<ClientActions.AbstractAction>(data.Span))
+                        {
+                            case ClientActions.Submit submit:
+                                await HandleDynamicPageSubmit(watcher, req, page, submit);
+                                break;
+                        }
+                    });
                     return response;
-                }
-
-                case "/submit":
-                {
-                    req.ForcePOST();
-                    if (req.Form == null)
-                        return StatusResponse.BadRequest;
-                    var id = req.Query.GetOrThrow("id");
-                    if (!WatcherManager.TryGetPage(id, out var page))
-                        return StatusResponse.NotFound;
-                    var elemPathEncoded = req.Query.GetOrThrow("path");
-                    var elemPath = JsonSerializer.Deserialize<string[]>(HttpUtility.UrlDecode(elemPathEncoded));
-                    if (elemPath == null)
-                        return StatusResponse.BadRequest;
-                    var element = page.FindByPath(elemPath);
-                    ActionHandlerAsync action;
-                    switch (element)
-                    {
-                        case null:
-                            return StatusResponse.NotFound;
-                        case IActionHaver actionHaver:
-                            action = actionHaver.Action;
-                            break;
-                        default:
-                            return StatusResponse.BadRequest;
-                    }
-                    
-                    if (element.HasActionIgnoringParent)
-                        return StatusResponse.Success;
-                    
-                    foreach (var (encodedKey, stringValues) in req.Form.Data)
-                    {
-                        var key = Uri.UnescapeDataString(encodedKey);
-                        var value = (string?)stringValues;
-                        
-                        var formElemPath = JsonSerializer.Deserialize<string[]>(HttpUtility.UrlDecode(key));
-                        if (formElemPath == null)
-                            return StatusResponse.BadRequest;
-                        
-                        var formElement = page.FindByPath(formElemPath);
-                        if (formElement is not AbstractInput formInput)
-                            return StatusResponse.BadRequest;
-                        
-                        formInput.SetValueFromForm(value ?? "");
-                    }
-                    
-                    if (page.Request.BlockBanned && req.IsBanned)
-                        page.Reload();
-                    else
-                    {
-                        try
-                        {
-                            await action(req);
-                        }
-                        catch (AbstractForcedActionHandler forcedHandler)
-                        {
-                            forcedHandler.Handle(page);
-                        }
-                        if (page.Request.BlockBanned && req.IsBanned)
-                            page.Reload();
-                    }
-                    
-                    return StatusResponse.Success;
                 }
                 
                 default:
                     return StatusResponse.NotFound;
+            }
+        }
+        
+        private static async Task HandleDynamicPageSubmit(ChangeWatcher watcher, Request req, Page page, ClientActions.Submit submit)
+        {
+            var element = page.FindByPath(submit.Path);
+            if (element is not IActionHaver actionHaver)
+            {
+                page.BrowserAlert("Error: Action target is invalid.");
+                return;
+            }
+            if (element.HasActionIgnoringParent)
+                return;
+            var action = actionHaver.Action;
+            
+            foreach (var entry in submit.Data)
+            {
+                var formElement = page.FindByPath(entry.Path);
+                if (formElement is not AbstractInput formInput)
+                {
+                    page.BrowserAlert("Error: Form input is invalid.");
+                    return;
+                }
+                
+                formInput.SetValueFromForm(entry.Value ?? "");
+            }
+            
+            if (page.Request.BlockBanned && req.IsBanned)
+                page.Reload();
+            else
+            {
+                try
+                {
+                    await action(req);
+                }
+                catch (AbstractForcedActionHandler forcedHandler)
+                {
+                    forcedHandler.Handle(page);
+                }
+                catch (Exception ex)
+                {
+                    page.BrowserAlert($"Error: Action failed ({ex.Message}).");
+                }
+                if (page.Request.BlockBanned && req.IsBanned)
+                    page.Reload();
+                watcher.FinishAction();
             }
         }
     }

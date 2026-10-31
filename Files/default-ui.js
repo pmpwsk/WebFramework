@@ -49,7 +49,6 @@ class WrappedSocket {
         this.#reconnectEnabled = false;
         window.removeEventListener("beforeunload", this.stopAsync);
         this.#socket?.close();
-        this.#socket = null;
     }
     
     restartAsync = async () => {
@@ -63,6 +62,12 @@ class WrappedSocket {
         });
     }
     
+    sendJson = async (data) => {
+        console.log("Sending JSON to socket.", data);
+        let text = JSON.stringify(data);
+        this.#socket.send(text);
+    }
+    
     #onOpenAsync = async () => {
         console.log("Socket event 'open'.");
         await this.onConnectedAsync?.();
@@ -70,7 +75,6 @@ class WrappedSocket {
     
     #onCloseAsync = async () => {
         console.log("Socket event 'close'.");
-        this.#socket = null;
         if (this.#reconnectEnabled) {
             console.log("Socket will be reconnecting.");
             await this.onReconnectingAsync?.();
@@ -308,6 +312,16 @@ async function onWatcherMessageAsync(data) {
             console.log("Alert.", change.message);
             alert(change.message);
         } break;
+        case "FinishAction": {
+            actionRunning = false;
+            console.log("Action completed.");
+            if (requestedNavigation) {
+                requestedNavigation();
+                requestedNavigation = null;
+            } else {
+                LoadingScreen.hide();
+            }
+        } break;
         default: {
             console.warn("Unknown change", change);
         } break;
@@ -416,28 +430,9 @@ async function runServerAction(submitter, form)
     console.log("Action started.");
     LoadingScreen.show();
 
-    let formData = new FormData();
-    appendAllToForm(form, formData);
-    let response = await fetch(
-        `/wf/dyn/submit?id=${watcherId}&path=${encodeURIComponent(JSON.stringify(getSystemPath(submitter)))}`,
-        {
-            method: "POST",
-            body: formData
-        }
-    );
-    if (!response.ok) {
-        alert("Action failed unexpectedly.")
-        return;
-    }
-    
-    actionRunning = false;
-    console.log("Action completed.");
-    if (requestedNavigation) {
-        requestedNavigation();
-        requestedNavigation = null;
-    } else {
-        LoadingScreen.hide();
-    }
+    let data = [];
+    appendAllToForm(form, data);
+    await watcher.sendJson({$type: "Submit", path: getSystemPath(submitter), data});
 }
 
 function getValueForForm(element)
@@ -447,14 +442,14 @@ function getValueForForm(element)
     return undefined;
 }
 
-function appendAllToForm(element, formData)
+function appendAllToForm(element, data)
 {
     let value = getValueForForm(element);
     if (value !== undefined)
-        formData.append(JSON.stringify(getSystemPath(element)), value);
+        data.push({ path: getSystemPath(element), value});
     
     for (let child of element.children)
-        appendAllToForm(child, formData);
+        appendAllToForm(child, data);
 }
 
 function writeAllValuesToMap(element, map)

@@ -19,6 +19,7 @@ public static class ServerActions
     [JsonDerivedType(typeof(Navigate), typeDiscriminator: "Navigate")]
     [JsonDerivedType(typeof(BrowserReload), typeDiscriminator: "BrowserReload")]
     [JsonDerivedType(typeof(BrowserAlert), typeDiscriminator: "BrowserAlert")]
+    [JsonDerivedType(typeof(FinishAction), typeDiscriminator: "FinishAction")]
     public abstract class AbstractAction;
 
     /// <summary>
@@ -148,4 +149,9 @@ public static class ServerActions
     {
         public readonly string Message = message;
     }
+
+    /// <summary>
+    /// Server action to indicate that the current action has been completed.
+    /// </summary>
+    public class FinishAction : AbstractAction;
 }
