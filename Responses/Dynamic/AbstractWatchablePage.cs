@@ -84,7 +84,7 @@ public abstract class AbstractWatchablePage : AbstractTextResponse, IWatchedPare
     /// <summary>
     /// Reloads a dynamic page using the browser navigation.
     /// </summary>
-    public Task BrowserReload()
+    public Task BrowserReloadAsync()
         => ChangeWatcher?.BrowserReloadAsync() ?? Task.CompletedTask;
     
     /// <summary>
