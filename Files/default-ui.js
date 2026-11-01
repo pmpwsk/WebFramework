@@ -215,9 +215,47 @@ async function onWatcherMessageAsync(data) {
             writeAllValuesToMap(document.body, valueMap);
             let focusName = document.activeElement?.name;
 
-            document.head.innerHTML = "";
-            for (let html of change.head)
-                document.head.append(parseElement(html));
+            let headElements = [];
+            let lastHeadElement = null;
+            for (let html of change.head) {
+                let element = parseElement(html);
+                let elementClone = element.cloneNode(true);
+                elementClone.removeAttribute("data-wf-id");
+                let lastHeadElementPassed = !lastHeadElement;
+                for (let oldElement of document.head.children) {
+                    if (oldElement === lastHeadElement)
+                        lastHeadElementPassed = true;
+                    else if (!lastHeadElementPassed)
+                        continue;
+                    let oldElementClone = oldElement.cloneNode(true);
+                    oldElementClone.removeAttribute("data-wf-id");
+                    if (elementClone.isEqualNode(oldElementClone)) {
+                        lastHeadElement = oldElement;
+                        if (element.hasAttribute("data-wf-id")) {
+                            oldElement.setAttribute("data-wf-id", element.getAttribute("data-wf-id"));
+                        } else {
+                            oldElement.removeAttribute("data-wf-id");
+                        }
+                        element = oldElement;
+                        break;
+                    }
+                }
+                headElements.push(element);
+            }
+            for (let element of [...document.head.children])
+                if (!headElements.includes(element))
+                    element.remove();
+            lastHeadElement = null;
+            for (let element of headElements) {
+                if (!document.head.contains(element)) {
+                    if (lastHeadElement) {
+                        lastHeadElement.after(element);
+                    } else {
+                        document.head.prepend(element);
+                    }
+                }
+                lastHeadElement = element;
+            }
 
             for (let child of [...document.body.children])
                 if (!matchesSystemId(child, "script") && !matchesSystemId(child, "loading"))
