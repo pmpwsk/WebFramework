@@ -19,6 +19,7 @@ public static class ServerActions
     [JsonDerivedType(typeof(BrowserAlert), typeDiscriminator: "BrowserAlert")]
     [JsonDerivedType(typeof(FinishAction), typeDiscriminator: "FinishAction")]
     [JsonDerivedType(typeof(CookieAction), typeDiscriminator: "CookieAction")]
+    [JsonDerivedType(typeof(FocusElement), typeDiscriminator: "FocusElement")]
     public abstract class AbstractAction;
 
     /// <summary>
@@ -147,5 +148,15 @@ public static class ServerActions
     ) : AbstractAction
     {
         public readonly string Id = id;
+    }
+
+    /// <summary>
+    /// Server action to focus an element.
+    /// </summary>
+    public class FocusElement(
+        string[] path
+    ) : AbstractAction
+    {
+        public readonly string[] Path = path;
     }
 }

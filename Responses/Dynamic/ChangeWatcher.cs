@@ -198,6 +198,18 @@ public class ChangeWatcher(Request req, string url, SocketResponse socket) : IDi
     
     public Task CookieActionAsync(string id)
         => WriteChangeAsync(new ServerActions.CookieAction(id));
+    
+    public void FocusElement(WatchedElement child)
+    {
+        var path = child.GetPath();
+        if (path == null)
+            return;
+        WriteChange(
+            new ServerActions.FocusElement(
+                path
+            )
+        );
+    }
 
     public void Dispose()
     {

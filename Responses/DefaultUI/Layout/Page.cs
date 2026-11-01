@@ -184,6 +184,9 @@ public class Page : AbstractWatchablePage
         DynamicDialog.IgnoreActions = false;
         if (!DynamicDialog.IsOpen)
             DynamicDialog.IsOpen = true;
+        
+        if (DynamicDialog.TryGetFirstChild<TextBox>(i => i.Autofocus, out var input))
+            input.Focus();
     }
     
     /// <summary>

@@ -344,6 +344,14 @@ async function onWatcherMessageAsync(data) {
             console.log("Cookie failed.", cookieId);
             alert("Error: Cookie action failed");
         } break;
+        case "FocusElement": {
+            let element = getElementByPath(change.path);
+            if (element) {
+                let length = element.value.length;
+                element.setSelectionRange(length, length);
+                element.focus();
+            }
+        } break;
         default: {
             console.warn("Unknown change", change);
         } break;

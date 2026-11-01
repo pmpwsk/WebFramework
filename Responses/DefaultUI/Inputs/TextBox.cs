@@ -172,12 +172,21 @@ public class TextBox : AbstractInput
         InitialValueAttribute.SetValueWithoutNotifying(Value);
     }
     
+    /// <summary>
+    /// Requests that the browser sets the current value to the specified value.
+    /// </summary>
     public Task SetValueForClientAsync(string value)
     {
         Value = value;
         InitialValueAttribute.SetValueWithoutNotifying(Value);
         return ChangeWatcher?.SetValueAsync(this, value) ?? Task.CompletedTask;
     }
+    
+    /// <summary>
+    /// Requests that the browser focuses this field.
+    /// </summary>
+    public void Focus()
+        => ChangeWatcher?.FocusElement(this);
 
     private static (string Type, string? Spellcheck, string? Autocomplete) ConfigurationFromRole(TextBoxRole role)
         => role switch
