@@ -14,7 +14,6 @@ public static class ServerActions
     [JsonDerivedType(typeof(AddElementAfter), typeDiscriminator: "AddElementAfter")]
     [JsonDerivedType(typeof(ChangeContent), typeDiscriminator: "ChangeContent")]
     [JsonDerivedType(typeof(SetValue), typeDiscriminator: "SetValue")]
-    [JsonDerivedType(typeof(InternalReload), typeDiscriminator: "InternalReload")]
     [JsonDerivedType(typeof(Navigate), typeDiscriminator: "Navigate")]
     [JsonDerivedType(typeof(BrowserReload), typeDiscriminator: "BrowserReload")]
     [JsonDerivedType(typeof(BrowserAlert), typeDiscriminator: "BrowserAlert")]
@@ -109,11 +108,6 @@ public static class ServerActions
         public readonly string[] Path = path;
         public readonly object Value = value;
     }
-
-    /// <summary>
-    /// Server action to request an internal reload.
-    /// </summary>
-    public class InternalReload : AbstractAction;
 
     /// <summary>
     /// Server action to request a navigation to a new location.

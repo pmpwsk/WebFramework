@@ -7,10 +7,13 @@ public class ForcedActionError(params string[] messages) : AbstractForcedActionH
 {
     public readonly string[] Messages = messages;
     
-    public override void Handle(AbstractWatchablePage page)
+    public override Task HandleAsync(AbstractWatchablePage page)
     {
         if (page is Page defaultPage)
+        {
             DialogBuilder.Error(defaultPage, Messages);
+            return Task.CompletedTask;
+        }
         else
             throw new Exception("Unable to handle page of type: " + page.GetType().Name);
     }

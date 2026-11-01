@@ -5,22 +5,70 @@ namespace uwap.WebFramework.Responses.Dynamic;
 /// <summary>
 /// A class to watch and distribute changes to default UI elements.
 /// </summary>
-public class ChangeWatcher
+public class ChangeWatcher(Request req, string url, SocketResponse socket) : IDisposable
 {
-    public SocketResponse? Socket = null;
+    internal readonly Request Request = req;
+    
+    internal readonly string Url = url;
+    
+    internal AbstractWatchablePage? Page = null;
+    
+    internal SocketResponse Socket = socket;
+    
+    internal async Task LoadAsync()
+    {
+        var otherResponse = await Server.GetOtherResponseAsync(Request, Url);
+        if (otherResponse is not AbstractWatchablePage page)
+        {
+            ServerActions.AbstractAction action = otherResponse is RedirectResponse redirectResponse
+                ? new ServerActions.Navigate(redirectResponse.Location)
+                : new ServerActions.BrowserReload();
+                        
+            otherResponse.Dispose();
+            await Socket.SendJsonAsync(
+                action
+            );
+            return;
+        }
+        
+        Page = page;
+        Request.Cookies.UseWatcherWriting(this);
+        await WritePageAsync();
+        Page.ChangeWatcher = this;
+    }
+    
+    internal void Unload()
+    {
+        if (Page != null)
+        {
+            Page.ChangeWatcher = null;
+            Page.Dispose();
+            Page = null;
+        }
+    }
+    
+    public async Task ReloadAsync()
+    {
+        Unload();
+        await LoadAsync();
+    }
+    
+    private Task WriteChangeAsync(ServerActions.AbstractAction change)
+        => Socket.SendJsonAsync(change);
     
     private void WriteChange(ServerActions.AbstractAction change)
-    {
-        Socket?.SendJsonAsync(change).GetAwaiter().GetResult();
-    }
+        => WriteChangeAsync(change).GetAwaiter().GetResult();
 
-    public void WritePage(Page page)
+    public Task WritePageAsync()
     {
-        var head = page.Head.RenderedContent.WhereNotNull().Select(ToCode).ToList();
+        if (Page == null)
+            throw new Exception("No page is present.");
+        
+        var head = Page.Head.RenderedContent.WhereNotNull().Select(ToCode).ToList();
         List<string> beforeScript = [];
         List<string> afterScript = [];
         string? script = null;
-        foreach (var part in page.Body.RenderedContent)
+        foreach (var part in Page.Body.RenderedContent)
             if (part != null)
                 if (part is SystemScriptReference s)
                     script = s.Location;
@@ -30,8 +78,8 @@ public class ChangeWatcher
                     else
                         beforeScript.Add(ToCode(part));
         if (script == null)
-            throw new ForcedResponse(StatusResponse.Teapot);
-        WriteChange(
+            throw new Exception("Page was generated without a default script.");
+        return WriteChangeAsync(
             new ServerActions.FullPage(
                 head,
                 beforeScript,
@@ -123,12 +171,12 @@ public class ChangeWatcher
         );
     }
     
-    public void SetValue(WatchedElement element, object value)
+    public Task SetValueAsync(WatchedElement element, object value)
     {
         var path = element.GetPath();
         if (path == null)
-            return;
-        WriteChange(
+            return Task.CompletedTask;
+        return WriteChangeAsync(
             new ServerActions.SetValue(
                 path,
                 value
@@ -136,47 +184,24 @@ public class ChangeWatcher
         );
     }
     
-    public void InternalReload()
-    {
-        WriteChange(
-            new ServerActions.InternalReload()
-        );
-    }
+    public Task NavigateAsync(string location)
+        => WriteChangeAsync(new ServerActions.Navigate(location));
     
-    public void Navigate(string location)
-    {
-        WriteChange(
-            new ServerActions.Navigate(
-                location
-            )
-        );
-    }
+    public Task BrowserReloadAsync()
+        => WriteChangeAsync(new ServerActions.BrowserReload());
     
-    public void BrowserReload()
-    {
-        WriteChange(
-            new ServerActions.BrowserReload()
-        );
-    }
+    public Task BrowserAlertAsync(string message)
+        => WriteChangeAsync(new ServerActions.BrowserAlert(message));
     
-    public void BrowserAlert(string message)
-    {
-        WriteChange(
-            new ServerActions.BrowserAlert(message)
-        );
-    }
+    public Task FinishActionAsync()
+        => WriteChangeAsync(new ServerActions.FinishAction());
     
-    public void FinishAction()
+    public Task CookieActionAsync(string id)
+        => WriteChangeAsync(new ServerActions.CookieAction(id));
+
+    public void Dispose()
     {
-        WriteChange(
-            new ServerActions.FinishAction()
-        );
-    }
-    
-    public void CookieAction(string id)
-    {
-        WriteChange(
-            new ServerActions.CookieAction(id)
-        );
+        GC.SuppressFinalize(this);
+        Unload();
     }
 }

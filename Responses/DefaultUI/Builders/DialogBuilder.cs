@@ -116,7 +116,7 @@ public static class DialogBuilder
             async _ =>
             {
                 await table.DeleteAsync(obj);
-                page.Navigate(returnLocation);
+                await page.NavigateAsync(returnLocation);
             }
         );
 }

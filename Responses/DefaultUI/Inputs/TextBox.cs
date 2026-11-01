@@ -172,11 +172,11 @@ public class TextBox : AbstractInput
         InitialValueAttribute.SetValueWithoutNotifying(Value);
     }
     
-    public void SetValueForClient(string value)
+    public Task SetValueForClientAsync(string value)
     {
         Value = value;
         InitialValueAttribute.SetValueWithoutNotifying(Value);
-        ChangeWatcher?.SetValue(this, value);
+        return ChangeWatcher?.SetValueAsync(this, value) ?? Task.CompletedTask;
     }
 
     private static (string Type, string? Spellcheck, string? Autocomplete) ConfigurationFromRole(TextBoxRole role)

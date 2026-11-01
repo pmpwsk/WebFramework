@@ -279,11 +279,6 @@ async function onWatcherMessageAsync(data) {
             if (element)
                 element.value = change.value;
         } break;
-        case "InternalReload": {
-            LoadingScreen.show();
-            console.log("Performing internal reload.");
-            await watcher.restartAsync();
-        } break;
         case "BrowserReload": {
             console.log("Performing browser reload.");
             window.location.reload();

@@ -2,7 +2,7 @@ using uwap.WebFramework.Tools;
 
 namespace uwap.WebFramework.Database;
 
-public delegate void ValueChangedHandler<in T>(T? oldValue, T? newValue);
+public delegate Task ValueChangedHandler<in T>(T? oldValue, T? newValue);
 
 /// <summary>
 /// Contains the table entry functionality.
@@ -61,7 +61,7 @@ public class TableEntry<T>(Table<T> table, string id, byte[] serialized)
     /// Notifies event subscribers that the value of the entry was changed.
     /// </summary>
     public Task CallChangedEventAsync(T? oldValue, T? newValue)
-        => ValueChanged.InvokeWithSyncCaller(s => s(oldValue, newValue), _ => {});
+        => ValueChanged.InvokeWithAsyncCaller(s => s(oldValue, newValue), _ => {}, true);
 
     public override void Dispose()
     {

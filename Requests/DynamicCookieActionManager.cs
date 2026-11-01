@@ -33,7 +33,7 @@ public static class DynamicCookieActionManager
             await Task.Delay(Expiration);
             await CloseAsync(id);
         });
-        watcher.CookieAction(id);
+        await watcher.CookieActionAsync(id);
         await entry.Waiter.WaitAsync();
     }
     

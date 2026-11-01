@@ -38,7 +38,7 @@ public class Page : AbstractWatchablePage
         if (dynamic && !req.IsInternal)
         {
             Title = "...";
-            Body.LoadingScreen.IsOpen = true;
+            BodyContainer.Element.LoadingScreen.IsOpen = true;
             throw new ForcedResponse(this);
         }
     }
@@ -55,16 +55,10 @@ public class Page : AbstractWatchablePage
             Sidebar.Items.Add(element);
     }
     
-    /// <summary>
-    /// The head element.
-    /// </summary>
-    public Head Head
+    public override Head Head
         => HeadContainer.Element;
     
-    /// <summary>
-    /// The body element.
-    /// </summary>
-    public Body Body
+    public override Body Body
         => BodyContainer.Element;
     
     /// <summary>

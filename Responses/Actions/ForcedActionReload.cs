@@ -4,6 +4,6 @@ namespace uwap.WebFramework.Responses.Actions;
 
 public class ForcedActionReload : AbstractForcedActionHandler
 {
-    public override void Handle(AbstractWatchablePage page)
-        => page.Reload();
+    public override Task HandleAsync(AbstractWatchablePage page)
+        => page.ReloadAsync();
 }

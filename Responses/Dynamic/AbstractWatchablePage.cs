@@ -8,16 +8,6 @@ namespace uwap.WebFramework.Responses.Dynamic;
 /// </summary>
 public abstract class AbstractWatchablePage : AbstractTextResponse, IWatchedParent
 {
-    /// <summary>
-    /// The request that initially created this page.
-    /// </summary>
-    public readonly Request Request;
-    
-    /// <summary>
-    /// Whether the page will be watched for changes.
-    /// </summary>
-    public readonly bool Dynamic;
-    
     public ChangeWatcher? ChangeWatcher { get; internal set; }
 
     public readonly string? WatchedUrl;
@@ -34,14 +24,22 @@ public abstract class AbstractWatchablePage : AbstractTextResponse, IWatchedPare
     /// </summary>
     protected AbstractWatchablePage(Request req, bool dynamic)
     {
-        Request = req;
-        Dynamic = dynamic;
         WatchedUrl = dynamic ? req.ProtoHostPathQuery : null;
         Disposing = new();
         RenderedContainers = [];
         CancellationOnDisposeSource = new();
         CancellationOnDispose = CancellationOnDisposeSource.Token;
     }
+    
+    /// <summary>
+    /// The head element.
+    /// </summary>
+    public abstract WatchedElement Head { get; }
+    
+    /// <summary>
+    /// The body element.
+    /// </summary>
+    public abstract WatchedElement Body { get; }
 
     public WatchedElement? FindByPath(string[] path)
     {
@@ -70,7 +68,7 @@ public abstract class AbstractWatchablePage : AbstractTextResponse, IWatchedPare
     {
         if (value.ContainingEntry is TableEntry<T> entry)
         {
-            ValueChangedHandler<T> updater = (_, _) => Reload();
+            ValueChangedHandler<T> updater = (_, _) => ReloadAsync();
             
             await entry.ValueChanged.RegisterAsync(updater);
             await Disposing.RegisterAsync(() => entry.ValueChanged.UnregisterAsync(updater).GetAwaiter().GetResult());
@@ -80,26 +78,26 @@ public abstract class AbstractWatchablePage : AbstractTextResponse, IWatchedPare
     /// <summary>
     /// Reloads a dynamic page internally.
     /// </summary>
-    public void Reload()
-        => ChangeWatcher?.InternalReload();
+    public Task ReloadAsync()
+        => ChangeWatcher?.ReloadAsync() ?? Task.CompletedTask;
     
     /// <summary>
     /// Reloads a dynamic page using the browser navigation.
     /// </summary>
-    public void BrowserReload()
-        => ChangeWatcher?.BrowserReload();
+    public Task BrowserReload()
+        => ChangeWatcher?.BrowserReloadAsync() ?? Task.CompletedTask;
     
     /// <summary>
     /// Shows a browser alert on a dynamic page.
     /// </summary>
-    public void BrowserAlert(string message)
-        => ChangeWatcher?.BrowserAlert(message);
+    public Task BrowserAlertAsync(string message)
+        => ChangeWatcher?.BrowserAlertAsync(message) ?? Task.CompletedTask;
     
     /// <summary>
     /// Directs the dynamic page to the new location.
     /// </summary>
-    public void Navigate(string location)
-        => ChangeWatcher?.Navigate(location);
+    public Task NavigateAsync(string location)
+        => ChangeWatcher?.NavigateAsync(location) ?? Task.CompletedTask;
 
     public override void Dispose()
     {

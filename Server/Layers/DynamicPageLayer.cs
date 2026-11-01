@@ -28,39 +28,11 @@ public static partial class Server
                 {
                     var url = req.Query.GetOrThrow("url");
                     
-                    var otherResponse = await GetOtherResponseAsync(req, url);
-                    if (otherResponse is not Page page)
-                    {
-                        ServerActions.AbstractAction action = otherResponse is RedirectResponse redirectResponse
-                            ? new ServerActions.Navigate(redirectResponse.Location)
-                            : new ServerActions.BrowserReload();
-                        
-                        otherResponse.Dispose();
-                        var otherSocket = new SocketResponse();
-                        await otherSocket.ConnectionOpened.RegisterAsync(async () =>
-                        {
-                            await otherSocket.SendJsonAsync(
-                                action
-                            );
-                        });
-                        return otherSocket;
-                    }
-                    
-                    var watcher = new ChangeWatcher();
-                    page.ChangeWatcher = watcher;
-                    
                     var response = new SocketResponse();
-                    await response.ConnectionClosed.RegisterAsync(() =>
-                    {
-                        watcher.Socket = null;
-                        page.Dispose();
-                    });
-                    watcher.Socket = response;
-                    await response.ConnectionOpened.RegisterAsync(() =>
-                    {
-                        req.Cookies.UseWatcherWriting(watcher);
-                        watcher.WritePage(page);
-                    });
+                    var watcher = new ChangeWatcher(req, url, response);
+                    
+                    await response.ConnectionClosed.RegisterAsync(watcher.Dispose);
+                    await response.ConnectionOpened.RegisterAsync(watcher.LoadAsync);
                     await response.MessageReceived.RegisterAsync((data, isText) =>
                     {
                         if (isText)
@@ -71,7 +43,7 @@ public static partial class Server
                                 switch (action)
                                 {
                                     case ClientActions.Submit submit:
-                                        await HandleDynamicPageSubmit(watcher, req, page, submit);
+                                        await HandleDynamicPageSubmit(watcher, submit);
                                         break;
                                     case ClientActions.CookieApplied cookieApplied:
                                         await DynamicCookieActionManager.CloseAsync(cookieApplied.Id);
@@ -98,12 +70,14 @@ public static partial class Server
             }
         }
         
-        private static async Task HandleDynamicPageSubmit(ChangeWatcher watcher, Request req, Page page, ClientActions.Submit submit)
+        private static async Task HandleDynamicPageSubmit(ChangeWatcher watcher, ClientActions.Submit submit)
         {
+            var page = watcher.Page ?? throw new Exception("No page is present.");
+            var req = watcher.Request;
             var element = page.FindByPath(submit.Path);
             if (element is not IActionHaver actionHaver)
             {
-                page.BrowserAlert("Error: Action target is invalid");
+                await page.BrowserAlertAsync("Error: Action target is invalid");
                 return;
             }
             if (element.HasActionIgnoringParent)
@@ -115,15 +89,15 @@ public static partial class Server
                 var formElement = page.FindByPath(entry.Path);
                 if (formElement is not AbstractInput formInput)
                 {
-                    page.BrowserAlert("Error: Form input is invalid");
+                    await page.BrowserAlertAsync("Error: Form input is invalid");
                     return;
                 }
                 
                 formInput.SetValueFromForm(entry.Value ?? "");
             }
             
-            if (page.Request.BlockBanned && req.IsBanned)
-                page.Reload();
+            if (req.BlockBanned && req.IsBanned)
+                await watcher.ReloadAsync();
             else
             {
                 try
@@ -132,15 +106,15 @@ public static partial class Server
                 }
                 catch (AbstractForcedActionHandler forcedHandler)
                 {
-                    forcedHandler.Handle(page);
+                    await forcedHandler.HandleAsync(page);
                 }
                 catch (Exception ex)
                 {
-                    page.BrowserAlert($"Error: Action failed ({ex.Message})");
+                    await page.BrowserAlertAsync($"Error: Action failed ({ex.Message})");
                 }
-                if (page.Request.BlockBanned && req.IsBanned)
-                    page.Reload();
-                watcher.FinishAction();
+                if (req.BlockBanned && req.IsBanned)
+                    await watcher.ReloadAsync();
+                await watcher.FinishActionAsync();
             }
         }
     }

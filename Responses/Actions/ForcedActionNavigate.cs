@@ -6,6 +6,6 @@ public class ForcedActionNavigate(string location) : AbstractForcedActionHandler
 {
     public readonly string Location = location;
     
-    public override void Handle(AbstractWatchablePage page)
-        => page.Navigate(Location);
+    public override Task HandleAsync(AbstractWatchablePage page)
+        => page.NavigateAsync(Location);
 }
