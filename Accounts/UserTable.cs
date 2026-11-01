@@ -287,7 +287,9 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
     /// Checks whether the given token is the token for mail verification and sets it to null (=verified) if it's the correct one.
     /// </summary>
     public async Task<bool> VerifyMailAsync(string id, string token, Request? req)
-        => (req == null || !AccountManager.IsBanned(req)) && await AsyncTransactionAndGetAsync(id, async t =>
+    {
+        string? newToken = null;
+        var result = (req == null || !AccountManager.IsBanned(req)) && await TransactionAndGetAsync(id, t =>
         {
             if (t.Value.MailToken == null)
                 throw new Exception("This user's mail address is already verified.");
@@ -312,12 +314,18 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
                     //renew
                     if (Server.Config.Log.AuthTokenRenewed)
                         Console.WriteLine($"Renewed a token after mail verification for user {tokenId}.");
-                    await AccountManager.AddAuthTokenCookieAsync(tokenId + (RenewTokenInTransaction(t.Value, authToken, data) ?? throw new Exception("The auth token wasn't renewed.")), req, false);
+                    newToken = tokenId + (RenewTokenInTransaction(t.Value, authToken, data) ?? throw new Exception("The auth token wasn't renewed."));
                 }
             }
             
             return true;
         });
+        
+        if (newToken != null && req != null)
+            await AccountManager.AddAuthTokenCookieAsync(newToken, req, false);
+        
+        return result;
+    }
 
     /// <summary>
     /// Checks whether the given password is correct.
@@ -401,7 +409,8 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
         //recovery code?
         if (tolerateRecovery && totp.RecoveryCodes.Contains(code))
         {
-            await AsyncTransactionAsync(id, async t =>
+            string? newToken = null;
+            await TransactionAsync(id, t =>
             {
                 t.Value.TwoFactor.TOTP?.RemoveRecoveryCode(code);
                 
@@ -411,15 +420,18 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
                     //get and decode the auth token
                     string tokenId = combinedToken.Remove(12);
                     string authToken = combinedToken.Remove(0, 12);
-                    if (t.Value.Id == tokenId && t.Value.Auth.TryGetValue(authToken, out var data))
+                    if (t.Value.Id == tokenId && t.Value.Auth.TryGetValue(authToken, out var data) && data.Needs2FA)
                     {
                         //renew
                         if (Server.Config.Log.AuthTokenRenewed)
                             Console.WriteLine($"Renewed a token after 2FA for user {t.Value.Id}.");
-                        await AccountManager.AddAuthTokenCookieAsync(t.Value.Id + (RenewTokenInTransaction(t.Value, authToken, data) ?? throw new Exception("The auth token wasn't renewed.")), req, false);
+                        newToken = t.Value.Id + (RenewTokenInTransaction(t.Value, authToken, data) ?? throw new Exception("The auth token wasn't renewed."));
                     }
                 }
             });
+        
+            if (newToken != null && req != null)
+                await AccountManager.AddAuthTokenCookieAsync(newToken, req, false);
             return true;
         }
 
@@ -427,7 +439,8 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
         if (TOTP.VerifyCode(totp.SecretKey, code, out long timeStepMatched) && !totp.UsedTimeSteps.Contains(timeStepMatched))
         {
             //add to used time steps (and remove the oldest one if the list is full)
-            await AsyncTransactionAsync(id, async t =>
+            string? newToken = null;
+            await TransactionAsync(id, t =>
             {
                 t.Value.TwoFactor.TOTP?.AddUsedTimestamp(timeStepMatched);
 
@@ -437,15 +450,18 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
                     //get and decode the auth token
                     string tokenId = combinedToken.Remove(12);
                     string authToken = combinedToken.Remove(0, 12);
-                    if (t.Value.Id == tokenId && t.Value.Auth.TryGetValue(authToken, out var data))
+                    if (t.Value.Id == tokenId && t.Value.Auth.TryGetValue(authToken, out var data) && data.Needs2FA)
                     {
                         //renew
                         if (Server.Config.Log.AuthTokenRenewed)
                             Console.WriteLine($"Renewed a token after 2FA for user {t.Value.Id}.");
-                        await AccountManager.AddAuthTokenCookieAsync(t.Value.Id + (RenewTokenInTransaction(t.Value, authToken, data) ?? throw new Exception("The auth token wasn't renewed.")), req, false);
+                        newToken = t.Value.Id + (RenewTokenInTransaction(t.Value, authToken, data) ?? throw new Exception("The auth token wasn't renewed."));
                     }
                 }
             });
+        
+            if (newToken != null && req != null)
+                await AccountManager.AddAuthTokenCookieAsync(newToken, req, false);
             return true;
         }
         else
