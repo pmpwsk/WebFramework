@@ -75,12 +75,12 @@ public class TextBox : AbstractInput
     /// </summary>
     public string Value { get; private set; }
     
-    public TextBox(string name, string? placeholder, string? initialValue, TextBoxRole role)
+    public TextBox(string name, string? placeholder, string? initialValue, TextBoxRole role, bool autofocus = false)
     {
         NameAttribute = new(this, "name", name);
         PlaceholderAttribute = new(this, "placeholder", placeholder);
         InitialValueAttribute = new(this, "value", initialValue);
-        AutofocusAttribute = new(this, "autofocus", null);
+        AutofocusAttribute = new(this, "autofocus", autofocus ? "" : null);
         Value = initialValue ?? "";
         _Role = role;
         var config = ConfigurationFromRole(role);
