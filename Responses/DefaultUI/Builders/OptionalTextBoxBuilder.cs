@@ -19,7 +19,10 @@ public class OptionalTextBoxBuilder<C>(
     public AbstractElement Initialize(C obj, Page page)
     {
         var initialValue = reference(obj);
-        Element = new TextBox(name, placeholder, initialValue, role);
+        Element = new TextBox(name, placeholder, initialValue, role)
+        {
+            Required = false
+        };
         return Element;
     }
 
@@ -45,6 +48,6 @@ public class OptionalTextBoxBuilder<C>(
         if (Element == null)
             throw new Exception("Not initialized.");
             
-        reference(obj) = Element.IsEmpty(out var value) ? null : value;
+        reference(obj) = Element.ValueNullable;
     }
 }

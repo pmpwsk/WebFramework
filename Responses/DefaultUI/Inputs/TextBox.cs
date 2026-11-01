@@ -71,6 +71,12 @@ public class TextBox : AbstractInput
     private TextBoxRole _Role;
     
     /// <summary>
+    /// Whether this input field is required to submit the surrounding form.<br/>
+    /// Default: true
+    /// </summary>
+    public bool Required { get; set; } = true;
+    
+    /// <summary>
     /// The last known value.
     /// </summary>
     public string Value { get; private set; }
@@ -81,7 +87,7 @@ public class TextBox : AbstractInput
         PlaceholderAttribute = new(this, "placeholder", placeholder);
         InitialValueAttribute = new(this, "value", initialValue);
         AutofocusAttribute = new(this, "autofocus", autofocus ? "" : null);
-        Value = initialValue ?? "";
+        Value = initialValue?.Trim() ?? "";
         _Role = role;
         var config = ConfigurationFromRole(role);
         TypeAttribute = new(this, "type", config.Type);
@@ -94,21 +100,10 @@ public class TextBox : AbstractInput
         => "input";
     
     /// <summary>
-    /// Returns whether the current value is unknown or empty, and returns the value as an out parameter.
+    /// Whether the current value is unknown, empty, or only whitespace characters.
     /// </summary>
-    public bool IsEmpty([MaybeNullWhen(true)] out string value)
-    {
-        if (string.IsNullOrWhiteSpace(Value))
-        {
-            value = null;
-            return true;
-        }
-        else
-        {
-            value = Value;
-            return false;
-        }
-    }
+    public bool IsEmpty
+        => string.IsNullOrWhiteSpace(Value);
     
     /// <summary>
     /// Returns null if the current value is unknown or empty, otherwise the value itself.
@@ -140,7 +135,7 @@ public class TextBox : AbstractInput
         set
         {
             InitialValueAttribute.Value = value;
-            Value = value ?? "";
+            Value = value?.Trim() ?? "";
         }
     }
     
@@ -177,7 +172,7 @@ public class TextBox : AbstractInput
     /// </summary>
     public Task SetValueForClientAsync(string value)
     {
-        Value = value;
+        Value = value.Trim();
         InitialValueAttribute.SetValueWithoutNotifying(Value);
         return ChangeWatcher?.SetValueAsync(this, value) ?? Task.CompletedTask;
     }

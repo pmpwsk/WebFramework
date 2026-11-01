@@ -1,4 +1,5 @@
 using uwap.WebFramework.Database;
+using uwap.WebFramework.Localization;
 using uwap.WebFramework.Responses;
 using uwap.WebFramework.Responses.Actions;
 using uwap.WebFramework.Responses.DefaultUI;
@@ -94,6 +95,15 @@ public static partial class Server
                 }
                 
                 formInput.SetValueFromForm(entry.Value ?? "");
+            }
+            
+            if (page is Page defaultPage
+                && element.TryGetParent<WatchedElement>(e => e.RenderedTag == "form", out var form)
+                && form.TryGetFirstChild<TextBox>(t => t.Required && t.IsEmpty, out _))
+            {
+                DialogBuilder.Error(defaultPage, CommonTexts.EmptyFields);
+                await watcher.FinishActionAsync();
+                return;
             }
             
             if (req.BlockBanned && req.IsBanned)

@@ -88,6 +88,27 @@ public abstract class WatchedElement : AbstractElement, IWatchedParent
         child = null;
         return false;
     }
+    
+    /// <summary>
+    /// Attempts to retrieve the first parent (including this element) of the specified type with the specified condition.
+    /// </summary>
+    public bool TryGetParent<T>(Predicate<T> condition, [MaybeNullWhen(false)] out T parent) where T : WatchedElement
+    {
+        if (this is T typedThis && condition(typedThis))
+        {
+            parent = typedThis;
+            return true;
+        }
+        else if (ParentContainer?.Parent is WatchedElement watchedParent)
+        {
+            return watchedParent.TryGetParent(condition, out parent);
+        }
+        else
+        {
+            parent = null;
+            return false;
+        }
+    }
 
     public override IEnumerable<(string Name, string? Value)> RenderedAttributes
         => [

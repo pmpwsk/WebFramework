@@ -193,11 +193,6 @@ public static class CommonTexts
         "Email-Adresse eingeben..."
     );
     
-    public static readonly Translation MailEmpty = Create(
-        "Please enter your email address.",
-        "Bitte geben Sie Ihre Email-Adresse ein."
-    );
-    
     public static readonly Translation MailNotFound = Create(
         "This email address isn't associated with any account.",
         "Zu dieser Email-Adresse wurde kein Konto gefunden."
@@ -299,7 +294,7 @@ public static class CommonTexts
     );
     
     public static readonly Translation EmptyFields = Create(
-        "Please fill out all fields.",
-        "Bitte füllen Sie alle Felder aus."
+        "Please fill out all required fields.",
+        "Bitte füllen Sie alle erforderlichen Felder aus."
     );
 }
