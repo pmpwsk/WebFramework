@@ -43,7 +43,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
         => 1;
     
     public override AbstractSerializer Serializer
-        => Serializers.DataContractJson;
+        => Serializers.Json;
     
     /// <summary>
     /// The minimum length a generated ID should have.
