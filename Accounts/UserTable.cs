@@ -23,9 +23,6 @@ public class UserTable(string name, List<ClusterNode> clusterNodes) : Table<User
 
     protected override IEnumerable<ITableIndex<User>> Indices => [ UsernameIndex, MailAddressIndex ];
 
-    public new static UserTable Import(string name, List<ClusterNode> clusterNodes)
-        => Tables.TryGetTable<UserTable>(name) ?? new UserTable(name, clusterNodes);
-
     public override ulong TypeIteration
         => 1;
     
