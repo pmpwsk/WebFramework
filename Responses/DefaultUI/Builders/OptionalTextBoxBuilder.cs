@@ -16,10 +16,10 @@ public class OptionalTextBoxBuilder<C>(
 {
     private TextBox? Element;
         
-    public AbstractElement Initialize(C obj, Page page)
+    public AbstractElement Initialize(C obj, Page page, bool isFirst)
     {
         var initialValue = reference(obj);
-        Element = new TextBox(name, placeholder, initialValue, role)
+        Element = new TextBox(name, placeholder, initialValue, role, isFirst)
         {
             Required = false
         };

@@ -15,7 +15,7 @@ public class SelectorBuilder<C, T>(
 {
     private DynamicSelector<T>? Element;
         
-    public AbstractElement Initialize(C obj, Page page)
+    public AbstractElement Initialize(C obj, Page page, bool isFirst)
     {
         var initialValue = reference(obj);
         Element = new DynamicSelector<T>(page, heading, initialValue, options);

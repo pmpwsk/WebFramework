@@ -10,7 +10,7 @@ public interface IInputBuilder<in C>
     /// <summary>
     /// Creates and stores the input element to use.
     /// </summary>
-    public AbstractElement Initialize(C obj, Page page);
+    public AbstractElement Initialize(C obj, Page page, bool isFirst);
     
     /// <summary>
     /// Validates the current value of the input element and returns an error message if necessary.
