@@ -62,7 +62,14 @@ public static class DialogBuilder
     /// <summary>
     /// Opens a dialog to create or edit an object.
     /// </summary>
-    public static void SaveObject<C>(Page page, C obj, IconAndText heading, List<IInputBuilder<C>> fields, Action<C>? additionalApplicator, Func<Action<C>, Task> saver) where C : AbstractTableValue
+    public static void SaveObject<C>(
+        Page page,
+        Table<C> table,
+        C obj,
+        string createdUrlPrefix,
+        IconAndText heading,
+        List<IInputBuilder<C>> fields
+    ) where C : AbstractTableValue
     {
         List<AbstractElement> elements = [];
         foreach (var field in fields)
@@ -88,13 +95,22 @@ public static class DialogBuilder
                     }
                 }
                 
-                await saver(o =>
+                if (obj.IdNullable == null)
                 {
                     foreach (var field in fields)
-                        field.Apply(o);
-
-                    additionalApplicator?.Invoke(o);
-                });
+                        field.Apply(obj);
+                    await table.CreateAsync(obj);
+                    
+                    await page.NavigateAsync($"{createdUrlPrefix}{obj.Id}");
+                }
+                else
+                {
+                    await using (table.StartModifying(ref obj))
+                        foreach (var field in fields)
+                            field.Apply(obj);
+                        
+                    await page.ReloadAsync();
+                }
             }
         );
     }
@@ -102,7 +118,14 @@ public static class DialogBuilder
     /// <summary>
     /// Opens a dialog to delete an object.
     /// </summary>
-    public static void DeleteObject<C>(Page page, C obj, Table<C> table, IconAndText heading, string name, string returnLocation) where C : AbstractTableValue
+    public static void DeleteObject<C>(
+        Page page,
+        C obj,
+        Table<C> table,
+        string returnLocation,
+        IconAndText heading,
+        string name
+    ) where C : AbstractTableValue
         => Open(
             page,
             heading,
