@@ -38,13 +38,19 @@ public static class Tables
     }
     
     /// <summary>
-    /// Attempts to find the loaded table with the given name and table type.
+    /// Attempts to find the loaded table with the given name and table type and throws and exception if it isn't loaded.
+    /// </summary>
+    public static T GetTable<T>(string name) where T : AbstractTable
+        => TryGetTable<T>(name) ?? throw new Exception("Table not found.");
+    
+    /// <summary>
+    /// Attempts to find the loaded table with the given name and table type and returns null if it isn't loaded.
     /// </summary>
     public static T? TryGetTable<T>(string name) where T : AbstractTable
         => Dictionary.TryGetValue(name, out var abstractTable) && abstractTable is T typedTable ? typedTable : null;
     
     /// <summary>
-    /// Attempts to find the loaded table with the given name and table type.
+    /// Attempts to find the loaded table with the given name and table type and returns false if it isn't loaded.
     /// </summary>
     public static bool TryGetTable<T>(string name, [MaybeNullWhen(false)] out T table) where T : AbstractTable
     {
