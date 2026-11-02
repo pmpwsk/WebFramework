@@ -84,10 +84,27 @@ public static class CommonTexts
         "Warnung"
     );
         
+    public static readonly Translation Name = Create(
+        "bi bi-tag",
+        "Name",
+        "Name"
+    );
+        
+    public static readonly Translation NamePlaceholder = Create(
+        "Enter a name...",
+        "Namen eingeben..."
+    );
+        
     public static readonly Translation Add = Create(
         "bi bi-arrow-return-right",
         "Add",
         "Hinzufügen"
+    );
+        
+    public static readonly Translation New = Create(
+        "bi bi-stars",
+        "New",
+        "Neu"
     );
         
     public static readonly Translation Delete = Create(
