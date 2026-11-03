@@ -10,6 +10,8 @@ public class ServerFormDialog : Dialog, IActionHaver
 {
     public ActionHandlerAsync Action { get; set; }
     
+    public bool IgnoresRequired { get; set; }
+    
     public ServerFormDialog(string id, IconAndText heading, bool isOpen, IEnumerable<AbstractElement> items, ActionHandlerAsync action) : base(id, heading, isOpen, items)
     {
         Action = action;

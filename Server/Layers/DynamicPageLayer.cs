@@ -98,6 +98,7 @@ public static partial class Server
             }
             
             if (page is Page defaultPage
+                && !actionHaver.IgnoresRequired
                 && element.TryGetParent<WatchedElement>(e => e.RenderedTag == "form", out var form)
                 && form.TryGetFirstChild<TextBox>(t => t.Required && t.IsEmpty, out _))
             {

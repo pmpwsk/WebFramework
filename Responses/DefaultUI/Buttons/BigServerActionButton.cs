@@ -11,6 +11,8 @@ public class BigServerActionButton : OptionalIdElement, IActionHaver
 {
     public ActionHandlerAsync Action { get; set; }
     
+    public bool IgnoresRequired { get; set; }
+    
     private readonly RequiredWatchedContainer<BigSubmitButton> SubmitContainer;
     
     public BigServerActionButton(IconAndText text, IEnumerable<string> subtexts, ActionHandlerAsync action)

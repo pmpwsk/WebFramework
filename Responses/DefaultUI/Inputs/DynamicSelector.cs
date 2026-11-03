@@ -11,6 +11,9 @@ public class DynamicSelector<T> : ButtonWithText, IActionHaver
     public ActionHandlerAsync Action
         => OpenTask;
     
+    public bool IgnoresRequired
+        => false;
+    
     public readonly Page Page;
     
     public readonly IconAndText Heading;

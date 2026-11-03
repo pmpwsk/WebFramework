@@ -10,6 +10,8 @@ public class ServerSubmitButton : ButtonWithText, IActionHaver
 {
     public ActionHandlerAsync Action { get; set; }
     
+    public bool IgnoresRequired { get; set; }
+    
     public ServerSubmitButton(IconAndText content, ActionHandlerAsync action) : base(content)
     {
         Action = action;

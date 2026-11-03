@@ -11,6 +11,8 @@ public class BigServerSubmitButton : OptionalIdElement, IActionHaver
 {
     public ActionHandlerAsync Action { get; set; }
     
+    public bool IgnoresRequired { get; set; }
+    
     /// <summary>
     /// The object describing the button's header text.
     /// </summary>

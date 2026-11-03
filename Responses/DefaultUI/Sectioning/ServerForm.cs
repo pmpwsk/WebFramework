@@ -9,6 +9,8 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 public class ServerForm : AbstractSubsection, IActionHaver
 {
     public ActionHandlerAsync Action { get; set; }
+    
+    public bool IgnoresRequired { get; set; }
 
     public ServerForm(IconAndText? heading, IEnumerable<AbstractElement> content, ActionHandlerAsync action) : base(heading, content)
     {

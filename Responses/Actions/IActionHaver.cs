@@ -9,4 +9,9 @@ public interface IActionHaver
     /// The action to perform when the form is submitted.
     /// </summary>
     public ActionHandlerAsync Action { get; }
+    
+    /// <summary>
+    /// Whether this action should be performed regardless of whether any required fields are empty.
+    /// </summary>
+    public bool IgnoresRequired { get; }
 }

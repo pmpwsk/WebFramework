@@ -10,6 +10,8 @@ public class ServerActionButton : AbstractButton, IActionHaver
 {
     public ActionHandlerAsync Action { get; set; }
     
+    public bool IgnoresRequired { get; set; }
+    
     private readonly RequiredWatchedContainer<SubmitButton> SubmitContainer;
     
     public ServerActionButton(IconAndText content, ActionHandlerAsync action)
