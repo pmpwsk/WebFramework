@@ -72,11 +72,12 @@ public static class DialogBuilder
     ) where C : AbstractTableValue
     {
         List<AbstractElement> elements = [];
-        bool isFirst = true;
+        bool autofocus = true;
         foreach (var field in fields)
         {
-            elements.Add(field.Initialize(obj, page, isFirst));
-            isFirst = false;
+            elements.Add(field.Initialize(obj, page, !field.IgnoreForAutofocus && autofocus));
+            if (!field.IgnoreForAutofocus)
+                autofocus = false;
         }
         elements.Add(new Row(
             new ContinueButton(),

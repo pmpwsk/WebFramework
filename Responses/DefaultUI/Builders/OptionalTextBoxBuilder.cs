@@ -14,12 +14,15 @@ public class OptionalTextBoxBuilder<C>(
     Func<string?, Task<string?>>? additionalValidator = null
 ) : IInputBuilder<C>
 {
+    public bool IgnoreForAutofocus
+        => false;
+    
     private TextBox? Element;
         
-    public AbstractElement Initialize(C obj, Page page, bool isFirst)
+    public AbstractElement Initialize(C obj, Page page, bool autofocus)
     {
         var initialValue = reference(obj);
-        Element = new TextBox(name, placeholder, initialValue, role, isFirst)
+        Element = new TextBox(name, placeholder, initialValue, role, autofocus)
         {
             Required = false
         };

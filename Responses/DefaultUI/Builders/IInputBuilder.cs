@@ -8,9 +8,14 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 public interface IInputBuilder<in C>
 {
     /// <summary>
+    /// Whether the resulting element should be skipped during the autofocus selection.
+    /// </summary>
+    public bool IgnoreForAutofocus { get; }
+    
+    /// <summary>
     /// Creates and stores the input element to use.
     /// </summary>
-    public AbstractElement Initialize(C obj, Page page, bool isFirst);
+    public AbstractElement Initialize(C obj, Page page, bool autofocus);
     
     /// <summary>
     /// Validates the current value of the input element and returns an error message if necessary.

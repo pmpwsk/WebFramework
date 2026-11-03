@@ -13,9 +13,12 @@ public class SelectorBuilder<C, T>(
     Func<T, Task<string?>>? additionalValidator = null
 ) : IInputBuilder<C>
 {
+    public bool IgnoreForAutofocus
+        => true;
+    
     private DynamicSelector<T>? Element;
         
-    public AbstractElement Initialize(C obj, Page page, bool isFirst)
+    public AbstractElement Initialize(C obj, Page page, bool autofocus)
     {
         var initialValue = reference(obj);
         Element = new DynamicSelector<T>(page, heading, initialValue, options);

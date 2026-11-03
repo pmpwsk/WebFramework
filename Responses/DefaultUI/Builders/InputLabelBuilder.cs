@@ -9,9 +9,12 @@ public class InputLabelBuilder<C>(
     IconAndText text
 ) : IInputBuilder<C>
 {
+    public bool IgnoreForAutofocus
+        => true;
+
     private Heading3? Element;
         
-    public AbstractElement Initialize(C obj, Page page, bool isFirst)
+    public AbstractElement Initialize(C obj, Page page, bool autofocus)
     {
         Element = new(text);
         return Element;
