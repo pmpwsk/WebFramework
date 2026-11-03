@@ -819,7 +819,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     public string GenerateId(int length)
     {
         string id;
-        do id = Parsers.RandomString(length);
+        do id = Parsers.RandomString(length, true, false, true);
         while (Data.ContainsKey(id));
         return id;
     }
@@ -847,7 +847,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     {
         if (Count == 0)
             return MinimumIdLength > 1 ? MinimumIdLength : 1;
-        var result = (Math.Log(Count) - Math.Log(1e-9d)) / Math.Log(62);
+        var result = (Math.Log(Count) - Math.Log(1e-9d)) / Math.Log(36);
         return result < MinimumIdLength ? MinimumIdLength : Convert.ToInt32(Math.Ceiling(result));
     }
     
