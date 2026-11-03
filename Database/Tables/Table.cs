@@ -49,7 +49,7 @@ public class Table<T> : AbstractTable, IDisposable where T : AbstractTableValue
     /// The minimum length a generated ID should have.
     /// </summary>
     public virtual int MinimumIdLength
-        => 1;
+        => 6;
     
     /// <summary>
     /// Creates a new table object with the given name and loads the entries.
