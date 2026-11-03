@@ -5,8 +5,11 @@ namespace uwap.WebFramework.Responses.DefaultUI;
 /// <summary>
 /// A default UI button that navigates back on any open dynamic dialogs.
 /// </summary>
-public class DialogBackButton(Page page)
-    : ServerSubmitButton(
-        CommonTexts.Back,
-        _ => DialogBuilder.Back(page)
-    );
+public class DialogBackButton : ServerSubmitButton
+{
+    public DialogBackButton(Page page)
+        : base(CommonTexts.Back, _ => DialogBuilder.Back(page))
+    {
+        IgnoresRequired = true;
+    }
+}
