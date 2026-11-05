@@ -14,6 +14,7 @@ public abstract class AbstractWatchablePage : AbstractTextResponse, IWatchedPare
 
     public List<AbstractWatchedContainer?> RenderedContainers { get; }
 
+    private bool Disposed = false;
     public readonly SubscriberContainer<Action> Disposing;
     
     private readonly CancellationTokenSource CancellationOnDisposeSource;
@@ -102,6 +103,9 @@ public abstract class AbstractWatchablePage : AbstractTextResponse, IWatchedPare
     public override void Dispose()
     {
         GC.SuppressFinalize(this);
+        if (Disposed)
+            return;
+        Disposed = true;
         base.Dispose();
         Disposing.InvokeWithSyncCaller(s => s(), null).GetAwaiter().GetResult();
         CancellationOnDisposeSource.Cancel();
