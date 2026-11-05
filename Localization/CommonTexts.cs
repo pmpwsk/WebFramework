@@ -55,6 +55,12 @@ public static class CommonTexts
         "Herunterladen"
     );
     
+    public static readonly Translation BackWithArrow = Create(
+        "bi bi-arrow-left",
+        "Back",
+        "Zurück"
+    );
+    
     public static readonly Translation Back = Create(
         "Back",
         "Zurück"
@@ -105,6 +111,12 @@ public static class CommonTexts
         "bi bi-stars",
         "New",
         "Neu"
+    );
+    
+    public static readonly Translation Edit = Create(
+        "bi bi-pen",
+        "Edit",
+        "Ändern"
     );
         
     public static readonly Translation Delete = Create(
