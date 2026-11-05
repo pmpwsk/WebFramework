@@ -326,4 +326,9 @@ public static class CommonTexts
         "Please fill out all required fields.",
         "Bitte füllen Sie alle erforderlichen Felder aus."
     );
+    
+    public static readonly Translation InvalidNumber = Create(
+        "Please only enter valid numbers into numeric fields.",
+        "Bitte geben Sie nur gültige Zahlen in Zahlenfelder ein."
+    );
 }
