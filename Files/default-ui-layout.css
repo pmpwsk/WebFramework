@@ -67,6 +67,11 @@ html {
     flex-direction: row;
 }
 
+.wf-mixed-text {
+    display: inline-flex;
+    flex-direction: row;
+}
+
 .wf-graph {
     gap: 0;
 }
@@ -77,6 +82,10 @@ html, body, main, .wf-content, nav, .wf-nav-island {
 
 .wf-subsection, footer, aside, .wf-menu, .wf-dialog, .wf-row-when-wide {
     gap: var(--s10);
+}
+
+.wf-mixed-text {
+    gap: var(--s6);
 }
 
 .wf-row, .wf-col, .wf-checkbox {
@@ -221,7 +230,7 @@ nav {
 
 /* Display */
 
-.wf-top-cover, .wf-button, .wf-menu-background, .wf-dialog-background, .wf-graph-segment:hover::after {
+.wf-top-cover, .wf-button:not(.wf-mixed-text), .wf-menu-background, .wf-dialog-background, .wf-graph-segment:hover::after {
     display: block;
 }
 
@@ -290,7 +299,7 @@ aside, .wf-menu, .wf-dialog {
 }
 
 h1.wf-heading, h2.wf-heading {
-    padding: 0 var(--s8);
+    padding: var(--s4) var(--s8);
 }
 
 .wf-button, .wf-upload::file-selector-button {
@@ -375,12 +384,12 @@ html {
 
 h1, h1 * {
     font-size: calc(1rem + var(--s8));
-    line-height: calc(2rem + var(--s4));
+    line-height: calc(1rem + var(--s12));
 }
 
 h2, h2 * {
     font-size: calc(1rem + var(--s4));
-    line-height: 2rem;
+    line-height: calc(1rem + var(--s8));
 }
 
 h3, h3 * {
@@ -432,17 +441,17 @@ html {
     overflow-x: hidden;
 }
 
-h1.wf-heading {
+.wf-text {
+    overflow-wrap: break-word;
+}
+
+h1.wf-heading, .wf-text {
     overflow: hidden;
 }
 
-h1.wf-heading {
+h1.wf-heading .wf-text {
     text-overflow: ellipsis;
     text-wrap: nowrap;
-}
-
-.wf-button {
-    text-wrap: wrap;
 }
 
 
@@ -505,8 +514,12 @@ aside, main, .wf-graph-segment {
     min-width: 0;
 }
 
-.wf-subsection > *, h1.wf-heading {
+.wf-subsection > * {
     max-width: 100%;
+}
+
+h1.wf-heading {
+    max-width: calc(100% - var(--s7));
 }
 
 .wf-button.wf-button-is-container, form:has(.wf-button-is-container), .wf-textbox, .wf-graph {

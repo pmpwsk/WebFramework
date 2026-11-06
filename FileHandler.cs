@@ -33,7 +33,7 @@ public static class SystemFiles
             "/bootstrap-icons/bootstrap-icons.min.css" => "638823958900000000",
             "/bootstrap-icons/fonts/bootstrap-icons.woff" => "638823958900000000",
             "/bootstrap-icons/fonts/bootstrap-icons.woff2" => "638823958900000000",
-            "/default-ui-layout.css" => "639276818780420000",
+            "/default-ui-layout.css" => "639295214111340000",
             "/default-ui-settings.css" => "639094554100878940",
             "/default-ui-theme.css" => "639276820684140000",
             "/default-ui.js" => "639291657418030000",

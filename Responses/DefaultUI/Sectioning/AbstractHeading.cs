@@ -13,6 +13,7 @@ public abstract class AbstractHeading : OptionalIdElement
     {
         ContentContainer = new(this, content);
         FixedAttributes.Add(("class", "wf-heading"));
+        FixedAttributes.Add(("class", "wf-mixed-text"));
     }
     
     /// <summary>

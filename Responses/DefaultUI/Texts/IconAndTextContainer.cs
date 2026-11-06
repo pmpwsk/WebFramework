@@ -10,9 +10,11 @@ public class IconAndTextContainer(IWatchedParent parent, IconAndText content)
 {
     private IconAndText _Content = content;
     
-    private readonly OptionalWatchedContainer<ItalicsText> IconContainer = new(parent, content.Icon == null ? null : new() { Class = content.Icon });
+    private readonly OptionalWatchedContainer<Icon> IconContainer
+        = new(parent, content.Icon == null ? null : new(content.Icon));
     
-    private readonly OptionalWatchedContainer<MarkdownText> TextContainer = new(parent, content.Text == null ? null : new(content.GeneratedText));
+    private readonly OptionalWatchedContainer<Text> TextContainer
+        = new(parent, content.Text == null ? null : new(content.Text));
     
     public IconAndText Content
     {
@@ -27,7 +29,7 @@ public class IconAndTextContainer(IWatchedParent parent, IconAndText content)
             else
             {
                 if (IconContainer.Element == null)
-                    IconContainer.Element = new() { Class = value.Icon };
+                    IconContainer.Element = new(value.Icon);
                 else if (IconContainer.Element.Class != value.Icon)
                     IconContainer.Element.Class = value.Icon;
             }
@@ -37,8 +39,13 @@ public class IconAndTextContainer(IWatchedParent parent, IconAndText content)
                 if (TextContainer.Element != null)
                     TextContainer.Element = null;
             }
-            else if (TextContainer.Element == null || TextContainer.Element.Text != value.GeneratedText)
-                TextContainer.Element = new(value.GeneratedText);
+            else
+            {
+                if (TextContainer.Element == null)
+                    TextContainer.Element = new(value.Text);
+                else if (TextContainer.Element.Content.Element.Text != value.Text)
+                    TextContainer.Element.Content.Element = new(value.Text);
+            }
             
             _Content = value;
         }

@@ -14,6 +14,7 @@ public abstract class ButtonWithText : AbstractButton
     {
         ContentContainer = new(this, content);
         FixedAttributes.Add(("class", "wf-button"));
+        FixedAttributes.Add(("class", "wf-mixed-text"));
     }
     
     /// <summary>
