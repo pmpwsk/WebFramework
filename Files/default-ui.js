@@ -179,7 +179,7 @@ document.addEventListener("submit", async event =>
     }
 });
 
-document.addEventListener("keydown", event =>
+document.addEventListener("input", event =>
 {
     let value = getValueForForm(event.target);
     if (value !== undefined)
