@@ -51,17 +51,6 @@ class WrappedSocket {
         this.#socket?.close();
     }
     
-    restartAsync = async () => {
-        console.log("Restarting socket.");
-        await this.stopAsync();
-        await new Promise(resolve => {
-            setTimeout(async () => {
-                await this.startAsync();
-                resolve();
-            }, 0)
-        });
-    }
-    
     sendJson = async (data) => {
         console.log("Sending JSON to socket.", data);
         let text = JSON.stringify(data);
