@@ -18,7 +18,14 @@ public class LineBreak : AbstractElement
             if (parts.Count != 0)
                 parts.Add(new LineBreak());
             
-            parts.Add(new MarkdownText(line));
+            bool lineBreak = false;
+            foreach (var subline in line.Split('\n'))
+            {
+                if (lineBreak)
+                    parts.Add(new LineBreak());
+                parts.Add(new MarkdownText(subline));
+                lineBreak = true;
+            }
         }
         return parts;
     }
