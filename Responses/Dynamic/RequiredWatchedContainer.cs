@@ -19,27 +19,35 @@ public class RequiredWatchedContainer<T> : AbstractWatchedContainer where T : Ab
     public T Element
     {
         get => _Element;
-        set
+        set => SetElement(value, true);
+    }
+    
+    /// <summary>
+    /// Sets the element without applying it to the watcher.
+    /// </summary>
+    public void SetElementWithoutNotifying(T value)
+        => SetElement(value, false);
+    
+    private void SetElement(T value, bool notify)
+    {
+        if (HasUnwatchedChildren || value is not WatchedElement)
         {
-            if (HasUnwatchedChildren || value is not WatchedElement)
-            {
-                AbandonChild(_Element);
-                _Element = value;
-                WelcomeChild(value);
-                if (Parent is WatchedElement watchedParent)
-                    Parent.ChangeWatcher?.ContentChanged(watchedParent);
-            }
-            else
-            {
-                if (_Element is WatchedElement old)
-                    Parent.ChangeWatcher?.ElementRemoved(old);
-                AbandonChild(_Element);
+            AbandonChild(_Element);
+            _Element = value;
+            WelcomeChild(value);
+            if (notify && Parent is WatchedElement watchedParent)
+                Parent.ChangeWatcher?.ContentChanged(watchedParent);
+        }
+        else
+        {
+            if (notify && _Element is WatchedElement old)
+                Parent.ChangeWatcher?.ElementRemoved(old);
+            AbandonChild(_Element);
                 
-                _Element = value;
-                WelcomeChild(value);
-                if (value is WatchedElement watchedElement)
-                    Parent.ChangeWatcher?.ElementAdded(watchedElement, Parent, FindElementBefore(), FindElementAfter());
-            }
+            _Element = value;
+            WelcomeChild(value);
+            if (notify && value is WatchedElement watchedElement)
+                Parent.ChangeWatcher?.ElementAdded(watchedElement, Parent, FindElementBefore(), FindElementAfter());
         }
     }
     

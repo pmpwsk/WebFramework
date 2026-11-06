@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using uwap.WebFramework.Responses.Dynamic;
 
 namespace uwap.WebFramework.Responses.DefaultUI;
@@ -52,7 +51,7 @@ public enum TextBoxRole
 /// <summary>
 /// A default UI single-line text input.
 /// </summary>
-public class TextBox : AbstractInput
+public class TextBox : AbstractInputWithFocus
 {
     private readonly RequiredWatchedAttribute NameAttribute;
     
@@ -69,12 +68,6 @@ public class TextBox : AbstractInput
     private readonly OptionalWatchedAttribute AutocompleteAttribute;
     
     private TextBoxRole _Role;
-    
-    /// <summary>
-    /// Whether this input field is required to submit the surrounding form.<br/>
-    /// Default: true
-    /// </summary>
-    public bool Required { get; set; } = true;
     
     /// <summary>
     /// The last known value.
@@ -99,10 +92,7 @@ public class TextBox : AbstractInput
     public override string RenderedTag
         => "input";
     
-    /// <summary>
-    /// Whether the current value is unknown, empty, or only whitespace characters.
-    /// </summary>
-    public bool IsEmpty
+    public override bool IsEmpty
         => string.IsNullOrWhiteSpace(Value);
     
     /// <summary>
@@ -152,10 +142,7 @@ public class TextBox : AbstractInput
         }
     }
 
-    /// <summary>
-    /// Whether the input's value should be censored like a password.
-    /// </summary>
-    public bool Autofocus
+    public override bool Autofocus
     {
         get => AutofocusAttribute.Value == "";
         set => AutofocusAttribute.Value = value ? "" : null;
@@ -177,10 +164,7 @@ public class TextBox : AbstractInput
         return ChangeWatcher?.SetValueAsync(this, value) ?? Task.CompletedTask;
     }
     
-    /// <summary>
-    /// Requests that the browser focuses this field.
-    /// </summary>
-    public void Focus()
+    public override void Focus()
         => ChangeWatcher?.FocusElement(this);
 
     private static (string Type, string? Spellcheck, string? Autocomplete) ConfigurationFromRole(TextBoxRole role)

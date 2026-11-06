@@ -100,7 +100,7 @@ public static partial class Server
             if (page is Page defaultPage
                 && !actionHaver.IgnoresRequired
                 && element.TryGetParent<WatchedElement>(e => e.RenderedTag == "form", out var form)
-                && form.TryGetFirstChild<TextBox>(t => t.Required && t.IsEmpty, out _))
+                && form.TryGetFirstChild<AbstractInput>(t => t.Required && t.IsEmpty, out _))
             {
                 DialogBuilder.Error(defaultPage, CommonTexts.EmptyFields);
                 await watcher.FinishActionAsync();
