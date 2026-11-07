@@ -28,9 +28,9 @@ public class TextArea : AbstractInputWithFocus
         NameAttribute = new(this, "name", name);
         PlaceholderAttribute = new(this, "placeholder", placeholder);
         AutofocusAttribute = new(this, "autofocus", autofocus ? "" : null);
-        Value = initialValue ?? "";
+        Value = initialValue?.Trim() ?? "";
         RowsAttribute = new(this, "rows", rows == null ? null : rows.ToString());
-        InitialValueContainer = new(this, initialValue == null ? null : new(initialValue));
+        InitialValueContainer = new(this, initialValue == null ? null : new(initialValue.Trim()));
         FixedAttributes.Add(("class", "wf-textbox"));
     }
 
@@ -67,7 +67,11 @@ public class TextArea : AbstractInputWithFocus
     public string? InitialValue
     {
         get => InitialValueContainer.Element?.Text;
-        set => InitialValueContainer.Element = value == null ? null : new(value);
+        set
+        {
+            InitialValueContainer.Element = value == null ? null : new(value.Trim());
+            Value = value?.Trim() ?? "";
+        }
     }
 
     public override bool Autofocus
@@ -78,7 +82,7 @@ public class TextArea : AbstractInputWithFocus
 
     public override void SetValueFromForm(string input)
     {
-        Value = input;
+        Value = input.Trim();
         InitialValueContainer.SetElementWithoutNotifying(Value == "" ? null : new(Value));
     }
     
@@ -87,9 +91,9 @@ public class TextArea : AbstractInputWithFocus
     /// </summary>
     public Task SetValueForClientAsync(string value)
     {
-        Value = value;
+        Value = value.Trim();
         InitialValueContainer.SetElementWithoutNotifying(Value == "" ? null : new(Value));
-        return ChangeWatcher?.SetValueAsync(this, value) ?? Task.CompletedTask;
+        return ChangeWatcher?.SetValueAsync(this, Value) ?? Task.CompletedTask;
     }
     
     public override void Focus()

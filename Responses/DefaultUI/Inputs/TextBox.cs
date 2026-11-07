@@ -78,7 +78,7 @@ public class TextBox : AbstractInputWithFocus
     {
         NameAttribute = new(this, "name", name);
         PlaceholderAttribute = new(this, "placeholder", placeholder);
-        InitialValueAttribute = new(this, "value", initialValue);
+        InitialValueAttribute = new(this, "value", initialValue?.Trim());
         AutofocusAttribute = new(this, "autofocus", autofocus ? "" : null);
         Value = initialValue?.Trim() ?? "";
         _Role = role;
@@ -124,7 +124,7 @@ public class TextBox : AbstractInputWithFocus
         get => InitialValueAttribute.Value;
         set
         {
-            InitialValueAttribute.Value = value;
+            InitialValueAttribute.Value = value?.Trim();
             Value = value?.Trim() ?? "";
         }
     }
@@ -161,7 +161,7 @@ public class TextBox : AbstractInputWithFocus
     {
         Value = value.Trim();
         InitialValueAttribute.SetValueWithoutNotifying(Value);
-        return ChangeWatcher?.SetValueAsync(this, value) ?? Task.CompletedTask;
+        return ChangeWatcher?.SetValueAsync(this, Value) ?? Task.CompletedTask;
     }
     
     public override void Focus()
