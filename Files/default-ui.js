@@ -571,7 +571,7 @@ function parseElement(html)
 }
 
 function setIsEmpty(element) {
-    if (element.innerText.trim().length === 0)
+    if (element.innerText === "" || (element.matches("span") && element.innerText === "\n"))
         element.setAttribute("data-wf-is-empty", "");
     else
         element.removeAttribute("data-wf-is-empty");
