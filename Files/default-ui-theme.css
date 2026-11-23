@@ -99,7 +99,7 @@ h1.wf-heading, aside > h2.wf-heading, .wf-menu > h2.wf-heading, .wf-dialog > h2.
 
 /* Font */
 
-* {
+*, .wf-textbox::placeholder, span.wf-textbox[data-wf-is-empty][data-wf-placeholder]::before {
     color: var(--foreground);
     font-family: var(--font-normal), sans-serif;
 }
@@ -263,6 +263,10 @@ li::marker {
 
 footer {
     opacity: 0.5;
+}
+
+.wf-textbox::placeholder, span.wf-textbox[data-wf-is-empty][data-wf-placeholder]::before {
+    opacity: 0.4;
 }
 
 .wf-checkbox input {

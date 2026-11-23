@@ -254,11 +254,11 @@ aside, .wf-top-cover, aside > .wf-heading, .wf-menu > .wf-heading, .wf-menu, .wf
     position: fixed;
 }
 
-.wf-button, .wf-upload::file-selector-button, h3.wf-heading, .wf-checkbox input, .wf-graph {
+.wf-button, .wf-upload::file-selector-button, h3.wf-heading, .wf-checkbox input, .wf-graph, span.wf-textbox {
     position: relative;
 }
 
-.wf-graph-segment:hover::after {
+.wf-graph-segment:hover::after, span.wf-textbox[data-wf-is-empty][data-wf-placeholder]::before {
     position: absolute;
 }
 
@@ -441,11 +441,11 @@ html {
     overflow-x: hidden;
 }
 
-.wf-text {
+.wf-text, span.wf-textbox {
     overflow-wrap: break-word;
 }
 
-h1.wf-heading, .wf-text {
+h1.wf-heading, .wf-text, span.wf-textbox {
     overflow: hidden;
 }
 
@@ -602,6 +602,11 @@ section {
     left: var(--s6);
 }
 
+span.wf-textbox[data-wf-is-empty][data-wf-placeholder]::before {
+    top: var(--s7);
+    left: var(--s8);
+}
+
 
 
 /* Shadows */
@@ -753,7 +758,7 @@ body:has(aside.wf-is-forced) .wf-menu-background, body:has(.wf-menu.wf-is-open) 
     user-select: none;
 }
 
-.wf-textbox {
+textarea.wf-textbox {
     resize: none;
 }
 
@@ -767,4 +772,9 @@ li pre, li .wf-image {
 
 .wf-graph-segment:hover::after {
     content: attr(data-wf-label);
+}
+
+span.wf-textbox[data-wf-is-empty][data-wf-placeholder]::before {
+    content: attr(data-wf-placeholder);
+    pointer-events: none;
 }

@@ -107,6 +107,31 @@ public class ListWatchedContainer<T> : AbstractWatchedContainer, IListWatchedCon
     }
     
     /// <summary>
+    /// Replaces the current elements in the list with the given elements without notifying the client.
+    /// </summary>
+    public void ReplaceAllWithoutNotifying(List<T> elements)
+    {
+        if (HasUnwatchedChildren || elements.Any(element => element is not WatchedElement))
+        {
+            foreach (var element in _Elements)
+                AbandonChild(element);
+            _Elements.Clear();
+            
+            _Elements.AddRange(elements);
+            foreach (var element in _Elements)
+                WelcomeChild(element);
+        }
+        else
+        {
+            while (_Elements.FirstOrDefault() is { } first)
+                Remove(first);
+            
+            foreach (var element in elements)
+                Add(element);
+        }
+    }
+    
+    /// <summary>
     /// Enumerates the typed elements.
     /// </summary>
     public IEnumerable<T> EnumerateTyped()

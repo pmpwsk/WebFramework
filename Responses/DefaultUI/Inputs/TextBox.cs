@@ -78,9 +78,9 @@ public class TextBox : AbstractInputWithFocus
     {
         NameAttribute = new(this, "name", name);
         PlaceholderAttribute = new(this, "placeholder", placeholder);
-        InitialValueAttribute = new(this, "value", initialValue?.Trim());
-        AutofocusAttribute = new(this, "autofocus", autofocus ? "" : null);
         Value = initialValue?.Trim() ?? "";
+        InitialValueAttribute = new(this, "value", Value.Length == 0 ? null : Value);
+        AutofocusAttribute = new(this, "autofocus", autofocus ? "" : null);
         _Role = role;
         var config = ConfigurationFromRole(role);
         TypeAttribute = new(this, "type", config.Type);

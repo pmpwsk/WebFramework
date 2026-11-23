@@ -168,18 +168,48 @@ document.addEventListener("submit", async event =>
     }
 });
 
-document.addEventListener("input", event =>
-{
+document.addEventListener("input", event => {
+    if (event.target.matches("span"))
+        setIsEmpty(event.target);
+    
     let value = getValueForForm(event.target);
     if (value !== undefined)
         event.target.setAttribute("data-wf-modified", "");
 });
 
-document.addEventListener("change", event =>
-{
-    let value = getValueForForm(event.target);
-    if (value !== undefined)
-        event.target.setAttribute("data-wf-modified", "");
+document.addEventListener("paste", event => {
+    if (event.target.matches("span")) {
+        event.preventDefault();
+        let text = event.clipboardData.getData("text/plain");
+        document.execCommand("insertText", false, text);
+    }
+});
+
+document.addEventListener("drop", event => {
+    if (event.target.matches("span")) {
+        event.preventDefault();
+        let text = event.dataTransfer.getData("text/plain");
+        let range = null;
+        if (document.caretPositionFromPoint) {
+            let position = document.caretPositionFromPoint(event.clientX, event.clientY);
+            if (position) {
+                range = document.createRange();
+                range.setStart(position.offsetNode, position.offset);
+                range.collapse(true);
+            }
+        } else if (document.caretRangeFromPoint) {
+            range = document.caretRangeFromPoint(event.clientX, event.clientY);
+        } else {
+            return;
+        }
+        if (!range)
+            return;
+        let selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        event.target.focus();
+        document.execCommand("insertText", false, text);
+    }
 });
 
 async function onWatcherMessageAsync(data) {
@@ -304,7 +334,12 @@ async function onWatcherMessageAsync(data) {
         case "SetValue": {
             let element = getElementByPath(change.path);
             if (element)
-                element.value = change.value;
+                if (element.matches("span")) {
+                    element.innerText = change.value;
+                    setIsEmpty(element);
+                } else {
+                    element.value = change.value;
+                }
         } break;
         case "BrowserReload": {
             console.log("Performing browser reload.");
@@ -336,8 +371,17 @@ async function onWatcherMessageAsync(data) {
         case "FocusElement": {
             let element = getElementByPath(change.path);
             if (element) {
-                let length = element.value.length;
-                element.setSelectionRange(length, length);
+                if (element.matches("span")) {
+                    let range = document.createRange();
+                    let selection = window.getSelection();
+                    range.selectNodeContents(element);
+                    range.collapse(false);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                } else {
+                    let length = element.value.length;
+                    element.setSelectionRange(length, length);
+                }
                 element.focus();
             }
         } break;
@@ -456,8 +500,12 @@ async function runServerAction(submitter, form)
 function getValueForForm(element)
 {
     if (element.matches(".wf-textbox"))
-        return element.value;
-    return undefined;
+        if (element.matches("span"))
+            return element.innerText;
+        else
+            return element.value;
+    else
+        return undefined;
 }
 
 function appendAllToForm(element, data)
@@ -500,12 +548,15 @@ function getValueWriter(element)
 
     if (element.matches(".wf-textbox"))
     {
-        let value = element.value;
+        let value = element.matches("span") ? element.innerText : element.value;
         return otherElement =>
         {
             if (otherElement.matches(".wf-textbox"))
             {
-                otherElement.value = value;
+                if (otherElement.matches("span"))
+                    otherElement.innerText = value;
+                else
+                    otherElement.value = value;
                 otherElement.setAttribute("data-wf-modified", "");
             }
         };
@@ -517,4 +568,11 @@ function parseElement(html)
     let template = document.createElement("template");
     template.innerHTML = html;
     return template.content.firstChild;
+}
+
+function setIsEmpty(element) {
+    if (element.innerText.trim().length === 0)
+        element.setAttribute("data-wf-is-empty", "");
+    else
+        element.removeAttribute("data-wf-is-empty");
 }
